@@ -302,6 +302,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "device-euclid"
+version = "0.0.0"
+dependencies = [
+ "abi",
+ "device-sequencer-common",
+ "math",
+]
+
+[[package]]
 name = "device-fold"
 version = "0.0.0"
 dependencies = [
@@ -393,6 +402,14 @@ dependencies = [
  "abi",
  "dsp",
  "libm",
+ "math",
+]
+
+[[package]]
+name = "device-sequencer-common"
+version = "0.0.0"
+dependencies = [
+ "abi",
  "math",
 ]
 

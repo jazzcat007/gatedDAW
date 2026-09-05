@@ -19,6 +19,38 @@ type Construct = {
     deviceHost: DeviceHost
 }
 
+type PreviewConstruct = Pick<Construct, "lifecycle" | "adapter">
+
+const EuclidPatternPreview = ({lifecycle, adapter}: PreviewConstruct) => {
+    const {steps, pulses, rotation} = adapter.namedParameter
+    const cells: Array<HTMLDivElement> = []
+    return (
+        <div className="pattern-preview"
+             aria-label="Euclidean pattern preview"
+             onInit={() => {
+                 const update = () => {
+                     const length = Math.max(1, steps.getControlledValue())
+                     const triggerCount = Math.min(pulses.getControlledValue(), length)
+                     const offset = ((rotation.getControlledValue() % length) + length) % length
+                     cells.forEach((cell, index) => {
+                         const active = index < length
+                             && Math.floor(((index + offset + 1) * triggerCount) / length)
+                             !== Math.floor(((index + offset) * triggerCount) / length)
+                         cell.classList.toggle("active", active)
+                         cell.classList.toggle("hidden", index >= length)
+                     })
+                 }
+                 lifecycle.own(steps.catchupAndSubscribe(update))
+                 lifecycle.own(pulses.catchupAndSubscribe(update))
+                 lifecycle.own(rotation.catchupAndSubscribe(update))
+             }}>
+            {Array.from({length: 64}, (_, index) => (
+                <div className="step" onInit={cell => cells[index] = cell}/>
+            ))}
+        </div>
+    )
+}
+
 export const EuclidDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {project} = service
     const {editing, midiLearning} = project
@@ -29,6 +61,7 @@ export const EuclidDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Co
                       populateMenu={parent => MenuItems.forEffectDevice(parent, service, deviceHost, adapter)}
                       populateControls={() => (
                           <div className={className}>
+                              <EuclidPatternPreview lifecycle={lifecycle} adapter={adapter}/>
                               {Object.values(adapter.namedParameter).map(parameter => ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,

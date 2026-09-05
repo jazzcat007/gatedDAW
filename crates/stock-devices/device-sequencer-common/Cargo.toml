@@ -1,13 +1,12 @@
 [package]
-name = "device-euclid"
+name = "device-sequencer-common"
 version = "0.0.0"
 edition = "2021"
 publish = false
 
 [lib]
-crate-type = ["cdylib", "lib"]
+crate-type = ["lib"]
 
 [dependencies]
 abi = {path = "../../abi"}
 math = {path = "../../math"}
-device-sequencer-common = {path = "../device-sequencer-common"}
