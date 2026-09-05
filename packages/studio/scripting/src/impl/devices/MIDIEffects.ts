@@ -1,5 +1,6 @@
 import {
     ArpeggioDeviceBox,
+    ChordDeviceBox,
     EuclidDeviceBox,
     GrooveShuffleBox,
     PitchDeviceBox,
@@ -12,6 +13,7 @@ import {asInstanceOf, bipolar, float, int, panic, unitValue} from "@opendaw/lib-
 import {
     AnyAudioUnit,
     ArpeggioEffect,
+    ChordEffect,
     EuclidEffect,
     MIDIEffects,
     PitchEffect,
@@ -34,7 +36,7 @@ export abstract class MIDIEffectFacade<B extends EffectDeviceBox = EffectDeviceB
 }
 
 export type AnyMIDIEffectImpl =
-    | ArpeggioEffectImpl | EuclidEffectImpl | PitchEffectImpl | VelocityEffectImpl | ZeitgeistEffectImpl | SpielwerkEffectImpl
+    | ArpeggioEffectImpl | ChordEffectImpl | EuclidEffectImpl | PitchEffectImpl | VelocityEffectImpl | ZeitgeistEffectImpl | SpielwerkEffectImpl
 
 export class ArpeggioEffectImpl extends MIDIEffectFacade<ArpeggioDeviceBox> implements ArpeggioEffect {
     readonly key = "Arpeggio" as const
@@ -50,6 +52,27 @@ export class ArpeggioEffectImpl extends MIDIEffectFacade<ArpeggioDeviceBox> impl
         this.bind({
             mode: box.modeIndex, octaves: box.numOctaves, rate: box.rateIndex,
             gate: box.gate, repeat: box.repeat, velocity: box.velocity
+        })
+    }
+}
+
+export class ChordEffectImpl extends MIDIEffectFacade<ChordDeviceBox> implements ChordEffect {
+    readonly key = "Chord" as const
+    declare keyNote: int
+    declare scaleIndex: int
+    declare degree: int
+    declare numNotes: int
+    declare inversion: int
+    declare spread: int
+    declare octave: int
+    declare strum: float
+    declare velocity: bipolar
+
+    constructor(context: Context, box: ChordDeviceBox) {
+        super(context, box)
+        this.bind({
+            keyNote: box.key, scaleIndex: box.scaleIndex, degree: box.degree, numNotes: box.numNotes,
+            inversion: box.inversion, spread: box.spread, octave: box.octave, strum: box.strum, velocity: box.velocity
         })
     }
 }
@@ -134,6 +157,7 @@ export class SpielwerkEffectImpl extends MIDIEffectFacade<SpielwerkDeviceBox> im
 export namespace MIDIEffectImpls {
     export const wrap = (context: Context, box: Box): AnyMIDIEffectImpl => context.facade(box, () => {
         if (box instanceof ArpeggioDeviceBox) {return new ArpeggioEffectImpl(context, box)}
+        if (box instanceof ChordDeviceBox) {return new ChordEffectImpl(context, box)}
         if (box instanceof EuclidDeviceBox) {return new EuclidEffectImpl(context, box)}
         if (box instanceof PitchDeviceBox) {return new PitchEffectImpl(context, box)}
         if (box instanceof VelocityDeviceBox) {return new VelocityEffectImpl(context, box)}
@@ -143,6 +167,6 @@ export namespace MIDIEffectImpls {
     }) as AnyMIDIEffectImpl
 
     export const isBox = (box: Box): box is MIDIEffectBox =>
-        box instanceof ArpeggioDeviceBox || box instanceof EuclidDeviceBox || box instanceof PitchDeviceBox || box instanceof VelocityDeviceBox
+        box instanceof ArpeggioDeviceBox || box instanceof ChordDeviceBox || box instanceof EuclidDeviceBox || box instanceof PitchDeviceBox || box instanceof VelocityDeviceBox
         || box instanceof ZeitgeistDeviceBox || box instanceof SpielwerkDeviceBox
 }

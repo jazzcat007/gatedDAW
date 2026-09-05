@@ -2,6 +2,7 @@ import {Optional, UUID} from "@opendaw/lib-std"
 import {Box} from "@opendaw/lib-box"
 import {
     ArpeggioDeviceBox,
+    ChordDeviceBox,
     AudioEffectCompositeBox,
     AudioEffectCompositeCellBox,
     AutotuneDeviceBox,
@@ -59,6 +60,23 @@ export namespace EffectFactories {
         create: ({boxGraph}, hostField, index) =>
             ArpeggioDeviceBox.create(boxGraph, UUID.generate(), (box) => {
                 box.label.setValue("Arpeggio")
+                box.index.setValue(index)
+                box.host.refer(hostField)
+            })
+    }
+
+    export const Chord: EffectFactory = {
+        defaultName: "Chord",
+        defaultIcon: IconSymbol.Piano,
+        briefDescription: "Chord Generator",
+        description: "Turns a single note into a diatonic chord in the configured key and scale",
+        manualPage: DeviceManualUrls.Chord,
+        separatorBefore: false,
+        external: false,
+        type: "midi",
+        create: ({boxGraph}, hostField, index) =>
+            ChordDeviceBox.create(boxGraph, UUID.generate(), (box) => {
+                box.label.setValue("Chord")
                 box.index.setValue(index)
                 box.host.refer(hostField)
             })
@@ -586,6 +604,7 @@ export namespace EffectFactories {
 
     export const MidiNamed = {
         Arpeggio,
+        Chord,
         Euclid,
         Pitch,
         Spielwerk,

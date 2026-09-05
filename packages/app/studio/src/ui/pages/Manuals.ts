@@ -249,6 +249,12 @@ export const Manuals: ReadonlyArray<Manual> = [
                     },
                     {
                         type: "page",
+                        label: "Chord",
+                        path: "/manuals/devices/midi/chord",
+                        icon: EffectFactories.MidiNamed.Chord.defaultIcon
+                    },
+                    {
+                        type: "page",
                         label: "Pitch",
                         path: "/manuals/devices/midi/pitch",
                         icon: EffectFactories.Pitch.defaultIcon

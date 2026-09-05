@@ -184,6 +184,7 @@ export enum IconSymbol {
     Backward,
     Bipolar,
     Convolver,
+    Sequencer,
 }
 
 export namespace IconSymbol {

@@ -14,6 +14,7 @@ import {
 import {Box, Update} from "@opendaw/lib-box"
 import {
     ArpeggioDeviceBox,
+    ChordDeviceBox,
     EuclidDeviceBox,
     AudioBusBox,
     ApparatDeviceBox,
@@ -128,6 +129,7 @@ import {TrackBoxAdapter} from "./timeline/TrackBoxAdapter"
 import {TapeDeviceBoxAdapter} from "./devices/instruments/TapeDeviceBoxAdapter"
 import {VaporisateurDeviceBoxAdapter} from "./devices/instruments/VaporisateurDeviceBoxAdapter"
 import {ArpeggioDeviceBoxAdapter} from "./devices/midi-effects/ArpeggioDeviceBoxAdapter"
+import {ChordDeviceBoxAdapter} from "./devices/midi-effects/ChordDeviceBoxAdapter"
 import {EuclidDeviceBoxAdapter} from "./devices/midi-effects/EuclidDeviceBoxAdapter"
 import {PitchDeviceBoxAdapter} from "./devices/midi-effects/PitchDeviceBoxAdapter"
 import {SpielwerkDeviceBoxAdapter} from "./devices/midi-effects/SpielwerkDeviceBoxAdapter"
@@ -232,6 +234,7 @@ export class BoxAdapters implements Terminable {
     #create(unknownBox: Box): BoxAdapter {
         return asDefined(unknownBox.accept<BoxVisitor<BoxAdapter>>({
             visitArpeggioDeviceBox: (box: ArpeggioDeviceBox) => new ArpeggioDeviceBoxAdapter(this.#context, box),
+            visitChordDeviceBox: (box: ChordDeviceBox) => new ChordDeviceBoxAdapter(this.#context, box),
             visitEuclidDeviceBox: (box: EuclidDeviceBox) => new EuclidDeviceBoxAdapter(this.#context, box),
             visitAudioBusBox: (box: AudioBusBox): BoxAdapter => new AudioBusBoxAdapter(this.#context, box),
             visitAudioClipBox: (box: AudioClipBox) => new AudioClipBoxAdapter(this.#context, box),

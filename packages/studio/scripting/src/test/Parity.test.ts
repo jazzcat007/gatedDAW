@@ -64,7 +64,7 @@ describe("Schema parity", () => {
     it("mirrors every automatable midi effect parameter", () => {
         const {project} = createFixture()
         const unit = project.addInstrumentUnit("Vaporisateur")
-        const keys: ReadonlyArray<keyof MIDIEffects> = ["Arpeggio", "Pitch", "Velocity", "Zeitgeist", "Spielwerk"]
+        const keys: ReadonlyArray<keyof MIDIEffects> = ["Arpeggio", "Chord", "Pitch", "Velocity", "Zeitgeist", "Spielwerk"]
         keys.forEach(key => expect(assertMirrored(unit.addMIDIEffect(key)), key).toEqual([]))
     })
 

@@ -234,6 +234,33 @@ export interface ArpeggioEffect extends MIDIEffect {
 }
 
 /**
+ * Turns a single note into a diatonic chord in a configured key and scale
+ * @group MIDI Effects
+ */
+export interface ChordEffect extends MIDIEffect {
+    /** Always "Chord" */
+    readonly key: "Chord"
+    /** Key / tonic (0 = C .. 11 = B, default 0) */
+    keyNote: int
+    /** Scale index (0-8): Major, Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian (default 0) */
+    scaleIndex: int
+    /** Diatonic transpose in scale steps (-7 to 7, default 0) */
+    degree: int
+    /** Stacked thirds in the chord (1 to 6, default 3) */
+    numNotes: int
+    /** Inversion (0 to 3, default 0) */
+    inversion: int
+    /** Drop-voicing spread (0 to 3, default 0) */
+    spread: int
+    /** Octave shift of the finished chord (-2 to 2, default 0) */
+    octave: int
+    /** Pulses between successive strummed voices (0 to 240, default 0) */
+    strum: float
+    /** Velocity tilt across the voicing (-1.0 to 1.0, default 0.0) */
+    velocity: bipolar
+}
+
+/**
  * Generates Euclidean note patterns
  * @group MIDI Effects
  */
@@ -319,6 +346,8 @@ export interface SpielwerkEffect extends MIDIEffect, ScriptDevice {
 export interface MIDIEffects {
     /** {@link ArpeggioEffect} */
     "Arpeggio": ArpeggioEffect
+    /** {@link ChordEffect} */
+    "Chord": ChordEffect
     /** {@link EuclidEffect} */
     "Euclid": EuclidEffect
     /** {@link PitchEffect} */

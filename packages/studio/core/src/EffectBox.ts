@@ -1,5 +1,6 @@
 import {
     ArpeggioDeviceBox,
+    ChordDeviceBox,
     AudioEffectCompositeBox,
     AutotuneDeviceBox,
     MaximizerDeviceBox,
@@ -30,7 +31,7 @@ import {
 } from "@opendaw/studio-boxes"
 
 export type EffectBox =
-    | ArpeggioDeviceBox | EuclidDeviceBox | PitchDeviceBox | VelocityDeviceBox | ZeitgeistDeviceBox | UnknownMidiEffectDeviceBox
+    | ArpeggioDeviceBox | ChordDeviceBox | EuclidDeviceBox | PitchDeviceBox | VelocityDeviceBox | ZeitgeistDeviceBox | UnknownMidiEffectDeviceBox
     | SpielwerkDeviceBox
     | MaximizerDeviceBox | DelayDeviceBox | ReverbDeviceBox | RevampDeviceBox | StereoToolDeviceBox | TidalDeviceBox
     | ModularDeviceBox | UnknownAudioEffectDeviceBox | CompressorDeviceBox | GateDeviceBox

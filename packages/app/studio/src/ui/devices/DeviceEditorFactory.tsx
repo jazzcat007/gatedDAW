@@ -2,6 +2,7 @@ import {createElement, JsxValue} from "@opendaw/lib-jsx"
 import {
     ApparatDeviceBox,
     ArpeggioDeviceBox,
+    ChordDeviceBox,
     EuclidDeviceBox,
     AudioBusBox,
     AudioEffectCompositeBox,
@@ -43,6 +44,7 @@ import {
     ZeitgeistDeviceBox
 } from "@opendaw/studio-boxes"
 import {ArpeggioDeviceEditor} from "@/ui/devices/midi-effects/ArpeggioDeviceEditor.tsx"
+import {ChordDeviceEditor} from "@/ui/devices/midi-effects/ChordDeviceEditor.tsx"
 import {EuclidDeviceEditor} from "@/ui/devices/midi-effects/EuclidDeviceEditor"
 import {AudioEffectCompositeDeviceEditor} from "@/ui/devices/audio-effects/AudioEffectCompositeDeviceEditor"
 import {FrequencySplitDeviceEditor} from "@/ui/devices/audio-effects/FrequencySplit/FrequencySplitDeviceEditor"
@@ -50,6 +52,7 @@ import {EffectFactories as CoreEffectFactories} from "@opendaw/studio-core"
 import {
     ApparatDeviceBoxAdapter,
     ArpeggioDeviceBoxAdapter,
+    ChordDeviceBoxAdapter,
     EuclidDeviceBoxAdapter,
     AudioBusBoxAdapter,
     AudioEffectCompositeBoxAdapter,
@@ -143,6 +146,12 @@ export namespace DeviceEditorFactory {
                                       service={service}
                                       adapter={service.project.boxAdapters.adapterFor(box, ArpeggioDeviceBoxAdapter)}
                                       deviceHost={deviceHost}/>
+            ),
+            visitChordDeviceBox: (box: ChordDeviceBox) => (
+                <ChordDeviceEditor lifecycle={lifecycle}
+                                   service={service}
+                                   adapter={service.project.boxAdapters.adapterFor(box, ChordDeviceBoxAdapter)}
+                                   deviceHost={deviceHost}/>
             ),
             visitEuclidDeviceBox: (box: EuclidDeviceBox) => (
                 <EuclidDeviceEditor lifecycle={lifecycle}
