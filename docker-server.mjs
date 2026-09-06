@@ -494,10 +494,13 @@ const serveStatic = (req, res) => {
   }
   const file = exists ? candidate : join(root, "index.html")
   const type = mime.get(extname(file)) ?? "application/octet-stream"
-  const cacheControl = extname(file) === ".html"
-    ? "no-store"
+  const extension = extname(file)
+  const cacheControl = extension === ".html" || extension === ".json" || extension === ".wasm"
+    ? "no-store, no-cache, must-revalidate"
     : "public, max-age=31536000, immutable"
-  const cdnCacheControl = extname(file) === ".html" ? {"CDN-Cache-Control": "no-store"} : {}
+  const cdnCacheControl = extension === ".html" || extension === ".json" || extension === ".wasm"
+    ? {"CDN-Cache-Control": "no-store", "Cloudflare-CDN-Cache-Control": "no-store"}
+    : {}
   res.writeHead(200, {...commonHeaders, "Content-Type": type, "Cache-Control": cacheControl, ...cdnCacheControl})
   createReadStream(file).pipe(res)
 }

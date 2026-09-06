@@ -156,8 +156,10 @@ export const EFFECT_COMPOSITES: ReadonlyArray<EffectCompositeSpec> = [
 ]
 
 export const loadEngineModules = async (base: string = ""): Promise<EngineModules> => {
+    const cacheKey = Date.now().toString(36)
+    const withCacheKey = (url: string) => `${url}${url.includes("?") ? "&" : "?"}v=${cacheKey}`
     const urls = [`${base}/wasm/engine.wasm`, ...DEVICES.map(device => `${base}${device.url}`)]
-    const buffers = await Promise.all(urls.map(url => fetch(url).then(response => response.ok
+    const buffers = await Promise.all(urls.map(url => fetch(withCacheKey(url), {cache: "reload"}).then(response => response.ok
         ? response.arrayBuffer()
         : Promise.reject(new Error(`Could not load wasm module '${url}' (${response.status} ${response.statusText})`)))))
     const [engineModule, ...deviceModules] = await Promise.all(buffers.map(bytes => WebAssembly.compile(bytes)))
