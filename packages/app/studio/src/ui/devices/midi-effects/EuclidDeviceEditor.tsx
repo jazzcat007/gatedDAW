@@ -23,11 +23,16 @@ type PreviewConstruct = Pick<Construct, "lifecycle" | "adapter">
 
 const EuclidPatternPreview = ({lifecycle, adapter}: PreviewConstruct) => {
     const {steps, pulses, rotation} = adapter.namedParameter
-    const cells: Array<HTMLDivElement> = []
     return (
         <div className="pattern-preview"
              aria-label="Euclidean pattern preview"
-             onInit={() => {
+             onInit={element => {
+                 const cells = Array.from({length: 64}, () => {
+                     const cell = document.createElement("div")
+                     cell.className = "step"
+                     element.appendChild(cell)
+                     return cell
+                 })
                  const update = () => {
                      const length = Math.max(1, steps.getControlledValue())
                      const triggerCount = Math.min(pulses.getControlledValue(), length)
@@ -43,17 +48,14 @@ const EuclidPatternPreview = ({lifecycle, adapter}: PreviewConstruct) => {
                  lifecycle.own(steps.catchupAndSubscribe(update))
                  lifecycle.own(pulses.catchupAndSubscribe(update))
                  lifecycle.own(rotation.catchupAndSubscribe(update))
-             }}>
-            {Array.from({length: 64}, (_, index) => (
-                <div className="step" onInit={cell => cells[index] = cell}/>
-            ))}
-        </div>
+             }}/>
     )
 }
 
 export const EuclidDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Construct) => {
     const {project} = service
     const {editing, midiLearning} = project
+    const {steps, pulses, rotation, rate, gate, pitch, velocity} = adapter.namedParameter
     return (
         <DeviceEditor lifecycle={lifecycle}
                       service={service}
@@ -62,13 +64,55 @@ export const EuclidDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Co
                       populateControls={() => (
                           <div className={className}>
                               <EuclidPatternPreview lifecycle={lifecycle} adapter={adapter}/>
-                              {Object.values(adapter.namedParameter).map(parameter => ControlBuilder.createKnob({
+                              {ControlBuilder.createKnob({
                                   lifecycle,
                                   editing,
                                   midiLearning,
                                   adapter,
-                                  parameter
-                              }))}
+                                  parameter: steps
+                              })}
+                              {ControlBuilder.createKnob({
+                                  lifecycle,
+                                  editing,
+                                  midiLearning,
+                                  adapter,
+                                  parameter: pulses
+                              })}
+                              {ControlBuilder.createKnob({
+                                  lifecycle,
+                                  editing,
+                                  midiLearning,
+                                  adapter,
+                                  parameter: rotation
+                              })}
+                              {ControlBuilder.createKnob({
+                                  lifecycle,
+                                  editing,
+                                  midiLearning,
+                                  adapter,
+                                  parameter: rate
+                              })}
+                              {ControlBuilder.createKnob({
+                                  lifecycle,
+                                  editing,
+                                  midiLearning,
+                                  adapter,
+                                  parameter: gate
+                              })}
+                              {ControlBuilder.createKnob({
+                                  lifecycle,
+                                  editing,
+                                  midiLearning,
+                                  adapter,
+                                  parameter: pitch
+                              })}
+                              {ControlBuilder.createKnob({
+                                  lifecycle,
+                                  editing,
+                                  midiLearning,
+                                  adapter,
+                                  parameter: velocity
+                              })}
                           </div>
                       )}
                       populateMeter={() => (
