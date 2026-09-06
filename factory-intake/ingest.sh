@@ -8,6 +8,7 @@ REPO_ROOT="${REPO_ROOT:-/root/opendaw}"
 TRUSTED_MIRROR="${TRUSTED_MIRROR:-/mnt/media}"
 LOG_FILE="${LOG_FILE:-/var/log/opendaw-ingest.log}"
 SYNC_FROM_MIRROR="${SYNC_FROM_MIRROR:-1}"
+DOWNLOAD_FIRST="${DOWNLOAD_FIRST:-auto}"
 RUN_IMPORTS="${RUN_IMPORTS:-1}"
 
 if [[ -w "$(dirname "$LOG_FILE")" ]]; then
@@ -21,6 +22,7 @@ echo "intake=$INTAKE_ROOT"
 echo "factory=$FACTORY_ROOT"
 echo "repo=$REPO_ROOT"
 echo "mirror=$TRUSTED_MIRROR"
+echo "download_first=$DOWNLOAD_FIRST"
 
 require_tool() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -32,7 +34,17 @@ require_tool() {
 mkdir -p \
   "$INTAKE_ROOT"/samples/{Bass,Drums,Foley,Guitar,Impulse-Responses,Keys,Loops,One-Shots,Synth,Vocals} \
   "$INTAKE_ROOT"/soundfonts/{GeneralUser-GS,FreePats-GM-Orchestral,FluidR3-GM,FreePats-GM-Percussion,Famicom-Multichip-Chiptune,VintageDreamsWaves} \
+  "$INTAKE_ROOT"/sfz \
   "$FACTORY_ROOT"/{samples,soundfonts,presets,demos}
+
+# Preflight: check mirror availability
+MIRROR_AVAILABLE=0
+if [[ -d "$TRUSTED_MIRROR" ]]; then
+  MIRROR_AVAILABLE=1
+  echo "trusted mirror found: $TRUSTED_MIRROR"
+else
+  echo "trusted mirror NOT found: $TRUSTED_MIRROR"
+fi
 
 sync_dir() {
   local source="$1"
@@ -45,7 +57,7 @@ sync_dir() {
   fi
 }
 
-if [[ "$SYNC_FROM_MIRROR" == "1" ]]; then
+if [[ "$SYNC_FROM_MIRROR" == "1" && "$MIRROR_AVAILABLE" == "1" ]]; then
   sync_dir "$TRUSTED_MIRROR/SoundFonts/GeneralUser-GS" "$INTAKE_ROOT/soundfonts/GeneralUser-GS"
   sync_dir "$TRUSTED_MIRROR/SoundFonts/FreePats-GM-Orchestral" "$INTAKE_ROOT/soundfonts/FreePats-GM-Orchestral"
   sync_dir "$TRUSTED_MIRROR/SoundFonts/FluidR3-GM" "$INTAKE_ROOT/soundfonts/FluidR3-GM"
@@ -63,6 +75,25 @@ if [[ "$SYNC_FROM_MIRROR" == "1" ]]; then
   sync_dir "$TRUSTED_MIRROR/Samples/One-Shots" "$INTAKE_ROOT/samples/One-Shots"
   sync_dir "$TRUSTED_MIRROR/Samples/Synth" "$INTAKE_ROOT/samples/Synth"
   sync_dir "$TRUSTED_MIRROR/Samples/Vocals" "$INTAKE_ROOT/samples/Vocals"
+fi
+
+# Download-first mode: fetch assets directly if mirror missing or forced
+if [[ "$DOWNLOAD_FIRST" == "1" || ( "$DOWNLOAD_FIRST" == "auto" && "$MIRROR_AVAILABLE" == "0" ) ]]; then
+  echo "download-first mode active"
+  require_tool git
+  require_tool curl
+  # SFZ libraries
+  if [[ ! -d "$INTAKE_ROOT/sfz/VCSL" ]]; then
+    echo "cloning VCSL SFZ..."
+    git clone --depth 1 --branch sfz https://github.com/sgossner/VCSL.git "$INTAKE_ROOT/sfz/VCSL"
+  fi
+  if [[ ! -d "$INTAKE_ROOT/sfz/VSCO-2-CE" ]]; then
+    echo "cloning VSCO-2-CE SFZ..."
+    git clone --depth 1 --branch SFZ https://github.com/sgossner/VSCO-2-CE.git "$INTAKE_ROOT/sfz/VSCO-2-CE"
+  fi
+  # SoundFonts: download archives if needed
+  # Placeholder for SoundFont download logic - expand per manifest URLs
+  echo "SoundFont download placeholder: implement per-manifest URL fetch and extraction"
 fi
 
 count_files() {
