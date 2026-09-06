@@ -1,0 +1,44 @@
+{
+  "version": "1.0",
+  "updatedAt": "2026-09-06T00:00:00Z",
+  "intakeRoot": "/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory-intake",
+  "factoryRoot": "/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory",
+  "packs": [
+    {
+      "type": "soundfont",
+      "name": "GeneralUser-GS",
+      "path": "soundfonts/GeneralUser-GS",
+      "license": "GPL-3.0",
+      "sourceUrl": "https://github.com/GalleryOfBots/GeneralUser-GS",
+      "checksum": "",
+      "imported": false
+    },
+    {
+      "type": "soundfont",
+      "name": "FreePats-GM-Orchestral",
+      "path": "soundfonts/FreePats-GM-Orchestral",
+      "license": "GPL-3.0",
+      "sourceUrl": "https://github.com/free-pats/FreePats",
+      "checksum": "",
+      "imported": false
+    },
+    {
+      "type": "samples",
+      "name": "Drums",
+      "path": "samples/Drums",
+      "license": "CC0",
+      "sourceUrl": "",
+      "checksum": "",
+      "imported": false
+    },
+    {
+      "type": "samples",
+      "name": "Impulse-Responses",
+      "path": "samples/Impulse-Responses",
+      "license": "CC0",
+      "sourceUrl": "",
+      "checksum": "",
+      "imported": false
+    }
+  ]
+}
