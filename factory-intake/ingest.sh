@@ -157,7 +157,7 @@ manifest_soundfonts() {
 const {readFileSync} = require("node:fs")
 const manifest = JSON.parse(readFileSync(process.env.MANIFEST_PATH, "utf8"))
 for (const pack of manifest.soundfonts ?? []) {
-  const url = pack.downloadUrl || pack.url || ""
+  const url = pack.downloadUrl || ""
   console.log([
     pack.id || "",
     pack.name || "",
@@ -175,7 +175,7 @@ manifest_samples() {
 const {readFileSync} = require("node:fs")
 const manifest = JSON.parse(readFileSync(process.env.MANIFEST_PATH, "utf8"))
 for (const pack of manifest.samples ?? []) {
-  const url = pack.downloadUrl || pack.url || ""
+  const url = pack.downloadUrl || ""
   console.log([
     pack.id || "",
     pack.name || "",

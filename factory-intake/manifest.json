@@ -29,10 +29,16 @@
       "sourcePath": "SoundFonts/GeneralUser-GS",
       "intakePath": "soundfonts/GeneralUser-GS",
       "catalogFolder": "GeneralUser",
-      "license": "GPL-3.0",
-      "url": "https://github.com/GalleryOfBots/GeneralUser-GS",
+      "license": "GeneralUser GS License v2.0",
+      "url": "https://github.com/mrbumpy409/GeneralUser-GS",
+      "downloadUrl": "https://raw.githubusercontent.com/mrbumpy409/GeneralUser-GS/main/GeneralUser-GS.sf2",
       "expectedUuid": "9575028c-7a1f-489f-9770-fccc8cff2734",
-      "checksums": []
+      "checksums": [
+        {
+          "sha256": "9575028c7a1f589f5770fccc8cff2734566af40cd26ed836944e9a5152688cfe",
+          "path": "soundfonts/GeneralUser-GS/GeneralUser-GS.sf2"
+        }
+      ]
     },
     {
       "id": "freepats-gm-orchestral",
@@ -41,9 +47,10 @@
       "intakePath": "soundfonts/FreePats-GM-Orchestral",
       "catalogFolder": "FreePats",
       "license": "GPL-3.0",
-      "url": "https://github.com/free-pats/FreePats",
+      "url": "https://freepats.zenvoid.org/SoundSets/general-midi.html",
       "expectedUuid": "f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b",
-      "checksums": []
+      "checksums": [],
+      "notes": "Official FreePats General MIDI SF2 is published as a 7z archive. Leave downloadUrl unset until 7z extraction is available on OMV or a tar/zip mirror is verified."
     },
     {
       "id": "fluidr3-gm",
@@ -51,10 +58,16 @@
       "sourcePath": "SoundFonts/FluidR3-GM",
       "intakePath": "soundfonts/FluidR3-GM",
       "catalogFolder": "FluidR3",
-      "license": "LGPL-3.0",
-      "url": "https://archive.org/download/fluidr3-gm-gs/FluidR3_GM_GS.sf2",
+      "license": "MIT",
+      "url": "https://archive.org/details/fluidr3-gm-gs",
+      "downloadUrl": "https://archive.org/download/fluidr3-gm-gs/FluidR3_GM_GS.sf2",
       "expectedUuid": null,
-      "checksums": []
+      "checksums": [
+        {
+          "sha256": "545b2833936f15f04df5f0c5c4096b3ba6ced46ec7031f61991cae46f8681986",
+          "path": "soundfonts/FluidR3-GM/FluidR3_GM_GS.sf2"
+        }
+      ]
     },
     {
       "id": "freepats-gm-percussion",
@@ -63,9 +76,10 @@
       "intakePath": "soundfonts/FreePats-GM-Percussion",
       "catalogFolder": "FreePats",
       "license": "GPL-3.0",
-      "url": "https://github.com/free-pats/FreePats",
+      "url": "https://freepats.zenvoid.org/SoundSets/general-midi.html",
       "expectedUuid": null,
-      "checksums": []
+      "checksums": [],
+      "notes": "Official FreePats percussion SF2 is published from the FreePats General MIDI page. Leave downloadUrl unset until the exact archive path and extractor support are verified."
     },
     {
       "id": "famicom-multichip-chiptune",
@@ -74,9 +88,10 @@
       "intakePath": "soundfonts/Famicom-Multichip-Chiptune",
       "catalogFolder": "Chiptune",
       "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuid": null,
-      "checksums": []
+      "checksums": [],
+      "notes": "Do not substitute AKWF-FREE here; this entry needs a real Famicom/Multichip SoundFont source."
     },
     {
       "id": "vintage-dreams-waves",
@@ -84,10 +99,11 @@
       "sourcePath": "SoundFonts/VintageDreamsWaves",
       "intakePath": "soundfonts/VintageDreamsWaves",
       "catalogFolder": "Synth",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "CC-BY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuid": null,
-      "checksums": []
+      "checksums": [],
+      "notes": "Do not substitute AKWF-FREE here; this entry needs the real VintageDreamsWaves source and license."
     }
   ],
   "samples": [
@@ -110,12 +126,13 @@
       "sourcePath": "Samples/Keys",
       "intakePath": "samples/Keys",
       "catalogFolder": "Keys/UIowa",
-      "license": "CC-BY/permissive - verify before mirror",
-      "url": "https://www.music.uiowa.edu/library/samples/steinway",
+      "license": "No restrictions per University of Iowa MIS page",
+      "url": "https://theremin.music.uiowa.edu/MISPiano.html",
       "expectedUuids": [
         "0ab1a85f-1d07-4a24-8418-ab5a6b6e3490"
       ],
-      "checksums": []
+      "checksums": [],
+      "notes": "The direct UIowa Piano.mf.C4.aiff file imports to 849457fe-42a7-42a9-8bb0-7d89a0c4b488 with the current importer, not the preset-required UUID. Keep downloadUrl unset until the transformed source that yields 0ab1a85f-1d07-4a24-8418-ab5a6b6e3490 is identified."
     },
     {
       "id": "drums",
@@ -123,10 +140,11 @@
       "sourcePath": "Samples/Drums",
       "intakePath": "samples/Drums",
       "catalogFolder": "Drums",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Do not substitute AKWF-FREE here; this needs a real drum sample source."
     },
     {
       "id": "one-shots",
@@ -134,8 +152,8 @@
       "sourcePath": "Samples/One-Shots",
       "intakePath": "samples/One-Shots",
       "catalogFolder": "One-Shots",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
       "checksums": []
     },
@@ -145,8 +163,8 @@
       "sourcePath": "Samples/Loops",
       "intakePath": "samples/Loops",
       "catalogFolder": "Loops",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
       "checksums": []
     },
@@ -156,8 +174,8 @@
       "sourcePath": "Samples/Bass",
       "intakePath": "samples/Bass",
       "catalogFolder": "Bass",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
       "checksums": []
     },
@@ -167,10 +185,17 @@
       "sourcePath": "Samples/Synth",
       "intakePath": "samples/Synth",
       "catalogFolder": "Synth",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "CC0-1.0",
+      "url": "https://www.adventurekid.se/akrt/waveforms/adventure-kid-waveforms/",
+      "downloadUrl": "https://www.adventurekid.se/AKRTfiles/AKWF/AKWF.zip",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [
+        {
+          "sha256": "edd4afd71449980a2141b9756c1069d9cc4ebfed1e88f2cbbdc111d494f2d872",
+          "path": "_downloads/synth-AKWF.zip"
+        }
+      ],
+      "notes": "Adventure Kid Waveforms all-in-one WAV zip. Single-cycle waveform samples; imported under the existing Synth category."
     },
     {
       "id": "guitar",
@@ -178,8 +203,8 @@
       "sourcePath": "Samples/Guitar",
       "intakePath": "samples/Guitar",
       "catalogFolder": "Guitar",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
       "checksums": []
     },
@@ -189,8 +214,8 @@
       "sourcePath": "Samples/Foley",
       "intakePath": "samples/Foley",
       "catalogFolder": "Foley",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
       "checksums": []
     },
@@ -200,8 +225,8 @@
       "sourcePath": "Samples/Vocals",
       "intakePath": "samples/Vocals",
       "catalogFolder": "Vocals",
-      "license": "CC0",
-      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
       "expectedUuids": [],
       "checksums": []
     }

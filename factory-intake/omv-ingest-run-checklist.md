@@ -132,6 +132,8 @@ DOWNLOAD_SAMPLES=0 bash "$INTAKE_ROOT/ingest.sh"
 
 Direct-download support:
 
+- `url` is the human/source/license page.
+- `downloadUrl` is the machine-fetchable file, archive, or repository URL. The ingest script does not fetch from `url` when `downloadUrl` is absent.
 - GitHub repository URLs are shallow-cloned into `$DOWNLOAD_ROOT/<pack-id>` and `.sf2` files are copied into the pack intake folder.
 - GitHub sample repository URLs are shallow-cloned into `$DOWNLOAD_ROOT/<pack-id>` and supported audio files are copied into the pack intake folder.
 - Direct `.sf2` and supported audio URLs are downloaded and copied into the pack intake folder.
