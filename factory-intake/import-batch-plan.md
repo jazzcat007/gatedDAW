@@ -185,9 +185,13 @@ function collect(folder, key, entries = []) {
   return entries
 }
 
+function presetsFrom(data) {
+  return Array.isArray(data) ? data : (data.presets || [])
+}
+
 const samples = collect({folders: readJson(join(root, "samples/index.json")).folders}, "samples")
 const soundfonts = collect({folders: readJson(join(root, "soundfonts/index.json")).folders}, "soundfonts")
-const presets = readJson(join(root, "presets/index.json")).presets || []
+const presets = presetsFrom(readJson(join(root, "presets/index.json")))
 const all = new Map([...samples, ...soundfonts, ...presets].map(entry => [entry.uuid, entry]))
 const missing = [...required].filter(uuid => !all.has(uuid))
 
@@ -245,10 +249,14 @@ function collect(folder, key, entries = []) {
   return entries
 }
 
+function presetsFrom(data) {
+  return Array.isArray(data) ? data : (data.presets || [])
+}
+
 console.log({
   samples: collect({folders: readJson(join(root, "samples/index.json")).folders}, "samples").length,
   soundfonts: collect({folders: readJson(join(root, "soundfonts/index.json")).folders}, "soundfonts").length,
-  presets: (readJson(join(root, "presets/index.json")).presets || []).length,
+  presets: presetsFrom(readJson(join(root, "presets/index.json"))).length,
   demos: (readJson(join(root, "demos/projects.json")).tracks || []).length
 })
 NODE
