@@ -52,7 +52,7 @@
       "intakePath": "soundfonts/FluidR3-GM",
       "catalogFolder": "FluidR3",
       "license": "LGPL-3.0",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://archive.org/download/fluidr3-gm-gs/FluidR3_GM_GS.sf2",
       "expectedUuid": null,
       "checksums": []
     },
@@ -63,7 +63,7 @@
       "intakePath": "soundfonts/FreePats-GM-Percussion",
       "catalogFolder": "FreePats",
       "license": "GPL-3.0",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/free-pats/FreePats",
       "expectedUuid": null,
       "checksums": []
     },
@@ -74,7 +74,7 @@
       "intakePath": "soundfonts/Famicom-Multichip-Chiptune",
       "catalogFolder": "Chiptune",
       "license": "CC0",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/", 
       "expectedUuid": null,
       "checksums": []
     },
@@ -85,7 +85,7 @@
       "intakePath": "soundfonts/VintageDreamsWaves",
       "catalogFolder": "Synth",
       "license": "CC-BY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuid": null,
       "checksums": []
     }
@@ -98,7 +98,7 @@
       "intakePath": "samples/Impulse-Responses",
       "catalogFolder": "Impulse Responses/AdventureKid",
       "license": "CC0/permissive - verify before mirror",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://www.adventurekid.se/akrt/free-reverb-impulse-responses/",
       "expectedUuids": [
         "f51ed198-f47a-4253-b765-888e0c8d16e6"
       ],
@@ -111,7 +111,7 @@
       "intakePath": "samples/Keys",
       "catalogFolder": "Keys/UIowa",
       "license": "CC-BY/permissive - verify before mirror",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://www.music.uiowa.edu/library/samples/steinway",
       "expectedUuids": [
         "0ab1a85f-1d07-4a24-8418-ab5a6b6e3490"
       ],
@@ -124,7 +124,7 @@
       "intakePath": "samples/Drums",
       "catalogFolder": "Drums",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -135,7 +135,7 @@
       "intakePath": "samples/One-Shots",
       "catalogFolder": "One-Shots",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -146,7 +146,7 @@
       "intakePath": "samples/Loops",
       "catalogFolder": "Loops",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -157,7 +157,7 @@
       "intakePath": "samples/Bass",
       "catalogFolder": "Bass",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -168,7 +168,7 @@
       "intakePath": "samples/Synth",
       "catalogFolder": "Synth",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -179,7 +179,7 @@
       "intakePath": "samples/Guitar",
       "catalogFolder": "Guitar",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -190,7 +190,7 @@
       "intakePath": "samples/Foley",
       "catalogFolder": "Foley",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     },
@@ -201,7 +201,7 @@
       "intakePath": "samples/Vocals",
       "catalogFolder": "Vocals",
       "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://github.com/",
       "expectedUuids": [],
       "checksums": []
     }
