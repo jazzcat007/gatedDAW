@@ -64,8 +64,14 @@ describe("Schema parity", () => {
     it("mirrors every automatable midi effect parameter", () => {
         const {project} = createFixture()
         const unit = project.addInstrumentUnit("Vaporisateur")
-        const keys: ReadonlyArray<keyof MIDIEffects> = ["Arpeggio", "Chord", "Pitch", "Velocity", "Zeitgeist", "Spielwerk"]
-        keys.forEach(key => expect(assertMirrored(unit.addMIDIEffect(key)), key).toEqual([]))
+        const keys: ReadonlyArray<keyof MIDIEffects> = ["Arpeggio", "Chord", "Kadenz", "Pitch", "Velocity", "Zeitgeist", "Spielwerk"]
+        const plain: Record<string, ReadonlyArray<string>> = {}
+        keys.forEach(key => {plain[key] = assertMirrored(unit.addMIDIEffect(key))})
+        expect(plain).toEqual({
+            Arpeggio: [], Chord: [], Pitch: [], Velocity: [], Zeitgeist: [], Spielwerk: [],
+            // the progression is exposed as packed KadenzStep records, not through the field binder
+            Kadenz: ["length", ...Array.from({length: 32}, (_, step) => `steps.${step}`)]
+        })
     })
 
     it("mirrors every automatable audio effect parameter", () => {

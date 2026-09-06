@@ -12,6 +12,7 @@ import {
     DattorroReverbDeviceBox,
     DelayDeviceBox,
     EuclidDeviceBox,
+    KadenzDeviceBox,
     FoldDeviceBox,
     FrequencySplitBox,
     GateDeviceBox,
@@ -37,7 +38,7 @@ import {
     ZeitgeistDeviceBox
 } from "@opendaw/studio-boxes"
 import {IconSymbol} from "@opendaw/studio-enums"
-import {DeviceManualUrls} from "@opendaw/studio-adapters"
+import {DeviceManualUrls, KadenzPresets, KadenzStep} from "@opendaw/studio-adapters"
 import {EffectFactory} from "./EffectFactory"
 import {EffectParameterDefaults} from "./EffectParameterDefaults"
 
@@ -79,6 +80,29 @@ export namespace EffectFactories {
                 box.label.setValue("Chord")
                 box.index.setValue(index)
                 box.host.refer(hostField)
+            })
+    }
+
+    export const Kadenz: EffectFactory = {
+        defaultName: "Kadenz",
+        defaultIcon: IconSymbol.Piano,
+        briefDescription: "Chord Progression Player",
+        description: "Plays and generates a chord progression on its own clock, without incoming notes",
+        manualPage: DeviceManualUrls.Kadenz,
+        separatorBefore: false,
+        external: false,
+        type: "midi",
+        create: ({boxGraph}, hostField, index) =>
+            KadenzDeviceBox.create(boxGraph, UUID.generate(), (box) => {
+                box.label.setValue("Kadenz")
+                box.index.setValue(index)
+                box.host.refer(hostField)
+                // A fresh device sounds like something: the schema default is four bars of I, so seed the
+                // most common progression instead of leaving the user on a static tonic.
+                const starter = KadenzPresets.All[0].steps
+                box.steps.fields().forEach((field, stepIndex) => field.setValue(
+                    stepIndex < starter.length ? KadenzStep.pack(starter[stepIndex]) : KadenzStep.Default))
+                box.length.setValue(starter.length)
             })
     }
 
@@ -606,6 +630,7 @@ export namespace EffectFactories {
         Arpeggio,
         Chord,
         Euclid,
+        Kadenz,
         Pitch,
         Spielwerk,
         Velocity,

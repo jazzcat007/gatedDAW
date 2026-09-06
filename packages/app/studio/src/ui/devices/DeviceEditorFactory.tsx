@@ -4,6 +4,7 @@ import {
     ArpeggioDeviceBox,
     ChordDeviceBox,
     EuclidDeviceBox,
+    KadenzDeviceBox,
     AudioBusBox,
     AudioEffectCompositeBox,
     AutotuneDeviceBox,
@@ -46,6 +47,7 @@ import {
 import {ArpeggioDeviceEditor} from "@/ui/devices/midi-effects/ArpeggioDeviceEditor.tsx"
 import {ChordDeviceEditor} from "@/ui/devices/midi-effects/ChordDeviceEditor.tsx"
 import {EuclidDeviceEditor} from "@/ui/devices/midi-effects/EuclidDeviceEditor"
+import {KadenzDeviceEditor} from "@/ui/devices/midi-effects/KadenzDeviceEditor.tsx"
 import {AudioEffectCompositeDeviceEditor} from "@/ui/devices/audio-effects/AudioEffectCompositeDeviceEditor"
 import {FrequencySplitDeviceEditor} from "@/ui/devices/audio-effects/FrequencySplit/FrequencySplitDeviceEditor"
 import {EffectFactories as CoreEffectFactories} from "@opendaw/studio-core"
@@ -54,6 +56,7 @@ import {
     ArpeggioDeviceBoxAdapter,
     ChordDeviceBoxAdapter,
     EuclidDeviceBoxAdapter,
+    KadenzDeviceBoxAdapter,
     AudioBusBoxAdapter,
     AudioEffectCompositeBoxAdapter,
     AutotuneDeviceBoxAdapter,
@@ -157,6 +160,12 @@ export namespace DeviceEditorFactory {
                 <EuclidDeviceEditor lifecycle={lifecycle}
                                     service={service}
                                     adapter={service.project.boxAdapters.adapterFor(box, EuclidDeviceBoxAdapter)}
+                                    deviceHost={deviceHost}/>
+            ),
+            visitKadenzDeviceBox: (box: KadenzDeviceBox) => (
+                <KadenzDeviceEditor lifecycle={lifecycle}
+                                    service={service}
+                                    adapter={service.project.boxAdapters.adapterFor(box, KadenzDeviceBoxAdapter)}
                                     deviceHost={deviceHost}/>
             ),
             visitPitchDeviceBox: (box: PitchDeviceBox) => (

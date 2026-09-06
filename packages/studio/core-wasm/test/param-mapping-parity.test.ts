@@ -11,7 +11,7 @@ import {readFileSync} from "node:fs"
 import {Arrays, isDefined, Option, Optional, panic, Terminable, UUID} from "@opendaw/lib-std"
 import {Address, BooleanField, BoxGraph, Constraints, Float32Field, Int32Field, PrimitiveType} from "@opendaw/lib-box"
 import {
-    ArpeggioDeviceBox, ChordDeviceBox, AudioFileBox, AudioUnitBox, AutotuneDeviceBox, CompressorDeviceBox, ConvolverDeviceBox, CrusherDeviceBox, DattorroReverbDeviceBox,
+    ArpeggioDeviceBox, ChordDeviceBox, KadenzDeviceBox, AudioFileBox, AudioUnitBox, AutotuneDeviceBox, CompressorDeviceBox, ConvolverDeviceBox, CrusherDeviceBox, DattorroReverbDeviceBox,
     DelayDeviceBox, FoldDeviceBox, GateDeviceBox, NeonDeviceBox, MaximizerDeviceBox, NanoDeviceBox, NeuralAmpDeviceBox,
     PitchDeviceBox, PlayfieldDeviceBox, PlayfieldSampleBox, RevampDeviceBox, ReverbDeviceBox, StereoToolDeviceBox,
     TidalDeviceBox, VaporisateurDeviceBox, VelocityDeviceBox, VocoderDeviceBox, WaveshaperDeviceBox,
@@ -19,7 +19,7 @@ import {
     LfoModulatorBox, MacroModulatorBox, RandomModulatorBox, StepsModulatorBox
 } from "@opendaw/studio-boxes"
 import {
-    ArpeggioDeviceBoxAdapter, ChordDeviceBoxAdapter, AutotuneDeviceBoxAdapter, AutomatableParameterFieldAdapter, BoxAdapters, BoxAdaptersContext, CompressorDeviceBoxAdapter,
+    ArpeggioDeviceBoxAdapter, ChordDeviceBoxAdapter, KadenzDeviceBoxAdapter, AutotuneDeviceBoxAdapter, AutomatableParameterFieldAdapter, BoxAdapters, BoxAdaptersContext, CompressorDeviceBoxAdapter,
     ConvolverDeviceBoxAdapter, CrusherDeviceBoxAdapter, DattorroReverbDeviceBoxAdapter, DelayDeviceBoxAdapter, FoldDeviceBoxAdapter,
     GateDeviceBoxAdapter, NeonDeviceBoxAdapter, MaximizerDeviceBoxAdapter, NanoDeviceBoxAdapter, NeuralAmpDeviceBoxAdapter,
     ParameterFieldAdapters, PitchDeviceBoxAdapter, PlayfieldSampleBoxAdapter, ProjectSkeleton,
@@ -123,6 +123,7 @@ const buildBoxes = () => {
     const autotune = AutotuneDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.audioEffects); box.index.setValue(14)})
     const arpeggio = ArpeggioDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.midiEffects); box.index.setValue(0)})
     const chord = ChordDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.midiEffects); box.index.setValue(5)})
+    const kadenz = KadenzDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.midiEffects); box.index.setValue(6)})
     const pitch = PitchDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.midiEffects); box.index.setValue(1)})
     const velocity = VelocityDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.midiEffects); box.index.setValue(2)})
     const vaporisateurUnit = createUnit(2)
@@ -159,7 +160,7 @@ const buildBoxes = () => {
     const randomModulator = RandomModulatorBox.create(boxGraph, UUID.generate(), box => {box.collection.refer(rootBox.modulators); box.index.setValue(3)})
     boxGraph.endTransaction()
     return {boxGraph, zeitgeist, werkstatt, spielwerk, apparat, cubed, soundfont, compressor, convolver, crusher, dattorro, delay, fold, gate, maximizer, neuralAmp, revamp, reverb,
-        stereoTool, tidal, vocoder, waveshaper, autotune, arpeggio, chord, pitch, velocity, vaporisateur, neon, nano, playfieldSample,
+        stereoTool, tidal, vocoder, waveshaper, autotune, arpeggio, chord, kadenz, pitch, velocity, vaporisateur, neon, nano, playfieldSample,
         lfoModulator, stepsModulator, macroModulator, randomModulator}
 }
 
@@ -235,6 +236,8 @@ const CASES: ReadonlyArray<DeviceCase> = [
         createAdapter: context => new ArpeggioDeviceBoxAdapter(context, boxes.arpeggio), tsOnly: []},
     {name: "chord", file: "device_chord.wasm",
         createAdapter: context => new ChordDeviceBoxAdapter(context, boxes.chord), tsOnly: []},
+    {name: "kadenz", file: "device_kadenz.wasm",
+        createAdapter: context => new KadenzDeviceBoxAdapter(context, boxes.kadenz), tsOnly: []},
     {name: "autotune", file: "device_autotune.wasm",
         createAdapter: context => new AutotuneDeviceBoxAdapter(context, boxes.autotune), tsOnly: []},
     {name: "compressor", file: "device_compressor.wasm",

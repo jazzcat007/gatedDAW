@@ -1,0 +1,10 @@
+@use "@/mixins"
+
+component
+  display: flex
+  flex-direction: column
+  gap: 0.5em
+  padding: 0.5em
+
+  > .knobs
+    @include mixins.ControlLayout(4)

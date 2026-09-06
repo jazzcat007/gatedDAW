@@ -83,6 +83,7 @@ export const DEVICES: ReadonlyArray<{ url: string, boxType: string }> = [
     {url: "/wasm/plugins/device_gate.wasm", boxType: "GateDeviceBox"},         // audio effect (sidechain)
     {url: "/wasm/plugins/device_arpeggio.wasm", boxType: "ArpeggioDeviceBox"}, // midi effect
     {url: "/wasm/plugins/device_chord.wasm", boxType: "ChordDeviceBox"}, // midi effect
+    {url: "/wasm/plugins/device_kadenz.wasm", boxType: "KadenzDeviceBox"}, // midi effect
     {url: "/wasm/plugins/device_euclid.wasm", boxType: "EuclidDeviceBox"}, // midi effect
     {url: "/wasm/plugins/device_zeitgeist.wasm", boxType: "ZeitgeistDeviceBox"}, // midi effect
     {url: "/wasm/plugins/device_pitch.wasm", boxType: "PitchDeviceBox"},     // midi effect

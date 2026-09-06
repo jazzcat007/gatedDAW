@@ -8,6 +8,7 @@ import {ArpeggioDeviceBox} from "./midi-effects/ArpeggioDeviceBox"
 import {EuclidDeviceBox} from "./midi-effects/EuclidDeviceBox"
 import {PitchDeviceBox} from "./midi-effects/PitchDeviceBox"
 import {ChordDeviceBox} from "./midi-effects/ChordDeviceBox"
+import {KadenzDeviceBox} from "./midi-effects/KadenzDeviceBox"
 import {NeonDeviceBox} from "./instruments/NeonDeviceBox"
 import {NanoDeviceBox} from "./instruments/NanoDeviceBox"
 import {PlayfieldDeviceBox, PlayfieldSampleBox} from "./instruments/PlayfieldDeviceBox"
@@ -77,6 +78,7 @@ export const DeviceDefinitions = [
     TapeDeviceBox,
     ArpeggioDeviceBox,
     ChordDeviceBox,
+    KadenzDeviceBox,
     EuclidDeviceBox,
     PitchDeviceBox,
     ZeitgeistDeviceBox,

@@ -244,6 +244,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "device-chord"
+version = "0.0.0"
+dependencies = [
+ "abi",
+ "device-chord-common",
+ "math",
+]
+
+[[package]]
+name = "device-chord-common"
+version = "0.0.0"
+
+[[package]]
 name = "device-compressor"
 version = "0.0.0"
 dependencies = [
@@ -326,6 +339,16 @@ version = "0.0.0"
 dependencies = [
  "abi",
  "libm",
+ "math",
+]
+
+[[package]]
+name = "device-kadenz"
+version = "0.0.0"
+dependencies = [
+ "abi",
+ "device-chord-common",
+ "device-sequencer-common",
  "math",
 ]
 

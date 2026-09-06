@@ -24,6 +24,10 @@
 use core::panic::PanicInfo;
 use abi::{EventRecord, ParamValue, EVENT_NOTE_OFF, EVENT_NOTE_ON};
 use math::value_mapping::{Linear, LinearInteger};
+use device_chord_common::{
+    apply_inversion, apply_spread, clamp_i32, degree_at_pitch, stack_diatonic, transpose_into_range,
+    voice_velocity, MAX_VOICES, SCALES
+};
 
 #[cfg(target_family = "wasm")]
 #[panic_handler]
@@ -31,24 +35,6 @@ fn panic(info: &PanicInfo) -> ! {
     abi::panic_to_host(info) // deposit the message in the engine's panic buffer, then trap (never a silent hang)
 }
 
-/// The selectable scales, as semitone offsets from the tonic. All are SEVEN-tone: the chord builder stacks
-/// thirds by stepping the degree index by two and wrapping `% 7`, which only spells thirds on a heptatonic
-/// scale. WASM CONTRACT: the order mirrors `ChordDeviceBoxAdapter.ScaleNames`, so the array index is the
-/// `scaleIndex` parameter value.
-pub const SCALES: [[i32; 7]; 9] = [
-    [0, 2, 4, 5, 7, 9, 11],  // Major (Ionian)
-    [0, 2, 3, 5, 7, 8, 10],  // Minor (Aeolian)
-    [0, 2, 3, 5, 7, 8, 11],  // Harmonic Minor
-    [0, 2, 3, 5, 7, 9, 11],  // Melodic Minor
-    [0, 2, 3, 5, 7, 9, 10],  // Dorian
-    [0, 1, 3, 5, 7, 8, 10],  // Phrygian
-    [0, 2, 4, 6, 7, 9, 11],  // Lydian
-    [0, 2, 4, 5, 7, 9, 10],  // Mixolydian
-    [0, 1, 3, 5, 6, 8, 10]   // Locrian
-];
-
-/// Voices in one chord (`numNotes` max): a stack of thirds up to the thirteenth.
-pub const MAX_VOICES: usize = 6;
 /// The widest strum, in pulses: 240 = a 1/16 at `PPQN.Quarter` 960, i.e. the whole voicing inside one step.
 const MAX_STRUM: i64 = 240;
 /// Simultaneously sounding input notes whose voices are tracked for their release.
@@ -127,103 +113,20 @@ fn blank_event() -> EventRecord {
     EventRecord {position: 0.0, offset: 0, kind: 0, id: 0, pitch: 0, velocity: 0.0, cent: 0.0, duration: 0.0}
 }
 
-fn clamp_i32(value: i32, min: i32, max: i32) -> i32 {
-    if value < min { min } else if value > max { max } else { value }
-}
-
-/// Sort a fixed voice slice ascending (insertion sort: at most six elements, no allocation).
-fn sort_voices(voices: &mut [i32]) {
-    let mut outer = 1;
-    while outer < voices.len() {
-        let value = voices[outer];
-        let mut inner = outer;
-        while inner > 0 && voices[inner - 1] > value {
-            voices[inner] = voices[inner - 1];
-            inner -= 1;
-        }
-        voices[inner] = value;
-        outer += 1;
-    }
-}
-
 /// Build the chord an incoming `pitch` selects, writing ascending MIDI pitches into `voices` and returning
-/// the count. The pitch is read as a scale degree: it is taken relative to the key, snapped DOWN to the
-/// scale tone at or below it (so a black key off the scale still chooses a degree rather than being dropped),
-/// and thirds are stacked from there — `Chord.compile`'s `scale[step % 7] + floor(step / 7) * 12`, with
-/// `rem_euclid` / `div_euclid` so a negative `degree` transposes correctly below the tonic.
-///
-/// The voicing is then shaped in a fixed order: `inversion` lifts the lowest voices an octave, `spread`
-/// applies successive DROP voicings from the top (drop-2, then drop-3, then drop-4), and `octave` transposes
-/// the result. Voices leaving MIDI range 0..=127 are DROPPED, never clamped (clamping would fold distinct
-/// pitches onto one), mirroring `device-pitch`.
+/// the count. The pitch is read as a scale degree, thirds are stacked from there, and the voicing is then
+/// shaped in a fixed order: `inversion`, `spread`, then the `octave` transpose. See `device-chord-common`,
+/// which owns each step and is shared with `device-kadenz`.
 pub fn build_chord(state: &ChordState, pitch: u32, voices: &mut [i32; MAX_VOICES]) -> usize {
     let scale = &SCALES[clamp_i32(state.scale_index, 0, (SCALES.len() - 1) as i32) as usize];
     let key = clamp_i32(state.key, 0, 11);
-    let relative = pitch as i32 - key;
-    let octave = relative.div_euclid(12);
-    let pitch_class = relative.rem_euclid(12);
-    let mut degree = 0i32;
-    let mut index = 0;
-    while index < 7 {
-        if scale[index] <= pitch_class {
-            degree = index as i32;
-        }
-        index += 1;
-    }
+    let (octave, degree) = degree_at_pitch(scale, key, pitch);
     let base_step = degree + clamp_i32(state.degree, -7, 7);
     let count = clamp_i32(state.notes, 1, MAX_VOICES as i32) as usize;
-    let mut index = 0;
-    while index < count {
-        let step = base_step + (index as i32) * 2;
-        let interval = scale[step.rem_euclid(7) as usize] + step.div_euclid(7) * 12;
-        voices[index] = key + octave * 12 + interval;
-        index += 1;
-    }
-    // Inversion lifts the lowest voices an octave, never the whole chord (that is what `octave` is for), so
-    // the top voice keeps its place and the chord keeps its identity.
-    let inversion = clamp_i32(state.inversion, 0, 3) as usize;
-    let liftable = count - 1;
-    let lifted = if inversion > liftable { liftable } else { inversion };
-    let mut index = 0;
-    while index < lifted {
-        voices[index] += 12;
-        index += 1;
-    }
-    sort_voices(&mut voices[..count]);
-    // Spread drops voicings from the top down: step 1 drops the SECOND voice from the top an octave (drop-2),
-    // step 2 also the third (drop-3), step 3 also the fourth. A step with no voice to drop is a no-op.
-    let spread = clamp_i32(state.spread, 0, 3) as usize;
-    let mut step = 1;
-    while step <= spread {
-        if count >= step + 1 {
-            voices[count - 1 - step] -= 12;
-        }
-        step += 1;
-    }
-    sort_voices(&mut voices[..count]);
-    let transpose = clamp_i32(state.octave, -2, 2) * 12;
-    let mut kept = 0;
-    let mut index = 0;
-    while index < count {
-        let value = voices[index] + transpose;
-        if (0..=127).contains(&value) {
-            voices[kept] = value;
-            kept += 1;
-        }
-        index += 1;
-    }
-    kept
-}
-
-/// The velocity for voice `index` of `count`, ascending. `velocity_tilt` is bipolar: negative fades the upper
-/// voices out (the chord sits under the melody), positive pushes them forward. The tilt reaches at most
-/// 75% at the top voice, so even a full negative tilt leaves the voicing audible rather than silent.
-fn voice_velocity(state: &ChordState, velocity: f32, index: usize, count: usize) -> f32 {
-    if count <= 1 {
-        return velocity.max(0.0).min(1.0);
-    }
-    let position = index as f32 / (count - 1) as f32;
-    (velocity * (1.0 + state.velocity_tilt * 0.75 * position)).max(0.0).min(1.0)
+    stack_diatonic(scale, key, octave, base_step, count, voices);
+    apply_inversion(voices, count, clamp_i32(state.inversion, 0, 3) as usize);
+    apply_spread(voices, count, clamp_i32(state.spread, 0, 3) as usize);
+    transpose_into_range(voices, count, clamp_i32(state.octave, -2, 2) * 12)
 }
 
 fn emit(events: &mut [EventRecord], count: &mut usize, record: EventRecord) {
@@ -332,7 +235,7 @@ pub fn process(state: &mut ChordState, from: f64, to: f64, flags: u32, input: &[
                         kind: EVENT_NOTE_ON,
                         id,
                         pitch: voices[voice] as u32,
-                        velocity: voice_velocity(state, record.velocity, voice, voiced),
+                        velocity: voice_velocity(state.velocity_tilt, record.velocity, voice, voiced),
                         cent: record.cent,
                         duration: record.duration
                     }, &mut events, &mut count);
@@ -599,13 +502,13 @@ mod tests {
     #[test]
     fn velocity_tilt_fades_or_lifts_the_upper_voices() {
         let mut state = state();
-        assert_eq!(voice_velocity(&state, 0.8, 2, 3), 0.8, "no tilt leaves every voice alone");
+        assert_eq!(voice_velocity(state.velocity_tilt, 0.8, 2, 3), 0.8, "no tilt leaves every voice alone");
         state.velocity_tilt = -1.0;
-        assert_eq!(voice_velocity(&state, 0.8, 0, 3), 0.8, "the bottom voice is never tilted");
-        assert!((voice_velocity(&state, 0.8, 2, 3) - 0.2).abs() < 1e-6, "the top voice keeps 25% at full negative tilt");
+        assert_eq!(voice_velocity(state.velocity_tilt, 0.8, 0, 3), 0.8, "the bottom voice is never tilted");
+        assert!((voice_velocity(state.velocity_tilt, 0.8, 2, 3) - 0.2).abs() < 1e-6, "the top voice keeps 25% at full negative tilt");
         state.velocity_tilt = 1.0;
-        assert!(voice_velocity(&state, 0.5, 2, 3) > 0.5, "a positive tilt pushes the upper voices forward");
-        assert_eq!(voice_velocity(&state, 1.0, 2, 3), 1.0, "never above full scale");
+        assert!(voice_velocity(state.velocity_tilt, 0.5, 2, 3) > 0.5, "a positive tilt pushes the upper voices forward");
+        assert_eq!(voice_velocity(state.velocity_tilt, 1.0, 2, 3), 1.0, "never above full scale");
     }
 
     fn note_on(id: u32, position: f64, pitch: u32) -> EventRecord {

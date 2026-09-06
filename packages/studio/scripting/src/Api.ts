@@ -284,6 +284,37 @@ export interface EuclidEffect extends MIDIEffect {
 }
 
 /**
+ * Plays and generates a chord progression on its own clock, without incoming notes
+ * @group MIDI Effects
+ */
+export interface KadenzEffect extends MIDIEffect {
+    /** Always "Kadenz" */
+    readonly key: "Kadenz"
+    /** Key / tonic (0 = C .. 11 = B, default 0) */
+    keyNote: int
+    /** Scale index (0-8): Major, Minor, Harmonic Minor, Melodic Minor, Dorian, Phrygian, Lydian, Mixolydian, Locrian (default 0) */
+    scaleIndex: int
+    /** Grid rate index (0-16): 1/1, 1/2, 1/3, 1/4, 3/16, 1/6, 1/8, 3/32, 1/12, 1/16, 3/64, 1/24, 1/32, 1/48, 1/64, 1/96, 1/128 (default 3 = 1/4) */
+    rate: int
+    /** Chord length relative to its own step (0.0 to 2.0, default 0.9) */
+    gate: float
+    /** Stacked voices per chord (1 to 6, default 3) */
+    numNotes: int
+    /** Inversion applied to every chord (0 to 3, default 0) */
+    inversion: int
+    /** Drop-voicing spread (0 to 3, default 0) */
+    spread: int
+    /** Octave shift of the finished chord (-2 to 2, default 0) */
+    octave: int
+    /** Pulses between successive strummed voices (0 to 240, default 0) */
+    strum: float
+    /** Base note velocity (0.0 to 1.0, default 0.8) */
+    velocity: unitValue
+    /** Velocity tilt across the voicing (-1.0 to 1.0, default 0.0) */
+    velocityTilt: bipolar
+}
+
+/**
  * Shifts the pitch of incoming notes
  * @group MIDI Effects
  */
@@ -350,6 +381,8 @@ export interface MIDIEffects {
     "Chord": ChordEffect
     /** {@link EuclidEffect} */
     "Euclid": EuclidEffect
+    /** {@link KadenzEffect} */
+    "Kadenz": KadenzEffect
     /** {@link PitchEffect} */
     "Pitch": PitchEffect
     /** {@link VelocityEffect} */

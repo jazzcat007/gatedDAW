@@ -1,5 +1,5 @@
 [package]
-name = "device-chord"
+name = "device-kadenz"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -10,4 +10,5 @@ crate-type = ["cdylib", "lib"]
 [dependencies]
 abi = {path = "../../abi"}
 math = {path = "../../math"}
+device-sequencer-common = {path = "../device-sequencer-common"}
 device-chord-common = {path = "../device-chord-common"}

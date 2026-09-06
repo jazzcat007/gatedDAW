@@ -2,6 +2,7 @@ import {
     ArpeggioDeviceBox,
     ChordDeviceBox,
     EuclidDeviceBox,
+    KadenzDeviceBox,
     GrooveShuffleBox,
     PitchDeviceBox,
     SpielwerkDeviceBox,
@@ -15,6 +16,7 @@ import {
     ArpeggioEffect,
     ChordEffect,
     EuclidEffect,
+    KadenzEffect,
     MIDIEffects,
     PitchEffect,
     ScriptParameter,
@@ -36,7 +38,7 @@ export abstract class MIDIEffectFacade<B extends EffectDeviceBox = EffectDeviceB
 }
 
 export type AnyMIDIEffectImpl =
-    | ArpeggioEffectImpl | ChordEffectImpl | EuclidEffectImpl | PitchEffectImpl | VelocityEffectImpl | ZeitgeistEffectImpl | SpielwerkEffectImpl
+    | ArpeggioEffectImpl | ChordEffectImpl | EuclidEffectImpl | KadenzEffectImpl | PitchEffectImpl | VelocityEffectImpl | ZeitgeistEffectImpl | SpielwerkEffectImpl
 
 export class ArpeggioEffectImpl extends MIDIEffectFacade<ArpeggioDeviceBox> implements ArpeggioEffect {
     readonly key = "Arpeggio" as const
@@ -92,6 +94,30 @@ export class EuclidEffectImpl extends MIDIEffectFacade<EuclidDeviceBox> implemen
         this.bind({
             steps: box.steps, pulses: box.pulses, rotation: box.rotation, rate: box.rateIndex,
             gate: box.gate, pitch: box.pitch, velocity: box.velocity
+        })
+    }
+}
+
+export class KadenzEffectImpl extends MIDIEffectFacade<KadenzDeviceBox> implements KadenzEffect {
+    readonly key = "Kadenz" as const
+    declare keyNote: int
+    declare scaleIndex: int
+    declare rate: int
+    declare gate: float
+    declare numNotes: int
+    declare inversion: int
+    declare spread: int
+    declare octave: int
+    declare strum: float
+    declare velocity: unitValue
+    declare velocityTilt: bipolar
+
+    constructor(context: Context, box: KadenzDeviceBox) {
+        super(context, box)
+        this.bind({
+            keyNote: box.key, scaleIndex: box.scaleIndex, rate: box.rateIndex, gate: box.gate,
+            numNotes: box.numNotes, inversion: box.inversion, spread: box.spread, octave: box.octave,
+            strum: box.strum, velocity: box.velocity, velocityTilt: box.velocityTilt
         })
     }
 }
@@ -159,6 +185,7 @@ export namespace MIDIEffectImpls {
         if (box instanceof ArpeggioDeviceBox) {return new ArpeggioEffectImpl(context, box)}
         if (box instanceof ChordDeviceBox) {return new ChordEffectImpl(context, box)}
         if (box instanceof EuclidDeviceBox) {return new EuclidEffectImpl(context, box)}
+        if (box instanceof KadenzDeviceBox) {return new KadenzEffectImpl(context, box)}
         if (box instanceof PitchDeviceBox) {return new PitchEffectImpl(context, box)}
         if (box instanceof VelocityDeviceBox) {return new VelocityEffectImpl(context, box)}
         if (box instanceof ZeitgeistDeviceBox) {return new ZeitgeistEffectImpl(context, box)}
@@ -167,6 +194,7 @@ export namespace MIDIEffectImpls {
     }) as AnyMIDIEffectImpl
 
     export const isBox = (box: Box): box is MIDIEffectBox =>
-        box instanceof ArpeggioDeviceBox || box instanceof ChordDeviceBox || box instanceof EuclidDeviceBox || box instanceof PitchDeviceBox || box instanceof VelocityDeviceBox
+        box instanceof ArpeggioDeviceBox || box instanceof ChordDeviceBox || box instanceof EuclidDeviceBox
+        || box instanceof KadenzDeviceBox || box instanceof PitchDeviceBox || box instanceof VelocityDeviceBox
         || box instanceof ZeitgeistDeviceBox || box instanceof SpielwerkDeviceBox
 }

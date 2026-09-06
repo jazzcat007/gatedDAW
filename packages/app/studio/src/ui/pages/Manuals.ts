@@ -255,6 +255,12 @@ export const Manuals: ReadonlyArray<Manual> = [
                     },
                     {
                         type: "page",
+                        label: "Kadenz",
+                        path: "/manuals/devices/midi/kadenz",
+                        icon: EffectFactories.MidiNamed.Kadenz.defaultIcon
+                    },
+                    {
+                        type: "page",
                         label: "Pitch",
                         path: "/manuals/devices/midi/pitch",
                         icon: EffectFactories.Pitch.defaultIcon

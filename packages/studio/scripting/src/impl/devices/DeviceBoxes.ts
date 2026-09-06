@@ -5,6 +5,7 @@ import {
     ArpeggioDeviceBox,
     ChordDeviceBox,
     EuclidDeviceBox,
+    KadenzDeviceBox,
     AudioEffectCompositeBox,
     AudioEffectCompositeCellBox,
     AutotuneDeviceBox,
@@ -36,7 +37,7 @@ import {InstrumentFactories} from "@opendaw/studio-adapters"
 import {AudioEffects, Instruments, MIDIEffects} from "../../Api"
 
 export type MIDIEffectBox =
-    | ArpeggioDeviceBox | ChordDeviceBox | EuclidDeviceBox | PitchDeviceBox | VelocityDeviceBox | ZeitgeistDeviceBox | SpielwerkDeviceBox
+    | ArpeggioDeviceBox | ChordDeviceBox | EuclidDeviceBox | KadenzDeviceBox | PitchDeviceBox | VelocityDeviceBox | ZeitgeistDeviceBox | SpielwerkDeviceBox
 
 export type AudioEffectBox =
     | AutotuneDeviceBox | CompressorDeviceBox | ConvolverDeviceBox | CrusherDeviceBox | DattorroReverbDeviceBox
@@ -49,7 +50,7 @@ export namespace DeviceBoxes {
     export const FREQUENCY_SPLIT_ENTRY_LABELS: ReadonlyArray<string> = ["Low", "Low Mid", "High Mid", "High"]
 
     export const MIDIEffectLabels: Record<keyof MIDIEffects, string> = {
-        Arpeggio: "Arpeggio", Chord: "Chord", Euclid: "Euclid", Pitch: "Pitch", Velocity: "Velocity",
+        Arpeggio: "Arpeggio", Chord: "Chord", Euclid: "Euclid", Kadenz: "Kadenz", Pitch: "Pitch", Velocity: "Velocity",
         Zeitgeist: "Zeitgeist", Spielwerk: "Spielwerk"
     }
 
@@ -66,6 +67,7 @@ export namespace DeviceBoxes {
             case "ArpeggioDeviceBox": return "Arpeggio"
             case "ChordDeviceBox": return "Chord"
             case "EuclidDeviceBox": return "Euclid"
+            case "KadenzDeviceBox": return "Kadenz"
             case "PitchDeviceBox": return "Pitch"
             case "VelocityDeviceBox": return "Velocity"
             case "ZeitgeistDeviceBox": return "Zeitgeist"
@@ -116,7 +118,7 @@ export namespace DeviceBoxes {
     }
 
     export const isMIDIEffectBox = (boxName: string): boolean =>
-        ["ArpeggioDeviceBox", "ChordDeviceBox", "EuclidDeviceBox", "PitchDeviceBox", "VelocityDeviceBox", "ZeitgeistDeviceBox", "SpielwerkDeviceBox"]
+        ["ArpeggioDeviceBox", "ChordDeviceBox", "EuclidDeviceBox", "KadenzDeviceBox", "PitchDeviceBox", "VelocityDeviceBox", "ZeitgeistDeviceBox", "SpielwerkDeviceBox"]
             .includes(boxName)
 
     export const isAudioEffectBox = (boxName: string): boolean =>
@@ -159,6 +161,12 @@ export namespace DeviceBoxes {
                 })
             case "Euclid":
                 return EuclidDeviceBox.create(boxGraph, UUID.generate(), box => {
+                    box.label.setValue(label)
+                    box.index.setValue(index)
+                    box.host.refer(host)
+                })
+            case "Kadenz":
+                return KadenzDeviceBox.create(boxGraph, UUID.generate(), box => {
                     box.label.setValue(label)
                     box.index.setValue(index)
                     box.host.refer(host)
