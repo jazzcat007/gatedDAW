@@ -222,7 +222,8 @@ pub fn process(state: &mut KadenzState, from: f64, to: f64, flags: u32, out: &mu
     let mut events = [blank_event(); EMIT_MAX];
     let mut count = 0;
     let discontinuous = flags & abi::BlockFlags::DISCONTINUOUS != 0;
-    let transporting = flags & abi::BlockFlags::TRANSPORTING != 0;
+    let playing = (flags & (abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING))
+        == (abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING);
     if discontinuous {
         // A transport jump: release everything sounding at `from` and abandon the strum queue, whose
         // deferred note-ons belong to a position the transport has left.
@@ -238,7 +239,7 @@ pub fn process(state: &mut KadenzState, from: f64, to: f64, flags: u32, out: &mu
         flush_pending(state, to, &mut events, &mut count);
         release_completed(&mut state.retained, &mut state.retained_count, to, &mut events, &mut count);
     }
-    if transporting && state.rate > 0.0 {
+    if playing && state.rate > 0.0 {
         if state.table_dirty {
             update_table(state);
         }
@@ -548,9 +549,9 @@ mod tests {
         progression(&mut state, &[pack(0, 0, 1, 0, false), pack(4, 0, 1, 0, false)]);
         let rate = state.rate;
         let mut out = [blank_event(); 64];
-        let written = process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON), vec![60, 64, 67], "the I chord at the first grid unit");
-        let written = process(&mut state, rate, rate * 2.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, rate, rate * 2.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON), vec![67, 71, 74], "the V chord one unit later");
     }
 
@@ -560,11 +561,11 @@ mod tests {
         progression(&mut state, &[pack(0, 0, 1, 0, false), pack(4, 0, 1, 0, true)]);
         let rate = state.rate;
         let mut out = [blank_event(); 64];
-        let written = process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON).len(), 3);
-        let written = process(&mut state, rate, rate * 2.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, rate, rate * 2.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON).len(), 0, "the rest emits nothing");
-        let written = process(&mut state, rate * 2.0, rate * 3.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, rate * 2.0, rate * 3.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON), vec![60, 64, 67], "and the cycle resumes after it");
     }
 
@@ -575,7 +576,7 @@ mod tests {
         progression(&mut state, &[pack(0, 0, 2, 0, false)]);
         let rate = state.rate;
         let mut out = [blank_event(); 64];
-        let written = process(&mut state, 0.0, rate * 2.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, 0.0, rate * 2.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         let releases: Vec<f64> = out[..written].iter()
             .filter(|event| event.kind == EVENT_NOTE_OFF).map(|event| event.position).collect();
         assert_eq!(releases, vec![rate, rate, rate], "a half gate over a two-unit step releases at one unit");
@@ -591,14 +592,23 @@ mod tests {
     }
 
     #[test]
+    fn nothing_is_emitted_while_transport_is_moving_but_not_playing() {
+        let mut state = state();
+        let rate = state.rate;
+        let mut out = [blank_event(); 64];
+        let written = process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING, &mut out);
+        assert_eq!(written, 0, "Kadenz should not generate chords unless playback is active");
+    }
+
+    #[test]
     fn a_transport_jump_releases_every_sounding_voice() {
         let mut state = state();
         progression(&mut state, &[pack(0, 0, 8, 0, false)]);
         let rate = state.rate;
         let mut out = [blank_event(); 64];
-        process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING, &mut out);
+        process(&mut state, 0.0, rate, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(state.retained_count, 3, "the chord is still sounding");
-        let flags = abi::BlockFlags::TRANSPORTING | abi::BlockFlags::DISCONTINUOUS;
+        let flags = abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING | abi::BlockFlags::DISCONTINUOUS;
         let written = process(&mut state, 500.0, 500.0 + rate, flags, &mut out);
         assert!(out[..written].iter().any(|event| event.kind == EVENT_NOTE_OFF && event.position == 500.0),
                 "everything held is released at the jump");
@@ -611,10 +621,10 @@ mod tests {
         state.strum = 300.0;
         progression(&mut state, &[pack(0, 0, 4, 0, false)]);
         let mut out = [blank_event(); 64];
-        let written = process(&mut state, 0.0, 100.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, 0.0, 100.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON), vec![60], "only the bottom voice lands in this block");
         assert_eq!(state.pending_count, 2, "the upper voices wait for their pulse");
-        let written = process(&mut state, 100.0, 700.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, 100.0, 700.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         assert_eq!(pitches(&out[..written], EVENT_NOTE_ON), vec![64, 67], "and arrive when the transport reaches them");
         assert_eq!(state.pending_count, 0);
     }
@@ -625,7 +635,7 @@ mod tests {
         progression(&mut state, &[pack(0, 0, 1, 0, false), pack(4, 0, 1, 0, false)]);
         let rate = state.rate;
         let mut out = [blank_event(); 64];
-        let written = process(&mut state, 0.0, rate * 4.0, abi::BlockFlags::TRANSPORTING, &mut out);
+        let written = process(&mut state, 0.0, rate * 4.0, abi::BlockFlags::TRANSPORTING | abi::BlockFlags::PLAYING, &mut out);
         let events = &out[..written];
         assert!(events.windows(2).all(|pair| pair[0].position <= pair[1].position), "sorted by position");
         for pair in events.windows(2) {
