@@ -10,7 +10,12 @@ if (!packName) {
 }
 
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-const pack = manifest.packs.find(p => p.name === packName);
+const packs = [
+  ...(manifest.soundfonts ?? []),
+  ...(manifest.samples ?? []),
+  ...(manifest.sfz ?? [])
+];
+const pack = packs.find(p => p.name === packName || p.id === packName);
 if (!pack) {
   console.error(`Pack ${packName} not found`);
   process.exit(1);

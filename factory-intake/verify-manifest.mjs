@@ -12,9 +12,25 @@ function countEntries(indexPath, key) {
   const data = JSON.parse(readFileSync(indexPath, 'utf8'));
   if (Array.isArray(data)) return data.length;
   if (data.folders) {
-    return data.folders.reduce((acc, f) => acc + (f[key]?.length || 0), 0);
+    return collectEntries({folders: data.folders}, key).length;
   }
   return 0;
+}
+
+function collectEntries(folder, key, entries = []) {
+  if (Array.isArray(folder[key])) entries.push(...folder[key]);
+  if (Array.isArray(folder.folders)) {
+    for (const child of folder.folders) collectEntries(child, key, entries);
+  }
+  return entries;
+}
+
+function manifestPacks(manifest) {
+  return [
+    ...(manifest.soundfonts ?? []).map(pack => ({type: 'soundfont', ...pack})),
+    ...(manifest.samples ?? []).map(pack => ({type: 'sample', ...pack})),
+    ...(manifest.sfz ?? []).map(pack => ({type: 'sfz', ...pack}))
+  ];
 }
 
 const samplesCount = countEntries(join(factoryRoot, 'samples/index.json'), 'samples');
@@ -32,8 +48,8 @@ console.log('soundfonts:', soundfontsCount);
 console.log('presets:', presetsCount);
 
 console.log('\nManifest packs:');
-for (const pack of manifest.packs) {
-  console.log(`- ${pack.type} ${pack.name} imported=${pack.imported}`);
+for (const pack of manifestPacks(manifest)) {
+  console.log(`- ${pack.type} ${pack.name} imported=${pack.imported === true}`);
 }
 
 console.log('\nDone');
