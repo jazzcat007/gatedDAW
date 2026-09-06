@@ -10,6 +10,7 @@ export FACTORY_ROOT="$MEDIA_ROOT/factory"
 export INTAKE_ROOT="$MEDIA_ROOT/factory-intake"
 export REPO_ROOT=/root/opendaw
 export TRUSTED_MIRROR=/mnt/media
+export DOWNLOAD_ROOT="$INTAKE_ROOT/_downloads"
 ```
 
 Expected Docker environment:
@@ -50,6 +51,8 @@ find "$TRUSTED_MIRROR/Samples" -type f \
 ```
 
 If `/mnt/media` is not mounted on this host, mount or bind the trusted mirror first, or run with `TRUSTED_MIRROR=/path/to/mirror`.
+
+If no trusted mirror is mounted, `ingest.sh` defaults `DOWNLOAD_FIRST=auto` and will try direct downloads where the manifest has a usable URL. SoundFont downloads are controlled by `DOWNLOAD_SOUNDFONTS=1`.
 
 Expected mirror folders:
 
@@ -105,8 +108,28 @@ INTAKE_ROOT="$INTAKE_ROOT" \
 FACTORY_ROOT="$FACTORY_ROOT" \
 REPO_ROOT="$REPO_ROOT" \
 TRUSTED_MIRROR="$TRUSTED_MIRROR" \
+DOWNLOAD_ROOT="$DOWNLOAD_ROOT" \
 bash ingest.sh
 ```
+
+To force download-first mode even when a mirror is mounted:
+
+```bash
+DOWNLOAD_FIRST=1 bash "$INTAKE_ROOT/ingest.sh"
+```
+
+To disable direct SoundFont downloads:
+
+```bash
+DOWNLOAD_SOUNDFONTS=0 bash "$INTAKE_ROOT/ingest.sh"
+```
+
+SoundFont direct-download support:
+
+- GitHub repository URLs are shallow-cloned into `$DOWNLOAD_ROOT/<pack-id>` and `.sf2` files are copied into the pack intake folder.
+- Direct `.sf2` URLs are downloaded and copied into the pack intake folder.
+- `.zip`, `.tar.gz`, `.tgz`, `.tar.xz`, `.txz`, `.tar.bz2`, and `.tbz2` archives are downloaded and extracted into the pack intake folder.
+- Missing or `TODO` URLs are logged and skipped.
 
 For a dry staging pass without importing:
 
