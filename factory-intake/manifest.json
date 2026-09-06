@@ -1,44 +1,238 @@
 {
-  "version": "1.0",
-  "updatedAt": "2026-09-06T00:00:00Z",
-  "intakeRoot": "/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory-intake",
+  "version": 1,
+  "updatedAt": "2026-09-06T00:00:00.000Z",
   "factoryRoot": "/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory",
-  "packs": [
+  "intakeRoot": "/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory-intake",
+  "offlineOnly": true,
+  "policy": {
+    "commitAudioBlobs": false,
+    "verifyLicensesBeforeMirror": true,
+    "verifyChecksumsBeforeImport": true,
+    "importMode": "idempotent-content-uuid"
+  },
+  "acceptance": {
+    "samplesMinimum": 1500,
+    "soundfontsMinimum": 10,
+    "presetsMinimum": 19,
+    "requiredAssetUuids": [
+      "9575028c-7a1f-489f-9770-fccc8cff2734",
+      "f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b",
+      "f51ed198-f47a-4253-b765-888e0c8d16e6",
+      "0ab1a85f-1d07-4a24-8418-ab5a6b6e3490"
+    ]
+  },
+  "soundfonts": [
     {
-      "type": "soundfont",
-      "name": "GeneralUser-GS",
-      "path": "soundfonts/GeneralUser-GS",
+      "id": "generaluser-gs",
+      "name": "GeneralUser GS",
+      "sourcePath": "SoundFonts/GeneralUser-GS",
+      "intakePath": "soundfonts/GeneralUser-GS",
+      "catalogFolder": "GeneralUser",
       "license": "GPL-3.0",
-      "sourceUrl": "https://github.com/GalleryOfBots/GeneralUser-GS",
-      "checksum": "",
-      "imported": false
+      "url": "https://github.com/GalleryOfBots/GeneralUser-GS",
+      "expectedUuid": "9575028c-7a1f-489f-9770-fccc8cff2734",
+      "checksums": []
     },
     {
-      "type": "soundfont",
-      "name": "FreePats-GM-Orchestral",
-      "path": "soundfonts/FreePats-GM-Orchestral",
+      "id": "freepats-gm-orchestral",
+      "name": "FreePats GM Orchestral",
+      "sourcePath": "SoundFonts/FreePats-GM-Orchestral",
+      "intakePath": "soundfonts/FreePats-GM-Orchestral",
+      "catalogFolder": "FreePats",
       "license": "GPL-3.0",
-      "sourceUrl": "https://github.com/free-pats/FreePats",
-      "checksum": "",
-      "imported": false
+      "url": "https://github.com/free-pats/FreePats",
+      "expectedUuid": "f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b",
+      "checksums": []
     },
     {
-      "type": "samples",
+      "id": "fluidr3-gm",
+      "name": "FluidR3 GM",
+      "sourcePath": "SoundFonts/FluidR3-GM",
+      "intakePath": "soundfonts/FluidR3-GM",
+      "catalogFolder": "FluidR3",
+      "license": "LGPL-3.0",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuid": null,
+      "checksums": []
+    },
+    {
+      "id": "freepats-gm-percussion",
+      "name": "FreePats GM Percussion",
+      "sourcePath": "SoundFonts/FreePats-GM-Percussion",
+      "intakePath": "soundfonts/FreePats-GM-Percussion",
+      "catalogFolder": "FreePats",
+      "license": "GPL-3.0",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuid": null,
+      "checksums": []
+    },
+    {
+      "id": "famicom-multichip-chiptune",
+      "name": "Famicom Multichip Chiptune",
+      "sourcePath": "SoundFonts/Famicom-Multichip-Chiptune",
+      "intakePath": "soundfonts/Famicom-Multichip-Chiptune",
+      "catalogFolder": "Chiptune",
+      "license": "CC0",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuid": null,
+      "checksums": []
+    },
+    {
+      "id": "vintage-dreams-waves",
+      "name": "VintageDreamsWaves",
+      "sourcePath": "SoundFonts/VintageDreamsWaves",
+      "intakePath": "soundfonts/VintageDreamsWaves",
+      "catalogFolder": "Synth",
+      "license": "CC-BY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuid": null,
+      "checksums": []
+    }
+  ],
+  "samples": [
+    {
+      "id": "adventurekid-impulse-responses",
+      "name": "AdventureKid Impulse Responses",
+      "sourcePath": "Samples/Impulse-Responses",
+      "intakePath": "samples/Impulse-Responses",
+      "catalogFolder": "Impulse Responses/AdventureKid",
+      "license": "CC0/permissive - verify before mirror",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [
+        "f51ed198-f47a-4253-b765-888e0c8d16e6"
+      ],
+      "checksums": []
+    },
+    {
+      "id": "uiowa-steinway",
+      "name": "UIowa Steinway",
+      "sourcePath": "Samples/Keys",
+      "intakePath": "samples/Keys",
+      "catalogFolder": "Keys/UIowa",
+      "license": "CC-BY/permissive - verify before mirror",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [
+        "0ab1a85f-1d07-4a24-8418-ab5a6b6e3490"
+      ],
+      "checksums": []
+    },
+    {
+      "id": "drums",
       "name": "Drums",
-      "path": "samples/Drums",
-      "license": "CC0",
-      "sourceUrl": "",
-      "checksum": "",
-      "imported": false
+      "sourcePath": "Samples/Drums",
+      "intakePath": "samples/Drums",
+      "catalogFolder": "Drums",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
     },
     {
-      "type": "samples",
-      "name": "Impulse-Responses",
-      "path": "samples/Impulse-Responses",
-      "license": "CC0",
-      "sourceUrl": "",
-      "checksum": "",
-      "imported": false
+      "id": "one-shots",
+      "name": "One-Shots",
+      "sourcePath": "Samples/One-Shots",
+      "intakePath": "samples/One-Shots",
+      "catalogFolder": "One-Shots",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    },
+    {
+      "id": "loops",
+      "name": "Loops",
+      "sourcePath": "Samples/Loops",
+      "intakePath": "samples/Loops",
+      "catalogFolder": "Loops",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    },
+    {
+      "id": "bass",
+      "name": "Bass",
+      "sourcePath": "Samples/Bass",
+      "intakePath": "samples/Bass",
+      "catalogFolder": "Bass",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    },
+    {
+      "id": "synth",
+      "name": "Synth",
+      "sourcePath": "Samples/Synth",
+      "intakePath": "samples/Synth",
+      "catalogFolder": "Synth",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    },
+    {
+      "id": "guitar",
+      "name": "Guitar",
+      "sourcePath": "Samples/Guitar",
+      "intakePath": "samples/Guitar",
+      "catalogFolder": "Guitar",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    },
+    {
+      "id": "foley",
+      "name": "Foley",
+      "sourcePath": "Samples/Foley",
+      "intakePath": "samples/Foley",
+      "catalogFolder": "Foley",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    },
+    {
+      "id": "vocals",
+      "name": "Vocals",
+      "sourcePath": "Samples/Vocals",
+      "intakePath": "samples/Vocals",
+      "catalogFolder": "Vocals",
+      "license": "TODO_VERIFY",
+      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "expectedUuids": [],
+      "checksums": []
+    }
+  ],
+  "sfz": [
+    {
+      "id": "vcsl",
+      "name": "VCSL SFZ",
+      "sourcePath": "sfz/VCSL",
+      "intakePath": "sfz/VCSL",
+      "catalogFolder": null,
+      "license": "CC0-1.0",
+      "url": "https://github.com/sgossner/VCSL",
+      "branch": "sfz",
+      "expectedSfzinstruments": 183,
+      "expectedWavs": 4232,
+      "imported": false,
+      "notes": "SFZ loader required. Do not flatten samples. Keep definitions intact."
+    },
+    {
+      "id": "vsco-2-ce",
+      "name": "VSCO 2 CE SFZ",
+      "sourcePath": "sfz/VSCO-2-CE",
+      "intakePath": "sfz/VSCO-2-CE",
+      "catalogFolder": null,
+      "license": "Confirm upstream distribution terms before publishing",
+      "url": "https://github.com/sgossner/VSCO-2-CE",
+      "branch": "SFZ",
+      "expectedSfzinstruments": 75,
+      "expectedWavs": 3168,
+      "imported": false,
+      "notes": "License needs confirmation before publishing. SFZ loader required."
     }
   ]
 }

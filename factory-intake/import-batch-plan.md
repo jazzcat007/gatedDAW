@@ -1,131 +1,271 @@
-# First Import Batch Plan — 2026-09-06
+# Factory Intake Batch Plan
 
-## Objective
-Grow the self-hosted factory from verified baseline to a usable starter studio:
-* Samples ≥ 1,500 entries
-* SoundFonts ≥ 10 entries
-* Presets ≥ 19 entries
-* All starter preset asset UUIDs present
+Generated for the openDAW self-hosted factory on 2026-09-06.
 
-## Baseline
-Verified 2026-09-06 OMV:
-* Mount: /dev/sdb1 XFS, 17T total, 16T free
-* Factory volume: /data/factory
-* OPENDAW_FACTORY_OFFLINE_ONLY=true
-* Samples: 902 entries, 0 missing
-* SoundFonts: 7 entries, 0 missing
-* Presets: 49 entries
-* Demos: 19 tracks, 0 missing
+## Context
 
-Staged intake as of 2026-09-02:
-* Samples: 590 files across Bass/Drums/Foley/Guitar/Impulse Responses/Keys/Loops/One-Shots/Synth/Vocals
-* SoundFonts: 6 catalogs, 6 .sf2 files
-* Presets: 9 .odp files
+- Repo: `jazzcat007/openDAW`
+- Branch: `screwpulp/self-hosted`
+- Dev-box intake root: `factory-intake`
+- Dev-box factory mirror: `/data/factory`
+- OMV factory root: `/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory`
+- Production mode: keep `OPENDAW_FACTORY_OFFLINE_ONLY=true`
 
-## Phase 1 — SoundFonts
-Run on dev box with Node + ffmpeg, then rsync to OMV.
+The 2026-09-02 intake note lists 590 staged samples across 10 categories, 6 SoundFonts, and 9 presets. This checkout currently tracks the preset files only. Before running the imports, make sure the external `factory-intake/samples` and `factory-intake/soundfonts` directories have been restored or synced onto the dev box.
+
+Current OMV catalog baseline from 2026-09-06 verification:
+
+- Samples: 902
+- SoundFonts: 7
+- Presets: 49
+- Demos: 19
+
+## Phase 1 - Preflight
+
+Run from the repo root on a dev box that has Node and ffmpeg installed:
 
 ```bash
-# GeneralUser GS
-node scripts/import-soundfonts.mjs factory-intake/soundfonts/GeneralUser-GS \
-  --folder "GeneralUser" --license "GPL-3.0" --url "https://github.com/GalleryOfBots/GeneralUser-GS"
+export FACTORY_ROOT=/data/factory
+export OMV_FACTORY_ROOT=/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory
 
-# FreePats GM Orchestral
-node scripts/import-soundfonts.mjs factory-intake/soundfonts/FreePats-GM-Orchestral \
-  --folder "FreePats" --license "GPL-3.0" --url "https://github.com/free-pats/FreePats"
+node -v
+ffmpeg -version
+ffprobe -version
 
-# FluidR3-GM
-node scripts/import-soundfonts.mjs factory-intake/soundfonts/FluidR3-GM \
-  --folder "FluidR3" --license "LGPL-3.0" --url "https://..."
-
-# FreePats GM Percussion
-node scripts/import-soundfonts.mjs factory-intake/soundfonts/FreePats-GM-Percussion \
-  --folder "FreePats" --license "GPL-3.0" --url "https://..."
-
-# Famicom Multichip Chiptune
-node scripts/import-soundfonts.mjs factory-intake/soundfonts/Famicom-Multichip-Chiptune \
-  --folder "Chiptune" --license "CC0" --url "https://..."
-
-# Vintage Dreams Waves
-node scripts/import-soundfonts.mjs factory-intake/soundfonts/VintageDreamsWaves \
-  --folder "Synth" --license "CC-BY" --url "https://..."
+test -d factory-intake/samples
+test -d factory-intake/soundfonts
+test -d factory-intake/presets
+test -d "$FACTORY_ROOT"
+test -f "$FACTORY_ROOT/samples/index.json"
+test -f "$FACTORY_ROOT/soundfonts/index.json"
+test -f "$FACTORY_ROOT/presets/index.json"
 ```
 
-Verification UUIDs:
-* 9575028c-7a1f-489f-9770-fccc8cff2734 — GeneralUser GS v2.0.3.sf2
-* f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b — FreePats GM Orchestral
+If `factory-intake/samples` or `factory-intake/soundfonts` is missing, sync the staged intake source onto the dev box before continuing. Do not import directly against production OMV unless that host intentionally has Node and ffmpeg available for this task.
 
-## Phase 2 — Samples
+## Phase 2 - SoundFonts
+
+```bash
+node scripts/import-soundfonts.mjs factory-intake/soundfonts/GeneralUser-GS \
+  --root "$FACTORY_ROOT" \
+  --folder "GeneralUser" \
+  --license "GPL-3.0" \
+  --url "https://github.com/GalleryOfBots/GeneralUser-GS"
+
+node scripts/import-soundfonts.mjs factory-intake/soundfonts/FreePats-GM-Orchestral \
+  --root "$FACTORY_ROOT" \
+  --folder "FreePats" \
+  --license "GPL-3.0" \
+  --url "https://github.com/free-pats/FreePats"
+
+node scripts/import-soundfonts.mjs factory-intake/soundfonts/FluidR3-GM \
+  --root "$FACTORY_ROOT" \
+  --folder "FluidR3" \
+  --license "LGPL-3.0" \
+  --url "TODO_REPLACE_WITH_SOURCE_URL"
+
+node scripts/import-soundfonts.mjs factory-intake/soundfonts/FreePats-GM-Percussion \
+  --root "$FACTORY_ROOT" \
+  --folder "FreePats" \
+  --license "GPL-3.0" \
+  --url "TODO_REPLACE_WITH_SOURCE_URL"
+
+node scripts/import-soundfonts.mjs factory-intake/soundfonts/Famicom-Multichip-Chiptune \
+  --root "$FACTORY_ROOT" \
+  --folder "Chiptune" \
+  --license "CC0" \
+  --url "TODO_REPLACE_WITH_SOURCE_URL"
+
+node scripts/import-soundfonts.mjs factory-intake/soundfonts/VintageDreamsWaves \
+  --root "$FACTORY_ROOT" \
+  --folder "Synth" \
+  --license "CC-BY" \
+  --url "TODO_REPLACE_WITH_SOURCE_URL"
+```
+
+Expected UUID checks from the brief:
+
+- `9575028c-7a1f-489f-9770-fccc8cff2734` - GeneralUser GS
+- `f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b` - FreePats GM Orchestral
+
+## Phase 3 - Samples
+
 ```bash
 node scripts/import-samples.mjs factory-intake/samples/Impulse-Responses \
-  --root /data/factory --folder "Impulse Responses/AdventureKid"
+  --root "$FACTORY_ROOT" \
+  --folder "Impulse Responses/AdventureKid"
 
 node scripts/import-samples.mjs factory-intake/samples/Keys \
-  --root /data/factory --folder "Keys/UIowa"
+  --root "$FACTORY_ROOT" \
+  --folder "Keys/UIowa"
 
 node scripts/import-samples.mjs factory-intake/samples/Drums \
-  --root /data/factory --folder "Drums"
+  --root "$FACTORY_ROOT" \
+  --folder "Drums"
 
 node scripts/import-samples.mjs factory-intake/samples/One-Shots \
-  --root /data/factory --folder "One-Shots"
+  --root "$FACTORY_ROOT" \
+  --folder "One-Shots"
 
 node scripts/import-samples.mjs factory-intake/samples/Loops \
-  --root /data/factory --folder "Loops"
+  --root "$FACTORY_ROOT" \
+  --folder "Loops"
 
 node scripts/import-samples.mjs factory-intake/samples/Bass \
-  --root /data/factory --folder "Bass"
+  --root "$FACTORY_ROOT" \
+  --folder "Bass"
 
 node scripts/import-samples.mjs factory-intake/samples/Synth \
-  --root /data/factory --folder "Synth"
+  --root "$FACTORY_ROOT" \
+  --folder "Synth"
 
 node scripts/import-samples.mjs factory-intake/samples/Guitar \
-  --root /data/factory --folder "Guitar"
+  --root "$FACTORY_ROOT" \
+  --folder "Guitar"
 
 node scripts/import-samples.mjs factory-intake/samples/Foley \
-  --root /data/factory --folder "Foley"
+  --root "$FACTORY_ROOT" \
+  --folder "Foley"
 
 node scripts/import-samples.mjs factory-intake/samples/Vocals \
-  --root /data/factory --folder "Vocals"
+  --root "$FACTORY_ROOT" \
+  --folder "Vocals"
 ```
 
-Verification UUIDs:
-* f51ed198-f47a-4253-b765-888e0c8d16e6 — AK-SPKRS_ModUk_001.wav
-* 0ab1a85f-1d07-4a24-8418-ab5a6b6e3490 — Piano.mf.C4.aiff
+Expected UUID checks from the brief:
 
-## Phase 3 — Presets
-Copy staged presets to factory:
+- `f51ed198-f47a-4253-b765-888e0c8d16e6` - Guitar Cab IR
+- `0ab1a85f-1d07-4a24-8418-ab5a6b6e3490` - Piano one-shot
+
+## Phase 4 - Presets
+
 ```bash
-cp factory-intake/presets/*.odp /data/factory/presets/
+mkdir -p "$FACTORY_ROOT/presets"
+rsync -av --checksum factory-intake/presets/*.odp "$FACTORY_ROOT/presets/"
+rsync -av --checksum factory-intake/presets/index.json "$FACTORY_ROOT/presets/index.json"
 ```
-Ensure presets/index.json is updated. Target starter set:
-* drum bus
-* vocal chain
-* mastering chain
-* lo-fi sampler
-* ambient send
-* guitar cab convolver
-* clean piano
-* orchestral sketch
-* synth bass
-* sidechain-style pump
 
-## Phase 4 — Sync to OMV
+Starter preset coverage target:
+
+- Drum bus
+- Vocal chain
+- Mastering chain
+- Lo-fi sampler
+- Ambient send
+- Guitar cab convolver
+- Clean piano
+- Orchestral sketch
+- Synth bass
+- Sidechain-style pump
+
+The acceptance brief mentions four starter preset asset UUIDs, but this batch note only names two SoundFont UUIDs and two sample UUIDs. Add the two missing preset-related UUIDs before treating that criterion as enforceable.
+
+## Phase 5 - Validate Catalogs
+
 ```bash
-rsync -av --checksum /data/factory/ root@omv:/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory/
+node - <<'NODE'
+const {readFileSync, existsSync} = require("node:fs")
+const {join} = require("node:path")
+
+const root = process.env.FACTORY_ROOT || "/data/factory"
+const required = new Set([
+  "9575028c-7a1f-489f-9770-fccc8cff2734",
+  "f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b",
+  "f51ed198-f47a-4253-b765-888e0c8d16e6",
+  "0ab1a85f-1d07-4a24-8418-ab5a6b6e3490"
+])
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, "utf8"))
+}
+
+function collect(folder, key, entries = []) {
+  if (Array.isArray(folder[key])) entries.push(...folder[key])
+  if (Array.isArray(folder.folders)) folder.folders.forEach(child => collect(child, key, entries))
+  return entries
+}
+
+function presetsFrom(data) {
+  return Array.isArray(data) ? data : (data.presets || [])
+}
+
+const samples = collect({folders: readJson(join(root, "samples/index.json")).folders}, "samples")
+const soundfonts = collect({folders: readJson(join(root, "soundfonts/index.json")).folders}, "soundfonts")
+const presets = presetsFrom(readJson(join(root, "presets/index.json")))
+const all = new Map([...samples, ...soundfonts, ...presets].map(entry => [entry.uuid, entry]))
+const missing = [...required].filter(uuid => !all.has(uuid))
+
+console.log(JSON.stringify({
+  samples: samples.length,
+  soundfonts: soundfonts.length,
+  presets: presets.length,
+  requiredMissing: missing,
+  sampleFilesMissing: samples.filter(entry => !existsSync(join(root, "samples", entry.uuid))).length,
+  soundfontFilesMissing: soundfonts.filter(entry => !existsSync(join(root, "soundfonts", entry.uuid))).length
+}, null, 2))
+
+if (samples.length < 1500) process.exitCode = 1
+if (soundfonts.length < 10) process.exitCode = 1
+if (presets.length < 19) process.exitCode = 1
+if (missing.length > 0) process.exitCode = 1
+NODE
 ```
 
-## Phase 5 — Verify
+Acceptance targets:
+
+- `samples/index.json` count increases from 902 to at least 1500
+- `soundfonts/index.json` count is at least 10
+- `presets/index.json` count is at least 19
+- Required UUID list is present after it is completed
+- Sample and SoundFont file-missing counts are zero
+
+## Phase 6 - Sync to OMV
+
+From the dev box after the imports pass:
+
+```bash
+rsync -av --checksum "$FACTORY_ROOT"/ root@omv:"$OMV_FACTORY_ROOT"/
+```
+
+Then verify on OMV:
+
+```bash
+docker inspect opendaw \
+  --format '{{range .Config.Env}}{{println .}}{{end}}' \
+  | grep '^OPENDAW_FACTORY_OFFLINE_ONLY=true$'
+
+FACTORY_ROOT="$OMV_FACTORY_ROOT" node - <<'NODE'
+const {readFileSync} = require("node:fs")
+const {join} = require("node:path")
+const root = process.env.FACTORY_ROOT
+
+function readJson(path) {
+  return JSON.parse(readFileSync(path, "utf8"))
+}
+
+function collect(folder, key, entries = []) {
+  if (Array.isArray(folder[key])) entries.push(...folder[key])
+  if (Array.isArray(folder.folders)) folder.folders.forEach(child => collect(child, key, entries))
+  return entries
+}
+
+function presetsFrom(data) {
+  return Array.isArray(data) ? data : (data.presets || [])
+}
+
+console.log({
+  samples: collect({folders: readJson(join(root, "samples/index.json")).folders}, "samples").length,
+  soundfonts: collect({folders: readJson(join(root, "soundfonts/index.json")).folders}, "soundfonts").length,
+  presets: presetsFrom(readJson(join(root, "presets/index.json"))).length,
+  demos: (readJson(join(root, "demos/projects.json")).tracks || []).length
+})
+NODE
+```
+
+If `/api/factory/summary` has been added by a later server build, this is the intended API check:
+
 ```bash
 curl -s http://localhost:8789/api/factory/summary | jq '.catalogs[] | {id, count}'
-grep 9575028c-7a1f-489f-9770-fccc8cff2734 /data/factory/soundfonts/index.json
-grep f7bf84f9-2ae8-4b5f-9650-97e69aff7e4b /data/factory/soundfonts/index.json
-grep f51ed198-f47a-4253-b765-888e0c8d16e6 /data/factory/samples/index.json
-grep 0ab1a85f-1d07-4a24-8418-ab5a6b6e3490 /data/factory/samples/index.json
 ```
 
-## Acceptance
-* samples/index.json count ≥ 1,500
-* soundfonts/index.json count ≥ 10
-* presets/index.json count ≥ 19
-* All four starter preset asset UUIDs present
-* OPENDAW_FACTORY_OFFLINE_ONLY remains true
+On the current checked-out server build, `/api/admin/assets` is the available factory summary endpoint and requires an authenticated admin browser session.

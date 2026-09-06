@@ -43,3 +43,9 @@ npm run import-demos
 ```
 
 Keep `OPENDAW_FACTORY_OFFLINE_ONLY=true` in production.
+
+## OMV ingest template
+
+Use `ingest.sh` as the repeatable OMV-side intake wrapper. It creates the staging tree, optionally rsyncs from a trusted mirror, runs the existing import scripts against the OMV factory root, and prints catalog counts.
+
+`manifest.json` records intended packs, source paths, licenses, acceptance thresholds, and required UUIDs. Keep large sample and SoundFont files on the OMV media volume; `factory-intake/samples/` and `factory-intake/soundfonts/` are intentionally ignored by git.
