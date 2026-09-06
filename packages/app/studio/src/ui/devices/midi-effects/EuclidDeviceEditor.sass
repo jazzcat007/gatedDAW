@@ -1,8 +1,4 @@
-component
-  display: grid
-  grid-template-columns: repeat(7, minmax(0, 1fr))
-  gap: 0.5em
-  align-items: center
+@use "@/mixins"
 
-  @media (max-width: 720px)
-    grid-template-columns: repeat(4, minmax(0, 1fr))
+component
+  @include mixins.ControlLayout(2)
