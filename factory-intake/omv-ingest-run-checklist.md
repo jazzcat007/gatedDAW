@@ -124,12 +124,36 @@ To disable direct SoundFont downloads:
 DOWNLOAD_SOUNDFONTS=0 bash "$INTAKE_ROOT/ingest.sh"
 ```
 
-SoundFont direct-download support:
+To disable direct sample downloads:
+
+```bash
+DOWNLOAD_SAMPLES=0 bash "$INTAKE_ROOT/ingest.sh"
+```
+
+Direct-download support:
 
 - GitHub repository URLs are shallow-cloned into `$DOWNLOAD_ROOT/<pack-id>` and `.sf2` files are copied into the pack intake folder.
-- Direct `.sf2` URLs are downloaded and copied into the pack intake folder.
+- GitHub sample repository URLs are shallow-cloned into `$DOWNLOAD_ROOT/<pack-id>` and supported audio files are copied into the pack intake folder.
+- Direct `.sf2` and supported audio URLs are downloaded and copied into the pack intake folder.
 - `.zip`, `.tar.gz`, `.tgz`, `.tar.xz`, `.txz`, `.tar.bz2`, and `.tbz2` archives are downloaded and extracted into the pack intake folder.
 - Missing or `TODO` URLs are logged and skipped.
+- Supported sample audio extensions: `.wav`, `.wave`, `.aif`, `.aiff`, `.flac`, `.mp3`, `.m4a`, `.ogg`, `.opus`.
+
+Manifest checksum entries are verified before imports. Each pack's `checksums` array may contain either sha256sum-format strings or objects:
+
+```json
+{
+  "checksums": [
+    "0123456789abcdef...  soundfonts/GeneralUser-GS/GeneralUser-GS.sf2",
+    {
+      "sha256": "0123456789abcdef...",
+      "path": "samples/Drums/example.wav"
+    }
+  ]
+}
+```
+
+Checksum paths are relative to `$INTAKE_ROOT`.
 
 For a dry staging pass without importing:
 

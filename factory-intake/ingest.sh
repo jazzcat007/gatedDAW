@@ -10,6 +10,7 @@ LOG_FILE="${LOG_FILE:-/var/log/opendaw-ingest.log}"
 SYNC_FROM_MIRROR="${SYNC_FROM_MIRROR:-1}"
 DOWNLOAD_FIRST="${DOWNLOAD_FIRST:-auto}"
 DOWNLOAD_SOUNDFONTS="${DOWNLOAD_SOUNDFONTS:-1}"
+DOWNLOAD_SAMPLES="${DOWNLOAD_SAMPLES:-1}"
 RUN_IMPORTS="${RUN_IMPORTS:-1}"
 DOWNLOAD_ROOT="${DOWNLOAD_ROOT:-$INTAKE_ROOT/_downloads}"
 
@@ -26,6 +27,7 @@ echo "repo=$REPO_ROOT"
 echo "mirror=$TRUSTED_MIRROR"
 echo "download_first=$DOWNLOAD_FIRST"
 echo "download_soundfonts=$DOWNLOAD_SOUNDFONTS"
+echo "download_samples=$DOWNLOAD_SAMPLES"
 
 require_tool() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -87,6 +89,11 @@ has_sf2() {
   [[ -d "$path" ]] && find "$path" -type f -iname '*.sf2' -print -quit | grep -q .
 }
 
+has_audio() {
+  local path="$1"
+  [[ -d "$path" ]] && find "$path" -type f \( -iname '*.wav' -o -iname '*.wave' -o -iname '*.aif' -o -iname '*.aiff' -o -iname '*.flac' -o -iname '*.mp3' -o -iname '*.m4a' -o -iname '*.ogg' -o -iname '*.opus' \) -print -quit | grep -q .
+}
+
 download_file() {
   local url="$1"
   local target="$2"
@@ -125,6 +132,25 @@ extract_archive() {
   esac
 }
 
+copy_audio_files() {
+  local source="$1"
+  local target="$2"
+  mkdir -p "$target"
+  rsync -a \
+    --include='*/' \
+    --include='*.wav' --include='*.WAV' \
+    --include='*.wave' --include='*.WAVE' \
+    --include='*.aif' --include='*.AIF' \
+    --include='*.aiff' --include='*.AIFF' \
+    --include='*.flac' --include='*.FLAC' \
+    --include='*.mp3' --include='*.MP3' \
+    --include='*.m4a' --include='*.M4A' \
+    --include='*.ogg' --include='*.OGG' \
+    --include='*.opus' --include='*.OPUS' \
+    --exclude='*' \
+    "$source"/ "$target"/
+}
+
 manifest_soundfonts() {
   local manifest="$1"
   MANIFEST_PATH="$manifest" node <<'NODE'
@@ -141,6 +167,60 @@ for (const pack of manifest.soundfonts ?? []) {
   ].join("\t"))
 }
 NODE
+}
+
+manifest_samples() {
+  local manifest="$1"
+  MANIFEST_PATH="$manifest" node <<'NODE'
+const {readFileSync} = require("node:fs")
+const manifest = JSON.parse(readFileSync(process.env.MANIFEST_PATH, "utf8"))
+for (const pack of manifest.samples ?? []) {
+  const url = pack.downloadUrl || pack.url || ""
+  console.log([
+    pack.id || "",
+    pack.name || "",
+    url,
+    pack.intakePath || "",
+    pack.branch || ""
+  ].join("\t"))
+}
+NODE
+}
+
+manifest_checksums() {
+  local manifest="$1"
+  MANIFEST_PATH="$manifest" node <<'NODE'
+const {readFileSync} = require("node:fs")
+const manifest = JSON.parse(readFileSync(process.env.MANIFEST_PATH, "utf8"))
+const sections = ["soundfonts", "samples", "sfz"]
+for (const section of sections) {
+  for (const pack of manifest[section] ?? []) {
+    for (const checksum of pack.checksums ?? []) {
+      if (typeof checksum === "string") {
+        console.log(checksum)
+      } else if (checksum?.sha256 && checksum?.path) {
+        console.log(`${checksum.sha256}  ${checksum.path}`)
+      }
+    }
+  }
+}
+NODE
+}
+
+verify_manifest_checksums() {
+  local manifest="$1"
+  local checksum_file
+  checksum_file="$(mktemp)"
+  manifest_checksums "$manifest" > "$checksum_file"
+  if [[ ! -s "$checksum_file" ]]; then
+    rm -f "$checksum_file"
+    echo "skip manifest checksum verification, no declared checksums"
+    return
+  fi
+  require_tool sha256sum
+  echo "verifying checksums declared in $manifest"
+  (cd "$INTAKE_ROOT" && sha256sum -c "$checksum_file")
+  rm -f "$checksum_file"
 }
 
 fetch_soundfont_pack() {
@@ -190,11 +270,69 @@ fetch_soundfont_pack() {
   esac
 }
 
+fetch_sample_pack() {
+  local id="$1"
+  local name="$2"
+  local url="$3"
+  local intake_path="$4"
+  local branch="$5"
+  local target="$INTAKE_ROOT/$intake_path"
+  local cache="$DOWNLOAD_ROOT/$id"
+
+  if [[ -z "$url" || "$url" == TODO* ]]; then
+    echo "skip sample download, URL not configured: $name"
+    return
+  fi
+  if has_audio "$target"; then
+    echo "skip sample download, staged audio already present: $name"
+    return
+  fi
+
+  mkdir -p "$target"
+  case "$url" in
+    https://github.com/*)
+      require_tool git
+      require_tool rsync
+      if [[ ! -d "$cache/.git" ]]; then
+        echo "cloning sample source: $name"
+        if [[ -n "$branch" ]]; then
+          git clone --depth 1 --branch "$branch" "$url" "$cache"
+        else
+          git clone --depth 1 "$url" "$cache"
+        fi
+      else
+        echo "updating sample source: $name"
+        git -C "$cache" pull --ff-only
+      fi
+      copy_audio_files "$cache" "$target"
+      ;;
+    *.zip|*.tar.gz|*.tgz|*.tar.xz|*.txz|*.tar.bz2|*.tbz2)
+      local archive="$DOWNLOAD_ROOT/$id-${url##*/}"
+      echo "downloading sample source: $name"
+      download_file "$url" "$archive"
+      extract_archive "$archive" "$target"
+      ;;
+    *.wav|*.wave|*.aif|*.aiff|*.flac|*.mp3|*.m4a|*.ogg|*.opus)
+      local audio="$DOWNLOAD_ROOT/$id-${url##*/}"
+      echo "downloading sample source: $name"
+      download_file "$url" "$audio"
+      cp -f "$audio" "$target/"
+      ;;
+    *)
+      echo "skip sample download, unsupported URL shape for $name: $url"
+      ;;
+  esac
+}
+
 # Download-first mode: fetch assets directly if mirror missing or forced
 if [[ "$DOWNLOAD_FIRST" == "1" || ( "$DOWNLOAD_FIRST" == "auto" && "$MIRROR_AVAILABLE" == "0" ) ]]; then
   echo "download-first mode active"
   require_tool git
   require_tool curl
+  manifest_path="$INTAKE_ROOT/manifest.json"
+  if [[ ! -f "$manifest_path" && -f "$REPO_ROOT/factory-intake/manifest.json" ]]; then
+    manifest_path="$REPO_ROOT/factory-intake/manifest.json"
+  fi
   # SFZ libraries
   if [[ ! -d "$INTAKE_ROOT/sfz/VCSL" ]]; then
     echo "cloning VCSL SFZ..."
@@ -206,16 +344,21 @@ if [[ "$DOWNLOAD_FIRST" == "1" || ( "$DOWNLOAD_FIRST" == "auto" && "$MIRROR_AVAI
   fi
   if [[ "$DOWNLOAD_SOUNDFONTS" == "1" ]]; then
     require_tool rsync
-    manifest_path="$INTAKE_ROOT/manifest.json"
-    if [[ ! -f "$manifest_path" && -f "$REPO_ROOT/factory-intake/manifest.json" ]]; then
-      manifest_path="$REPO_ROOT/factory-intake/manifest.json"
-    fi
     if [[ -f "$manifest_path" ]]; then
       while IFS=$'\t' read -r id name url intake_path branch; do
         fetch_soundfont_pack "$id" "$name" "$url" "$intake_path" "$branch"
       done < <(manifest_soundfonts "$manifest_path")
     else
       echo "skip SoundFont downloads, manifest missing"
+    fi
+  fi
+  if [[ "$DOWNLOAD_SAMPLES" == "1" ]]; then
+    if [[ -f "$manifest_path" ]]; then
+      while IFS=$'\t' read -r id name url intake_path branch; do
+        fetch_sample_pack "$id" "$name" "$url" "$intake_path" "$branch"
+      done < <(manifest_samples "$manifest_path")
+    else
+      echo "skip sample downloads, manifest missing"
     fi
   fi
 fi
@@ -239,6 +382,16 @@ if [[ -f "$INTAKE_ROOT/manifest.sha256" ]]; then
   (cd "$INTAKE_ROOT" && sha256sum -c manifest.sha256)
 else
   echo "skip checksum verification, manifest missing: $INTAKE_ROOT/manifest.sha256"
+fi
+
+manifest_path="$INTAKE_ROOT/manifest.json"
+if [[ ! -f "$manifest_path" && -f "$REPO_ROOT/factory-intake/manifest.json" ]]; then
+  manifest_path="$REPO_ROOT/factory-intake/manifest.json"
+fi
+if [[ -f "$manifest_path" ]]; then
+  verify_manifest_checksums "$manifest_path"
+else
+  echo "skip manifest checksum verification, manifest missing"
 fi
 
 if [[ "$RUN_IMPORTS" == "1" ]]; then

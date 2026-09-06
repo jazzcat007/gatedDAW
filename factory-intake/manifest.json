@@ -8,7 +8,8 @@
     "commitAudioBlobs": false,
     "verifyLicensesBeforeMirror": true,
     "verifyChecksumsBeforeImport": true,
-    "importMode": "idempotent-content-uuid"
+    "importMode": "idempotent-content-uuid",
+    "checksumFormat": "checksums entries may be strings in sha256sum format or objects with sha256 and path, relative to intakeRoot"
   },
   "acceptance": {
     "samplesMinimum": 1500,
