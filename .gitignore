@@ -29,6 +29,8 @@ tsconfig.tsbuildinfo
 /packages/server/logs.opendaw.studio/
 packages/app/studio/.env
 /factory-staging/
+/factory-intake/samples/
+/factory-intake/soundfonts/
 /assets.opendaw.studio/models/**/*.onnx
 /assets.opendaw.studio/models/**/*.onnx.partial
 /presets/
