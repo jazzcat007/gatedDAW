@@ -18,22 +18,22 @@ FACTORY_ROOT=/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/
 INTAKE=/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory-intake
 
 node scripts/import-soundfonts.mjs "$INTAKE/soundfonts/GeneralUser-GS" \
-  --folder "GeneralUser" --license "GPL-3.0" --url "https://github.com/GalleryOfBots/GeneralUser-GS"
+  --root "$FACTORY_ROOT" --folder "GeneralUser" --license "GPL-3.0" --url "https://github.com/GalleryOfBots/GeneralUser-GS"
 
 node scripts/import-soundfonts.mjs "$INTAKE/soundfonts/FreePats-GM-Orchestral" \
-  --folder "FreePats" --license "GPL-3.0" --url "https://github.com/free-pats/FreePats"
+  --root "$FACTORY_ROOT" --folder "FreePats" --license "GPL-3.0" --url "https://github.com/free-pats/FreePats"
 
 node scripts/import-soundfonts.mjs "$INTAKE/soundfonts/FluidR3-GM" \
-  --folder "FluidR3" --license "LGPL-3.0" --url "https://..."
+  --root "$FACTORY_ROOT" --folder "FluidR3" --license "LGPL-3.0" --url "https://..."
 
 node scripts/import-soundfonts.mjs "$INTAKE/soundfonts/FreePats-GM-Percussion" \
-  --folder "FreePats" --license "GPL-3.0" --url "https://..."
+  --root "$FACTORY_ROOT" --folder "FreePats" --license "GPL-3.0" --url "https://..."
 
 node scripts/import-soundfonts.mjs "$INTAKE/soundfonts/Famicom-Multichip-Chiptune" \
-  --folder "Chiptune" --license "CC0" --url "https://..."
+  --root "$FACTORY_ROOT" --folder "Chiptune" --license "CC0" --url "https://..."
 
 node scripts/import-soundfonts.mjs "$INTAKE/soundfonts/VintageDreamsWaves" \
-  --folder "Synth" --license "CC-BY" --url "https://..."
+  --root "$FACTORY_ROOT" --folder "Synth" --license "CC-BY" --url "https://..."
 ```
 
 Verify:
