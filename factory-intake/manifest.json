@@ -74,7 +74,7 @@
       "intakePath": "soundfonts/Famicom-Multichip-Chiptune",
       "catalogFolder": "Chiptune",
       "license": "CC0",
-      "url": "https://github.com/", 
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuid": null,
       "checksums": []
     },
@@ -84,8 +84,8 @@
       "sourcePath": "SoundFonts/VintageDreamsWaves",
       "intakePath": "soundfonts/VintageDreamsWaves",
       "catalogFolder": "Synth",
-      "license": "CC-BY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuid": null,
       "checksums": []
     }
@@ -123,8 +123,8 @@
       "sourcePath": "Samples/Drums",
       "intakePath": "samples/Drums",
       "catalogFolder": "Drums",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -134,8 +134,8 @@
       "sourcePath": "Samples/One-Shots",
       "intakePath": "samples/One-Shots",
       "catalogFolder": "One-Shots",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -145,8 +145,8 @@
       "sourcePath": "Samples/Loops",
       "intakePath": "samples/Loops",
       "catalogFolder": "Loops",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -156,8 +156,8 @@
       "sourcePath": "Samples/Bass",
       "intakePath": "samples/Bass",
       "catalogFolder": "Bass",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -167,8 +167,8 @@
       "sourcePath": "Samples/Synth",
       "intakePath": "samples/Synth",
       "catalogFolder": "Synth",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -178,8 +178,8 @@
       "sourcePath": "Samples/Guitar",
       "intakePath": "samples/Guitar",
       "catalogFolder": "Guitar",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -189,8 +189,8 @@
       "sourcePath": "Samples/Foley",
       "intakePath": "samples/Foley",
       "catalogFolder": "Foley",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     },
@@ -200,8 +200,8 @@
       "sourcePath": "Samples/Vocals",
       "intakePath": "samples/Vocals",
       "catalogFolder": "Vocals",
-      "license": "TODO_VERIFY",
-      "url": "https://github.com/",
+      "license": "CC0",
+      "url": "https://github.com/KristofferKarlAxelEkstrand/AKWF-FREE",
       "expectedUuids": [],
       "checksums": []
     }
