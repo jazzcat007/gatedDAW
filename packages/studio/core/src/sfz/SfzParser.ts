@@ -97,7 +97,7 @@ export namespace SfzParser {
     // snapshotting the merge at the point it opens (mirrors `scripts/import-sfz-instruments.mjs#parseSfz`).
     export const parse = (source: string): SfzParseResult => {
         const stripped = withoutComments(source)
-        const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^\s<>=]+)/gi
+        const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/gi
         const scopes: {control: Scope, global: Scope, master: Scope, group: Scope, region: Scope} =
             {control: {}, global: {}, master: {}, group: {}, region: {}}
         const raw: Array<Scope> = []
@@ -114,7 +114,7 @@ export namespace SfzParser {
                 }
             } else {
                 const opcode = match[2].toLowerCase()
-                const value = match[3].replace(/^"|"$/g, "")
+                const value = match[3].trim().replace(/^"|"$/g, "")
                 scopes[current][opcode] = value
                 if (current === "region") {
                     Object.assign(raw[raw.length - 1], scopes.control, scopes.global, scopes.master, scopes.group, scopes.region)

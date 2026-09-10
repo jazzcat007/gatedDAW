@@ -32,6 +32,18 @@ describe("SfzParser", () => {
         expect(regions[0]).toMatchObject({sample: "kick.wav", defaultPath: "samples/"})
     })
 
+    it("keeps unquoted sample paths with spaces", () => {
+        const {regions} = SfzParser.parse(`
+            <region> sample=Concert Harp/KSHarp_E1_f1.wav pitch_keycenter=28 lokey=28 hikey=29
+        `)
+        expect(regions[0]).toMatchObject({
+            sample: "Concert Harp/KSHarp_E1_f1.wav",
+            rootKey: 28,
+            keyLo: 28,
+            keyHi: 29
+        })
+    })
+
     it("converts ampeg_sustain from a 0-100 percentage into a 0-1 unit", () => {
         const {regions} = SfzParser.parse("<region> sample=pad.wav ampeg_sustain=50")
         expect(regions[0].sustain).toBeCloseTo(0.5)
