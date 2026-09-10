@@ -1,4 +1,4 @@
-# Site Philosophy: Metal-Duck Studios vs. Upstream openDAW
+# Site Philosophy: Metal-Duck Studios vs. Upstream gatedDAW
 
 This document exists to guide copywriting across the site (landing/meta text, in-app empty states,
 onboarding, admin UI, manuals) so it consistently reflects what this fork actually is, instead of
@@ -7,10 +7,10 @@ rewritten copy against.
 
 ## The one-line difference
 
-Upstream openDAW is a free browser DAW anyone can open, for everyone. Metal-Duck Studios is a
+Upstream gatedDAW is a free browser DAW anyone can open, for everyone. Metal-Duck Studios is a
 private studio one person runs, for the specific people they've let in.
 
-Same engine, different building. openDAW is the public instrument; this is a room with a lock on
+Same engine, different building. gatedDAW is the public instrument; this is a room with a lock on
 the door, keys handed out one at a time, where the same people keep coming back and their work
 stays exactly where they left it.
 
@@ -29,7 +29,7 @@ zero-commitment tool:
 - **Ephemeral live rooms.** Anyone with a link can join a session; the session is the unit, not a
   persistent shared history.
 
-None of that is wrong for openDAW's audience. It is simply not our audience, and copy that still
+None of that is wrong for gatedDAW's audience. It is simply not our audience, and copy that still
 reads that way (generic taglines, "no signup needed" energy, "for musicians everywhere" framing)
 is a leftover, not a feature.
 
@@ -75,15 +75,15 @@ multiplayer-cursor language of tools built for strangers collaborating on the op
 - Prefer *studio*, *room*, *project*, *your work* over *app*, *tool*, *platform*, *workspace*
   (the latter reads generic-SaaS).
 - It's fine to sound a little insular/clubhouse — that's accurate, not a flaw to soften.
-- Don't borrow openDAW's "free and open to everyone" framing, education/classroom framing, or
+- Don't borrow gatedDAW's "free and open to everyone" framing, education/classroom framing, or
   growth-oriented calls to action ("get started," "join now," "no signup required").
 - Ownership and persistence should show up wherever the copy touches saving, history, or returning
   to work — this is the opposite of a scratch pad.
-- It's fine to reference that this is built on openDAW's engine (attribution, licensing) — the
+- It's fine to reference that this is built on gatedDAW's engine (attribution, licensing) — the
   distinction is about audience and posture, not about hiding the lineage.
 
 ## Quick gut-check for any new copy
 
-Would this sentence make sense on the public openDAW site, addressed to a random visitor? If yes,
+Would this sentence make sense on the public gatedDAW site, addressed to a random visitor? If yes,
 it's probably still upstream's voice, not ours — rewrite it to assume a specific, known, already-
 admitted person on the other end.

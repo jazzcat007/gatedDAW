@@ -34,7 +34,7 @@
 
 ## Remote update process (cross-agent handoff)
 
-The deployed instance runs on a separate host (OMV server), managed by its own agent session with no access to this machine's filesystem. The only channel between "code written here" and "code running there" is GitHub (`origin` = `jazzcat007/openDAW`, branch `screwpulp/self-hosted` is the shared base both sides track). Local `npm install` cannot complete on this checkout's drive (no symlink support); `R:\Development\OpenDAW` is a working NTFS sandbox kept in sync for verification only — copy changed files there to build/test, never treat it as the source of truth.
+The deployed instance runs on a separate host (OMV server), managed by its own agent session with no access to this machine's filesystem. The only channel between "code written here" and "code running there" is GitHub (`origin` = `jazzcat007/gatedDAW`, branch `screwpulp/self-hosted` is the shared base both sides track). Local `npm install` cannot complete on this checkout's drive (no symlink support); `R:\Development\OpenDAW` is a working NTFS sandbox kept in sync for verification only — copy changed files there to build/test, never treat it as the source of truth.
 
 Before asking the user to test anything that needs deployment, finish your OWN portion first:
 1. Verify the change as thoroughly as your environment allows (type-check, build, run the relevant tests) — do this before handoff, not after.

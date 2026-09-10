@@ -2,11 +2,11 @@
 
 ## Known Issues
 
-**openDAW is in an early prototype stage and NOT ready for production use!**
+**gatedDAW is in an early prototype stage and NOT ready for production use!**
 
 ### General
 
-* Some features in openDAW may be unpolished or not functional yet.
+* Some features in gatedDAW may be unpolished or not functional yet.
 * No backward compatibility is guaranteed. New studio versions may invalidate old project files.
 
 ### Audio Engine

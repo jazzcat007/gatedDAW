@@ -1,8 +1,8 @@
-# openDAW Nextcloud Classroom app
+# gatedDAW Nextcloud Classroom app
 
 ## Intro
 
-The Classroom feature is separate from openDAW's existing generic Nextcloud connect, which stays as
+The Classroom feature is separate from gatedDAW's existing generic Nextcloud connect, which stays as
 is. This specification covers the Classroom feature, which connects to a custom Nextcloud app.
 
 The app backend owns identity, storage, and access rules. The studio talks to the app's own REST API
@@ -13,7 +13,7 @@ Single connect: the studio sends server URL plus credentials, and the login retu
 
 ## Requirements
 
-Each requirement notes which side does the work: the **app** (Nextcloud) or the **studio** (openDAW).
+Each requirement notes which side does the work: the **app** (Nextcloud) or the **studio** (gatedDAW).
 
 1. **App:** add CORS for `opendaw.studio` so the studio can call the app from the browser.
 2. **App:** manage classrooms and students (add, remove, move) in the app's own Nextcloud UI.
@@ -53,7 +53,7 @@ Shared asset store: students never get direct write access to it. The app is the
 asset cannot be deleted or overwritten by a student, which gives both deduplication and tamper
 safety.
 
-## Studio app (openDAW side)
+## Studio app (gatedDAW side)
 
 The studio is a thin client. It holds no permission logic and no provisioning logic.
 
@@ -83,17 +83,17 @@ Things to plan for:
 - App store review: a hardcoded CORS origin may draw scrutiny.
 - Version maintenance: Nextcloud major versions move fast, so ongoing upkeep is a real cost.
   Test against each supported major version.
-- openDAW side: a new transport that speaks the app API.
+- gatedDAW side: a new transport that speaks the app API.
 - Quotas, backup, export, GDPR: per-student quota, and all data stays on the school's server.
 
 Effort (for someone fluent in Nextcloud app development):
 
 - MVP (CORS, provisioning, per-student projects, shared deduped assets, teacher distribute, basic
-  notifications, minimal UI): about 4 to 8 weeks server side, plus 1 to 2 weeks openDAW side.
+  notifications, minimal UI): about 4 to 8 weeks server side, plus 1 to 2 weeks gatedDAW side.
 - Hardened and store-published (chunked uploads, GC, polished UI, multi-version testing): add several
   more weeks, then ongoing maintenance.
 
-The largest risks are the openDAW-side transport rework and long-term version churn, not any missing
+The largest risks are the gatedDAW-side transport rework and long-term version churn, not any missing
 Nextcloud capability.
 
 ## Hiring

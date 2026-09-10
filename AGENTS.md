@@ -2,7 +2,7 @@
 
 ## Remote update process (cross-agent handoff)
 
-This repo is worked on from at least two places: a local Windows checkout (no direct filesystem access from the deployed host) and the OMV server running the deployed instance. GitHub is the only channel between them — `origin` = `jazzcat007/openDAW`, branch `screwpulp/self-hosted` is the shared base every side tracks.
+This repo is worked on from at least two places: a local Windows checkout (no direct filesystem access from the deployed host) and the OMV server running the deployed instance. GitHub is the only channel between them — `origin` = `jazzcat007/gatedDAW`, branch `screwpulp/self-hosted` is the shared base every side tracks.
 
 **Whichever side made a change must finish its own portion before asking the user to test:**
 1. Verify the change as thoroughly as your environment allows (type-check, build, run the relevant tests) before handing off — not after.

@@ -1,9 +1,9 @@
-# Creating an Audio Effect Device for openDAW
+# Creating an Audio Effect Device for gatedDAW
 
 ### Disclaimer
 
-Adding a device to openDAW itself requires a PR. There is not yet an open device API hence adding a new device involves
-significant manual work. This guide documents how to create a complete audio effect device in openDAW.
+Adding a device to gatedDAW itself requires a PR. There is not yet an open device API hence adding a new device involves
+significant manual work. This guide documents how to create a complete audio effect device in gatedDAW.
 
 ## Overview
 

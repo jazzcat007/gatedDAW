@@ -6,7 +6,7 @@ Execution attempt for the first factory intake batch described in `factory-intak
 
 ## Environment
 
-- Repo: `jazzcat007/openDAW`
+- Repo: `jazzcat007/gatedDAW`
 - Branch: `screwpulp/self-hosted`
 - Factory root: `/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory`
 - Container factory mount: `/data/factory`

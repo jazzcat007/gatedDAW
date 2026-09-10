@@ -1,14 +1,14 @@
 <p align="center">
   <img src="https://raw.githubusercontent.com/andremichelle/openDAW/refs/heads/main/packages/app/studio/public/favicon.svg" height="120"/>
-  <h1 align="center">openDAW</h1>
+  <h1 align="center">gatedDAW</h1>
 </p>
 
 <p align="center">
 <a href="https://www.gnu.org/licenses/agpl-3.0.html" rel="nofollow"><img src="https://img.shields.io/badge/license-AGPLv3-blue.svg" alt="License: AGPLv3"></a>
-<a href="https://github.com/jazzcat007/openDAW" rel="nofollow"><img src="https://img.shields.io/github/stars/jazzcat007/openDAW" alt="stars"></a>
+<a href="https://github.com/jazzcat007/gatedDAW" rel="nofollow"><img src="https://img.shields.io/github/stars/jazzcat007/gatedDAW" alt="stars"></a>
 </p>
 
-**Metal-Duck Studios** — private studio, invite-only, 80s neon attitude. Built on openDAW's engine, but this is our lair, not the public playground.
+**Metal-Duck Studios** — private studio, invite-only, 80s neon attitude. gatedDAW is a private fork of [openDAW](https://github.com/andremichelle/openDAW): built on its engine, but this is our lair, not the public playground.
 
 New to the codebase? [introduction.md](introduction.md) maps every component of this repository and how they depend on
 each other.
@@ -23,7 +23,7 @@ each other.
 
 We are committed to transparency and community-driven development.
 
-The source code for openDAW is available under **AGPL v3 (or later)**
+The source code for gatedDAW is available under **AGPL v3 (or later)**
 
 ### House Rules
 
@@ -38,40 +38,37 @@ The source code for openDAW is available under **AGPL v3 (or later)**
 
 ## Looking for Contributors
 
-We welcome contributions that follow the existing style and conventions of the project. AI-assisted code is fine, but
-every contributor must **understand every line of code they submit**. If you use AI tools, please document your process
-in [`/plans`](https://github.com/jazzcat007/openDAW/tree/main/plans). Keep pull requests small and focused. Large
+We welcome contributions that follow the existing style and conventions of the project. Every contributor must
+**understand and take responsibility for every line of code they submit**. Keep pull requests small and focused. Large
 PRs will not be reviewed. Split big contributions into smaller commits that add requirements gradually and maintain
 operations of the app.
 
 If you are interested in helping, here are areas where we need support:
 
-1. **Offline App** — e.g. wrapping openDAW with [Tauri](https://tauri.app/) for a native desktop experience
-2. **PWA** — turning openDAW into a fully installable Progressive Web App with offline support
+1. **Offline App** — e.g. wrapping gatedDAW with [Tauri](https://tauri.app/) for a native desktop experience
+2. **PWA** — turning gatedDAW into a fully installable Progressive Web App with offline support
 3. **Timeline Track Management** — design and UX help for track layout, ordering, grouping, and interaction
 
-We always appreciate help on open issues: https://github.com/jazzcat007/openDAW/issues
+We always appreciate help on open issues: https://github.com/jazzcat007/gatedDAW/issues
 
 ---
 
-## Huge Shoutout To The Incredible openDAW Community!
+## Credits to the openDAW Community
 
-To everyone who has contributed feedback, reported bugs, suggested improvements, or helped spread the word — thank you!
-Your support is shaping openDAW into something truly powerful!
+The following acknowledgements belong to the upstream openDAW project. They do not imply endorsement of, affiliation with, or support for gatedDAW.
 
 Thank
 you [@ccswdavidson](https://github.com/ccswdavidson), [@Chaosmeister](https://github.com/Chaosmeister), [@jeffreylouden](https://github.com/jeffreylouden), [@solsos](https://github.com/solsos), [@TheRealSyler](https://github.com/TheRealSyler), [@Trinitou](https://github.com/Trinitou),
-and [@xnstad](https://github.com/xnstad) for testing the repositories and identifying issues during the installation of
-openDAW!
+and [@xnstad](https://github.com/xnstad) for testing the upstream openDAW repositories and installation.
 
 Special shout-out to the biggest bug
 hunters: [kanaris](https://kanaris.net/), [@Chaosmeister](https://github.com/Chaosmeister)
 and [BeatMax Prediction](https://linktr.ee/beatmax_prediction). Your relentless attention to detail made a huge
 difference!
 
-Huge thanks to our [ambassadors](https://opendaw.org/ambassadors), whose dedication and outreach amplify our mission!
+Thanks to the upstream [openDAW ambassadors](https://opendaw.org/ambassadors).
 
-## And big hugs to all our supporters!
+## Upstream openDAW Supporters
 
 ### openDAW Visionary — $25.00
 
@@ -85,7 +82,7 @@ skyboundzoo, JHINZ, Mark Dammer, fork-kun, Martin Eigel
 
 ---
 
-### openDAW Devices
+### gatedDAW Devices
 
 #### Stock Plugins
 
@@ -128,14 +125,14 @@ skyboundzoo, JHINZ, Mark Dammer, fork-kun, Martin Eigel
 
 ### Repositories
 
-* [openDAW](https://github.com/jazzcat007/openDAW)
+* [gatedDAW](https://github.com/jazzcat007/gatedDAW)
 * [openDAW-headless (SDK)](https://github.com/andremichelle/openDAW-headless)
 * [openDAW-headless @naomiaro](https://github.com/naomiaro/opendaw-test) (openDAW-headless fork with more docs and
   examples)
 
 ### Roadmap
 
-This roadmap represents an estimation of the upcoming development steps. Timelines and priorities may shift as openDAW
+This roadmap represents an estimation of the upcoming development steps. Timelines and priorities may shift as gatedDAW
 evolves.
 
 #### 2025/Q4
@@ -163,14 +160,14 @@ evolves.
 - [ ] Plugin support for Reaper, Bitwig, and other DAWs
 - [ ] [Launch 1.0](https://opendaw.org/release26/)
 
-For more issues and feature requests, visit [github.com/jazzcat007/openDAW/issues/](https://github.com/jazzcat007/openDAW/issues/)
+For more issues and feature requests, visit [github.com/jazzcat007/gatedDAW/issues/](https://github.com/jazzcat007/gatedDAW/issues/)
 
 ### Prepare, Clone, Installation, and Run
 
-openDAW tries to avoid external libraries and frameworks. The following is a list of the external libraries we currently
+gatedDAW tries to avoid external libraries and frameworks. The following is a list of the external libraries we currently
 use in the web studio:
 
-* [jszip](https://www.npmjs.com/package/jszip) (for openDAW project bundle file)
+* [jszip](https://www.npmjs.com/package/jszip) (for gatedDAW project bundle file)
 * [markdown-it](https://www.npmjs.com/package/markdown-it) + [markdown-it-table](https://www.npmjs.com/package/markdown-it-table) (
   for help pages)
 * [d3-force](https://d3js.org/d3-force) (for graph debugging)
@@ -205,7 +202,7 @@ Before starting, ensure you have the following installed on your system:
 
 ### Clone
 
-`git clone https://github.com/jazzcat007/openDAW.git && cd opendaw`
+`git clone https://github.com/jazzcat007/gatedDAW.git && cd gatedDAW`
 
 ### Installation
 
@@ -227,7 +224,7 @@ Before starting, ensure you have the following installed on your system:
 
 ## Links
 
-* [openDAW SDK](https://www.npmjs.com/org/opendaw)
+* [gatedDAW SDK](https://www.npmjs.com/org/opendaw)
 
 ## Contributions
 
@@ -241,21 +238,10 @@ Before starting, ensure you have the following installed on your system:
 * "futurism" by Martin Königsmann from [Noun Project](https://thenounproject.com/icon/futurism-4565401/)
 * "tape reel" by Evgeny Filatov from [thenounproject](https://thenounproject.com/icon/tape-reel-2216293/)
 
-## Dual-Licensing Model
-
-openDAW is available **under two alternative license terms**:
-
-| Option                    | When to choose it                                                                                                    | Obligations                                                                                                                                                                                                                                                       |
-|---------------------------|----------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **A. AGPL v3 (or later)** | You are happy for the entire work that includes openDAW to be released under AGPL-compatible open-source terms.      | – Must distribute complete corresponding source code under AGPL.<br>– Must keep copyright & licence notices.<br>– Applies both to distribution **and** to public use via network/SaaS (§13).<br>– May run openDAW privately in any software, open or closed (§0). |
-| **B. Commercial Licence** | You wish to incorporate openDAW into **closed-source** or otherwise licence-incompatible software or SaaS offerings. | – Pay the agreed fee.<br>– No copyleft requirement for your own source code.<br>– Other terms as per the signed agreement.                                                                                                                                        |
-
-> **How to obtain the Commercial License**  
-> Email `andre.michelle@opendaw.org` with your company name, product description, and expected distribution volume.
-
-If you redistribute or run modified versions of openDAW for public use **without** a commercial license, the AGPL v3
-terms apply automatically.
-
 ## License
+
+gatedDAW is distributed under the [AGPL v3 (or later)](https://www.gnu.org/licenses/agpl-3.0.txt). Any commercial licensing offered by the upstream project is separate and does not apply to this fork unless its copyright holder expressly agrees.
+
+
 
 [AGPL v3 (or later)](https://www.gnu.org/licenses/agpl-3.0.txt) © 2025 André Michelle

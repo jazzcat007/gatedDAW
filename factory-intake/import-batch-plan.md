@@ -1,10 +1,10 @@
 # Factory Intake Batch Plan
 
-Generated for the openDAW self-hosted factory on 2026-09-06.
+Generated for the gatedDAW self-hosted factory on 2026-09-06.
 
 ## Context
 
-- Repo: `jazzcat007/openDAW`
+- Repo: `jazzcat007/gatedDAW`
 - Branch: `screwpulp/self-hosted`
 - Dev-box intake root: `factory-intake`
 - Dev-box factory mirror: `/data/factory`
