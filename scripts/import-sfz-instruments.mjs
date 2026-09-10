@@ -4,19 +4,14 @@
  * This deliberately preserves the source SFZ and its referenced samples; it never
  * flattens a multi-sample mapping into the single-sample catalog.
  */
-import {copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync} from "node:fs"
+import {copyFileSync, existsSync, linkSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync} from "node:fs"
 import {createHash} from "node:crypto"
 import {basename, dirname, extname, join, normalize, relative, resolve, sep} from "node:path"
 import {fileURLToPath} from "node:url"
+import {wavInfo} from "./lib/wav-info.mjs"
+import {parseSfz, resolveSfzPath, toRegion} from "./lib/sfz-parse.mjs"
 
 const DEFAULT_ROOT = "/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory"
-const SUPPORTED = new Set([
-    "sample", "default_path", "lokey", "hikey", "key", "lovel", "hivel", "pitch_keycenter",
-    "loop_mode", "loop_start", "loop_end", "group", "off_by", "off_mode", "polyphony",
-    "seq_length", "seq_position", "lorand", "hirand", "sw_lokey", "sw_hikey", "sw_last",
-    "sw_default", "sw_down", "sw_up", "ampeg_attack", "ampeg_decay", "ampeg_sustain",
-    "ampeg_release", "volume", "gain", "pan", "tune", "transpose", "trigger"
-])
 const usage = `Usage: node scripts/import-sfz-instruments.mjs <library-folder> [more-folders...]
 
 Options:
@@ -51,70 +46,41 @@ const walk = (path, files = []) => {
     return files
 }
 
-const withoutComments = source => source.replace(/\/\*[\s\S]*?\*\//g, "").split("\n").map(line => {
-    let quote = false
-    for (let index = 0; index < line.length - 1; index++) {
-        if (line[index] === '"') {quote = !quote}
-        if (!quote && line[index] === "/" && line[index + 1] === "/") {return line.slice(0, index)}
-    }
-    return line
-}).join("\n")
-
-const parseAttributes = source => {
-    const attributes = []
-    const expression = /([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/g
-    for (const match of source.matchAll(expression)) {
-        attributes.push([match[1].toLowerCase(), match[2].trim().replace(/^"|"$/g, "")])
-    }
-    return attributes
-}
-
-const parseFile = (file, stack = []) => {
-    const resolved = resolve(file)
-    if (stack.includes(resolved)) {throw new Error(`Circular #include: ${[...stack, resolved].join(" -> ")}`)}
-    const raw = readFileSync(resolved, "utf8")
-    const expanded = withoutComments(raw).replace(/^\s*#include\s+"([^"]+)"\s*$/gm, (_match, include) =>
-        parseFile(resolve(dirname(resolved), include), [...stack, resolved]).source)
-    return {source: expanded, attributes: parseAttributes(expanded)}
-}
-
-export const parseSfz = file => {
-    const {source} = parseFile(file)
-    const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/gi
-    const scopes = {control: {}, global: {}, master: {}, group: {}, region: {}}
-    const regions = []
-    let current = "global"
-    for (const match of source.matchAll(tokens)) {
-        if (match[1]) {
-            current = match[1].toLowerCase()
-            if (current === "global") {scopes.global = {}; scopes.master = {}; scopes.group = {}}
-            if (current === "master") {scopes.master = {}; scopes.group = {}}
-            if (current === "group") {scopes.group = {}}
-            if (current === "region") {
-                scopes.region = {}
-                regions.push(Object.assign({}, scopes.control, scopes.global, scopes.master, scopes.group, scopes.region))
-            }
-        } else {
-            const key = match[2].toLowerCase()
-            const value = match[3].trim().replace(/^"|"$/g, "")
-            scopes[current][key] = value
-            if (current === "region") {Object.assign(regions.at(-1), scopes.control, scopes.global, scopes.master, scopes.group, scopes.region)}
-        }
-    }
-    return {regions, unsupported: [...new Set([...source.matchAll(/([A-Za-z][A-Za-z0-9_]*)\s*=/g)].map(match => match[1].toLowerCase()).filter(key => !SUPPORTED.has(key)))]}
-}
-
 const inside = (root, file) => {
     const path = relative(root, file)
     return path !== "" && !path.startsWith(`..${sep}`) && path !== ".." && !path.includes(`${sep}..${sep}`)
 }
-const resolveSfzPath = (base, ...segments) =>
-    resolve(base, ...segments.flatMap(segment => segment.replaceAll("\\", "/").split("/")).filter(segment => segment.length > 0))
 const contentUuid = buffers => {
     const hash = createHash("sha256"); buffers.forEach(buffer => hash.update(buffer))
     const bytes = hash.digest().subarray(0, 16); bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128
     const hex = bytes.toString("hex")
     return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+}
+
+const tryWavInfo = buffer => {
+    try {return {value: wavInfo(buffer)}} catch (error) {return {reason: error instanceof Error ? error.message : String(error)}}
+}
+
+const probeSamples = (samples, bytes) => {
+    const info = new Map()
+    const unreadable = []
+    for (const path of samples) {
+        const attempt = tryWavInfo(bytes.get(path))
+        if (attempt.reason !== undefined) {unreadable.push({path, reason: attempt.reason}); continue}
+        info.set(path, {...attempt.value, uuid: contentUuid([bytes.get(path)])})
+    }
+    return {info, unreadable}
+}
+
+const linkOrCopy = (source, target) => {
+    if (existsSync(target)) {return}
+    mkdirSync(dirname(target), {recursive: true})
+    const attempt = tryLink(source, target)
+    if (!attempt) {copyFileSync(source, target)}
+}
+
+const tryLink = (source, target) => {
+    try {linkSync(source, target); return true} catch {return false}
 }
 const readCatalog = path => existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {version: 1, updatedAt: new Date(0).toISOString(), folders: []}
 
@@ -132,29 +98,59 @@ const main = () => {
         const entries = []
         for (const definition of walk(libraryRoot)) {
             const parsed = parseSfz(definition)
-            const samples = [...new Set(parsed.regions.filter(region => region.sample).map(region =>
-                resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)))]
+            const pathOf = region => resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)
+            const playable = parsed.regions.filter(region => region.sample)
+            const samples = [...new Set(playable.map(pathOf))]
             const missing = samples.filter(sample => !inside(libraryRoot, sample) || !existsSync(sample))
             if (parsed.regions.length === 0 || missing.length > 0) {
                 console.error(`invalid  ${relative(libraryRoot, definition)} regions=${parsed.regions.length} missing=${missing.length}`)
                 failed++; continue
             }
-            const uuid = contentUuid([readFileSync(definition), ...samples.sort().map(sample => readFileSync(sample))])
+            const bytes = new Map(samples.map(sample => [sample, readFileSync(sample)]))
+            const {info, unreadable} = probeSamples(samples, bytes)
+            if (unreadable.length > 0) {
+                const [{path, reason}] = unreadable
+                console.error(`invalid  ${relative(libraryRoot, definition)} unreadable=${unreadable.length} first='${relative(libraryRoot, path)}' (${reason})`)
+                failed++; continue
+            }
+            // Hash inputs stay definition-then-sorted-sample-bytes: the instrument uuid must not shift.
+            const uuid = contentUuid([readFileSync(definition), ...samples.slice().sort().map(sample => bytes.get(sample))])
+            const manifest = {
+                version: 1,
+                regions: playable.map(region => {
+                    const probe = info.get(pathOf(region))
+                    return {
+                        sample: probe.uuid,
+                        fileName: basename(pathOf(region)),
+                        durationInSeconds: probe.durationInSeconds,
+                        sampleRate: probe.sampleRate,
+                        channels: probe.channels,
+                        ...toRegion(region)
+                    }
+                }),
+                unsupportedOpcodes: parsed.unsupported
+            }
             const entry = {uuid, name: basename(definition, ".sfz"), definition: relative(libraryRoot, definition).replaceAll("\\", "/"),
                 regions: parsed.regions.length, samples: samples.length, unsupportedOpcodes: parsed.unsupported,
                 license: args.license ?? "No license provided", url: args.url ?? "local import"}
-            entries.push({entry, definition, samples})
+            entries.push({entry, definition, samples, manifest, info})
         }
         const folder = catalog.folders.find(candidate => candidate.name === library) ?? {name: library, instruments: []}
         if (!catalog.folders.includes(folder)) {catalog.folders.push(folder)}
         folder.instruments ??= []
-        for (const {entry, definition, samples} of entries) {
+        for (const {entry, definition, samples, manifest, info} of entries) {
             if (!folder.instruments.some(candidate => candidate.uuid === entry.uuid)) {folder.instruments.push(entry)}
             if (!args["dry-run"]) {
-                const targetRoot = join(root, "sfz", entry.uuid, "source")
+                const instrumentRoot = join(root, "sfz", entry.uuid)
+                const targetRoot = join(instrumentRoot, "source")
                 for (const file of [definition, ...samples]) {
                     const target = join(targetRoot, relative(libraryRoot, file)); mkdirSync(dirname(target), {recursive: true}); copyFileSync(file, target)
                 }
+                // Link out of the copy, not the library: same filesystem as the store, so the link cannot fail over.
+                for (const sample of samples) {
+                    linkOrCopy(join(targetRoot, relative(libraryRoot, sample)), join(root, "sfz", "samples", info.get(sample).uuid))
+                }
+                writeFileSync(join(instrumentRoot, "regions.json"), `${JSON.stringify(manifest, null, 2)}\n`)
             }
             console.log(`import  ${library}/${entry.name} regions=${entry.regions} samples=${entry.samples} unsupported=${entry.unsupportedOpcodes.length}`)
             imported++
