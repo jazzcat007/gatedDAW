@@ -38,7 +38,7 @@ export const SfzDeviceEditor = ({lifecycle, service, adapter, deviceHost}: Const
                           <div className={className}>
                               <FlexSpacer pixels={2}/>
                               <header>
-                                  <Icon symbol={IconSymbol.SoundFont}/>
+                                  <Icon symbol={IconSymbol.Sfz}/>
                                   <h1>SFZ</h1>
                               </header>
                               <div className="label">

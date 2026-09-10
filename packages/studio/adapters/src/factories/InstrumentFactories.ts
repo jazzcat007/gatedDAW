@@ -240,7 +240,7 @@ export namespace InstrumentFactories {
 
     export const Sfz: InstrumentFactory<SfzRegionAttachment, SfzDeviceBox> = {
         defaultName: "SFZ",
-        defaultIcon: IconSymbol.SoundFont,
+        defaultIcon: IconSymbol.Sfz,
         briefDescription: "SFZ Sampler",
         description: "Multi-sample instrument from an SFZ definition",
         manualPage: DeviceManualUrls.Sfz,
