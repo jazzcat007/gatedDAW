@@ -29,8 +29,20 @@
 ## Workflow
 
 - **Analyze bugs and propose fixes, but wait for approval before editing code.**
-- **Never commit.** Only run `git commit` when explicitly asked, for that commit. Finished, tested and verified work is ready to be committed, it is not permission to commit it.
+- **Never commit.** Only run `git commit` when explicitly asked, for that commit. Finished, tested and verified work is ready to be committed, it is not permission to commit it. The one standing exception is the remote-update handoff described below, which the user has asked to run without per-change confirmation.
 - **Never use `Write` to rewrite existing files** — always use `Edit` (small diffs).
+
+## Remote update process (cross-agent handoff)
+
+The deployed instance runs on a separate host (OMV server), managed by its own agent session with no access to this machine's filesystem. The only channel between "code written here" and "code running there" is GitHub (`origin` = `jazzcat007/openDAW`, branch `screwpulp/self-hosted` is the shared base both sides track). Local `npm install` cannot complete on this checkout's drive (no symlink support); `R:\Development\OpenDAW` is a working NTFS sandbox kept in sync for verification only — copy changed files there to build/test, never treat it as the source of truth.
+
+Before asking the user to test anything that needs deployment, finish your OWN portion first:
+1. Verify the change as thoroughly as your environment allows (type-check, build, run the relevant tests) — do this before handoff, not after.
+2. Stage and commit ONLY the files belonging to this change, on a new branch cut from the latest `origin/screwpulp/self-hosted` (`git fetch origin` first).
+3. Push that branch to `origin` and open a PR against `screwpulp/self-hosted` with a short summary and the verification checklist you actually ran.
+4. Tell the user (or, for the OMV side, the deploying agent) the branch/PR — not a patch file, zip, or "copy this over," unless GitHub access is genuinely unavailable.
+
+The receiving side's job before it asks the user to test: `git fetch origin && git merge origin/<branch>` (or merge the PR, then `git pull`), rebuild, restart, and confirm the feature is actually live. Neither side hands the user a "please check" until its own half — verified code, actually reachable in the environment the user will test — is done.
 
 ## MemPalace
 
