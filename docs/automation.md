@@ -5,7 +5,7 @@ automated parameter while the transport runs. Two changes are documented here:
 
 - **write-driven latch recording**, which replaced a touch-gated recorder that only ever worked for one UI
   component,
-- **[#347](https://github.com/jazzcat007/openDAW/issues/347) manual control**, which suspends a parameter's
+- **[#347](https://github.com/jazzcat007/gatedDAW/issues/347) manual control**, which suspends a parameter's
   automation while it is being written.
 
 ## Recording model

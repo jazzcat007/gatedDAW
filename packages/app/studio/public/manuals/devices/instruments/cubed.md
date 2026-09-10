@@ -193,7 +193,7 @@ rather than merging into it, and all of them undo in one step.
 
 **Copy Pattern** puts the current pattern on the clipboard, **Paste Pattern** writes it back. Note, gate, slide, accent
 and the pattern length all travel together. It is the system clipboard, so a pattern moves between the 16 slots, between
-two _Cubed_ devices, and between two openDAW tabs.
+two _Cubed_ devices, and between two gatedDAW tabs.
 
 **Paste Pattern** stays available even when the clipboard holds nothing usable, because a browser only hands over the
 clipboard after the click. Nothing changes in that case and a short message says so.

@@ -1,7 +1,7 @@
 # Script Editor
 
 The script editor lets you write a few lines of TypeScript that create a new project or change the one you have open.
-You find it under openDAW menu > Script Editor.
+You find it under gatedDAW menu > Script Editor.
 
 The complete documentation lives at `/docs/scripting/`, with a guide, a cookbook and
 the reference of everything a script can touch. This page covers the editor itself.
@@ -27,5 +27,5 @@ Scripts are saved in your browser with a name and a description and are included
 
 The editor comes with example scripts. They show a first melody, an acid line with drums, a generated sample on an
 audio track, a wavetable for Nano, an inventory of the open project and a cleanup script. You can delete them, and
-newer openDAW versions replace them with updated copies. The same scripts are explained in the
+newer gatedDAW versions replace them with updated copies. The same scripts are explained in the
 [cookbook](/docs/scripting/guide/09-cookbook/).

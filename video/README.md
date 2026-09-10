@@ -1,4 +1,4 @@
-# openDAW video series — subjects & highlights
+# gatedDAW video series — subjects & highlights
 
 Prep notes for the video creator. One file per video: the **subject** and **what to show, in order**.
 Wording and voice-over are yours. For musicians and beginners, not developers — keep it about making
@@ -7,7 +7,7 @@ music, no engine/tech talk. Aim 2 minutes max per video; the intro can run longe
 Ordered as a learning path. Videos 4–8 build one small track step by step.
 
 ## Order
-1. `01-welcome.md` — Welcome to openDAW (intro, longer)
+1. `01-welcome.md` — Welcome to gatedDAW (intro, longer)
 2. `02-getting-around.md` — Getting around
 3. `03-start-a-project.md` — Start a project
 4. `04-first-instrument.md` — Your first instrument and melody

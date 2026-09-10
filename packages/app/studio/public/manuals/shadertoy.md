@@ -89,7 +89,7 @@ The following Shadertoy features are **not available**:
 
 ## 6. Video Export
 
-Export your shader visualization as an MP4 video file via **openDAW Menu** > Export > Video...
+Export your shader visualization as an MP4 video file via **gatedDAW Menu** > Export > Video...
 
 ### Export Settings
 
@@ -139,7 +139,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
 ## 9. AI Start Prompt
 
-Copy and paste this prompt into any coding AI to vibe-code a shader for the openDAW visualizer.
+Copy and paste this prompt into any coding AI to vibe-code a shader for the gatedDAW visualizer.
 
 ````text
 Write a GLSL fragment shader for a Shadertoy-compatible environment with audio and MIDI input.

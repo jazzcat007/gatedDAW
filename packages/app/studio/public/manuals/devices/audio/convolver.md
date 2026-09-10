@@ -41,7 +41,7 @@ The circular drop zone holds the IR sample.
 
 The name of the loaded sample appears below the zone. Without a sample the device passes the dry signal only. If the referenced sample cannot be loaded (missing or failed download), the zone turns orange and the device stays dry.
 
-The device menu (⋮) has an **Impulse Responses** entry listing the free, openly licensed collection from the openDAW cloud. The same list appears when right-clicking the drop zone. Pick one to load it, the currently loaded response is marked with a check.
+The device menu (⋮) has an **Impulse Responses** entry listing the free, openly licensed collection from the gatedDAW cloud. The same list appears when right-clicking the drop zone. Pick one to load it, the currently loaded response is marked with a check.
 
 ---
 

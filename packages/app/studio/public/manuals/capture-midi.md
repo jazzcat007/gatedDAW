@@ -1,6 +1,6 @@
 # Capture MIDI
 
-Capture MIDI lets you keep a performance you didn't plan to record. While an instrument is armed, openDAW silently
+Capture MIDI lets you keep a performance you didn't plan to record. While an instrument is armed, gatedDAW silently
 buffers every note that arrives from your controller. When you decide the take is worth keeping, the
 {icon:Capture} **Capture MIDI** button in the header turns the buffered notes into a region on the timeline. No record
 arming, no transport state, no count-in.
@@ -20,7 +20,7 @@ The keyboard shortcut for committing is {key:Ctrl+Shift+M}.
 
 ## How buffering works
 
-For each armed MIDI track, openDAW collects note-on and note-off events from your controller into a buffer that lives
+For each armed MIDI track, gatedDAW collects note-on and note-off events from your controller into a buffer that lives
 alongside the track. The buffer is independent of the transport.
 
 ### Transport stopped
@@ -52,7 +52,7 @@ whole time.
 
 ## Which track gets the region?
 
-When multiple MIDI tracks are armed, openDAW picks the target this way:
+When multiple MIDI tracks are armed, gatedDAW picks the target this way:
 
 1. If the currently focused track belongs to an armed MIDI capture, the region is created there.
 2. Otherwise the first armed MIDI capture is used.
@@ -62,7 +62,7 @@ track you want before pressing the button.
 
 ## Behaviour with existing material
 
-If the captured region overlaps regions already on the chosen track, openDAW applies your current overlap-resolution
+If the captured region overlaps regions already on the chosen track, gatedDAW applies your current overlap-resolution
 preference (clip, push, or keep). The newly committed region is selected after creation so you can move, quantise or
 delete it immediately.
 

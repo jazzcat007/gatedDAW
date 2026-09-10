@@ -6,4 +6,4 @@
   First, it bakes in the `opendaw.studio` CORS allowlist, so a school installs it in one click
   instead of the manual WebAppPassword config. Second, it provisions classes (accounts, folders,
   permissions) so teachers avoid the manual Team Folder and ACL setup, and it could expose
-  provisioning endpoints so this can be driven from inside openDAW.
+  provisioning endpoints so this can be driven from inside gatedDAW.

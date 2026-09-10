@@ -1,6 +1,6 @@
-Hello openDAW Support,
+Hello gatedDAW Support,
 
-I'd like to report a bug encountered while using openDAW. Below are the details:
+I'd like to report a bug encountered while using gatedDAW. Below are the details:
 
 What I did:
 [Briefly describe the steps you performed before the issue occurred.]
