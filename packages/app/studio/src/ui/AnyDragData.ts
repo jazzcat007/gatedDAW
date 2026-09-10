@@ -1,10 +1,11 @@
 import {byte, int, Nullable, UUID} from "@opendaw/lib-std"
-import {InstrumentFactories, Sample, Soundfont} from "@opendaw/studio-adapters"
+import {InstrumentFactories, Sample, SfzInstrument, Soundfont} from "@opendaw/studio-adapters"
 import {EffectFactories, PresetCategory, PresetSource} from "@opendaw/studio-core"
 
 export type DragCopyHint = { copy?: boolean }
 export type DragSample = { type: "sample", sample: Sample } & DragCopyHint
 export type DragSoundfont = { type: "soundfont", soundfont: Soundfont } & DragCopyHint
+export type DragSfz = { type: "sfz", sfz: SfzInstrument } & DragCopyHint
 export type DragFile = { type: "file", file: File /* This cannot be accessed while dragging! */ } & DragCopyHint
 export type DragDevice = (
     {
@@ -67,5 +68,5 @@ export type DragModulator = {
 } & DragCopyHint
 
 export type AnyDragData =
-    DragSample | DragFile | DragDevice | DragChannelStrip | DragTrack | DragSoundfont | DragPreset
+    DragSample | DragFile | DragDevice | DragChannelStrip | DragTrack | DragSoundfont | DragSfz | DragPreset
     | DragCompositeEntry | DragModulator

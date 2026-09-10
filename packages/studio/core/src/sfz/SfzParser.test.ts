@@ -80,4 +80,42 @@ describe("SfzParser", () => {
         const {regions} = SfzParser.parse("<region> sample=a.wav lovel=64 hivel=127 volume=-6 gain=-3")
         expect(regions[0]).toMatchObject({velLo: 64, velHi: 127, volume: -3})
     })
+
+    describe("resolveSamplePath", () => {
+        const region = (sample: string, defaultPath: string = "") => {
+            const {regions} = SfzParser.parse(defaultPath.length > 0
+                ? `<group> default_path="${defaultPath}" <region> sample="${sample}"`
+                : `<region> sample="${sample}"`)
+            return regions[0]
+        }
+
+        it("joins the definition's own directory, default_path and sample", () => {
+            const path = SfzParser.resolveSamplePath(
+                "Chordophones/Composite Chordophones/Concert Harp.sfz", region("Concert Harp/A1.wav"))
+            expect(path).toBe("Chordophones/Composite Chordophones/Concert Harp/A1.wav")
+        })
+
+        it("applies default_path relative to the definition's directory", () => {
+            const path = SfzParser.resolveSamplePath(
+                "Kits/Kit.sfz", region("kick.wav", "samples/"))
+            expect(path).toBe("Kits/samples/kick.wav")
+        })
+
+        it("normalizes backslashes from Windows-authored SFZ files", () => {
+            const path = SfzParser.resolveSamplePath(
+                "Kits\\Kit.sfz", region("Samples\\kick.wav"))
+            expect(path).toBe("Kits/Samples/kick.wav")
+        })
+
+        it("collapses .. segments against the definition's directory", () => {
+            const path = SfzParser.resolveSamplePath(
+                "Kits/Sub/Kit.sfz", region("../shared/kick.wav"))
+            expect(path).toBe("Kits/shared/kick.wav")
+        })
+
+        it("handles a definition at the library root", () => {
+            const path = SfzParser.resolveSamplePath("Kit.sfz", region("kick.wav"))
+            expect(path).toBe("kick.wav")
+        })
+    })
 })

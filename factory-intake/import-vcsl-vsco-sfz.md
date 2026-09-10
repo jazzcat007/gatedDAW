@@ -38,12 +38,40 @@ find "$INTAKE/sfz/VSCO-2-CE" -iname '*.wav' | wc -l # 3168
 
 ## Required product support
 
-The current factory importer supports standalone audio samples and `.sf2` files;
-it cannot load SFZ regions. The Nano sampler is single-sample and must not be
-used as a substitute. Add an SFZ instrument loader/catalog type before setting
-either manifest entry's `imported` flag to `true`.
+The playable SFZ instrument (`SfzDeviceBox`/`SfzRegionBox`, a composite device — one
+tiny WASM voice per region) and its Browser-panel catalog tab now exist: an SFZ tab
+in the Browser panel (`SfzBrowser.tsx`) lists whatever `factory/sfz/index.json`
+contains, and "Create SFZ Device" fetches the `.sfz` text plus every referenced WAV
+over HTTP and builds a live device (`OpenSfzAPI`, `SfzSelection.ts`). The Nano
+sampler is single-sample and must not be used as a substitute.
+
+What remains before setting either manifest entry's `imported` flag to `true` is
+staging: clone the library, run the importer below to populate
+`factory/sfz/index.json` and `factory/sfz/<uuid>/source/...` on the OMV host
+(`RUN_SFZ_IMPORTS=1` in `ingest.sh`, or invoke `scripts/import-sfz-instruments.mjs`
+directly per library), and confirm the app's Browser panel serves those paths at
+`/factory/sfz/...`.
 
 At minimum, the loader must support `<control>`, `<global>`, `<group>`, and
 `<region>` inheritance; `sample`, `lokey`, `hikey`, `lovel`, `hivel`, `pitch_keycenter`,
 `loop_mode`, `loop_start`, `loop_end`, `off_by`, `group`, and `sw_*` opcodes.
 Unsupported opcodes must be reported per instrument, never discarded silently.
+
+## Current importer
+
+The first implementation is available now. It validates each definition, expands
+includes, resolves inherited regions, copies every referenced source file into an
+offline factory bundle, and writes `sfz/index.json`. It records unsupported
+opcodes on each entry; missing samples or zero-region definitions fail the run.
+
+```bash
+npm run import-sfz -- "$INTAKE/sfz/VCSL" \
+  --root "$FACTORY_ROOT" --library VCSL --license CC0-1.0 \
+  --url https://github.com/sgossner/VCSL/tree/sfz
+```
+
+Use `--dry-run` first. Round robin, keyswitch, choke groups, and `#include` are
+still deliberately unsupported by the playable device — opcodes it can't apply are
+recorded per instrument in `unsupportedOpcodes` and surfaced in the Browser tab, not
+silently dropped, but a region using only those features will play with whatever
+the device does support (e.g. ignoring a round-robin pick, always sounding).
