@@ -75,6 +75,8 @@ import {
     SignatureEventBox,
     SoundfontDeviceBox,
     SoundfontFileBox,
+    SfzDeviceBox,
+    SfzRegionBox,
     SpielwerkDeviceBox,
     StereoToolDeviceBox,
     TapeDeviceBox,
@@ -159,6 +161,8 @@ import {UnknownAudioEffectDeviceBoxAdapter} from "./devices/audio-effects/Unknow
 import {UnknownMidiEffectDeviceBoxAdapter} from "./devices/midi-effects/UnknownMidiEffectDeviceBoxAdapter"
 import {SoundfontDeviceBoxAdapter} from "./devices/instruments/SoundfontDeviceBoxAdapter"
 import {SoundfontFileBoxAdapter} from "./soundfont/SoundfontFileBoxAdapter"
+import {SfzDeviceBoxAdapter} from "./devices/instruments/SfzDeviceBoxAdapter"
+import {SfzRegionBoxAdapter} from "./devices/instruments/Sfz/SfzRegionBoxAdapter"
 import {MaximizerDeviceBoxAdapter} from "./devices/audio-effects/MaximizerDeviceBoxAdapter"
 import {CompressorDeviceBoxAdapter} from "./devices/audio-effects/CompressorDeviceBoxAdapter"
 import {GateDeviceBoxAdapter} from "./devices/audio-effects/GateDeviceBoxAdapter"
@@ -300,6 +304,8 @@ export class BoxAdapters implements Terminable {
             visitRootBox: (box: RootBox): BoxAdapter => new RootBoxAdapter(this.#context, box),
             visitSoundfontDeviceBox: (box: SoundfontDeviceBox) => new SoundfontDeviceBoxAdapter(this.#context, box),
             visitSoundfontFileBox: (box: SoundfontFileBox) => new SoundfontFileBoxAdapter(this.#context, box),
+            visitSfzDeviceBox: (box: SfzDeviceBox) => new SfzDeviceBoxAdapter(this.#context, box),
+            visitSfzRegionBox: (box: SfzRegionBox) => new SfzRegionBoxAdapter(this.#context, box),
             visitSpielwerkDeviceBox: (box: SpielwerkDeviceBox) => new SpielwerkDeviceBoxAdapter(this.#context, box),
             visitStereoToolDeviceBox: (box: StereoToolDeviceBox) => new StereoToolDeviceBoxAdapter(this.#context, box),
             visitTapeDeviceBox: (box: TapeDeviceBox) => new TapeDeviceBoxAdapter(this.#context, box),

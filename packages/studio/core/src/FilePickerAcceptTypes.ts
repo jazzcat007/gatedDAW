@@ -11,6 +11,12 @@ export namespace FilePickerAcceptTypes {
             accept: {"audio/x-soundfont": [".sf2"]}
         }]
     }
+    export const SfzFiles: FilePickerOptions = {
+        types: [{
+            description: "sfz-instrument",
+            accept: {"application/octet-stream": [".sfz", ".wav"]}
+        }]
+    }
     export const ProjectSyncLog: FilePickerOptions = {
         types: [{
             description: "openDAW sync-log-file",

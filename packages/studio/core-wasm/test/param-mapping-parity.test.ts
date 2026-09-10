@@ -15,14 +15,14 @@ import {
     DelayDeviceBox, FoldDeviceBox, GateDeviceBox, NeonDeviceBox, MaximizerDeviceBox, NanoDeviceBox, NeuralAmpDeviceBox,
     PitchDeviceBox, PlayfieldDeviceBox, PlayfieldSampleBox, RevampDeviceBox, ReverbDeviceBox, StereoToolDeviceBox,
     TidalDeviceBox, VaporisateurDeviceBox, VelocityDeviceBox, VocoderDeviceBox, WaveshaperDeviceBox,
-    ApparatDeviceBox, CubedDeviceBox, GrooveShuffleBox, SoundfontDeviceBox, SpielwerkDeviceBox, WerkstattDeviceBox, ZeitgeistDeviceBox,
+    ApparatDeviceBox, CubedDeviceBox, GrooveShuffleBox, SoundfontDeviceBox, SfzDeviceBox, SfzRegionBox, SpielwerkDeviceBox, WerkstattDeviceBox, ZeitgeistDeviceBox,
     LfoModulatorBox, MacroModulatorBox, RandomModulatorBox, StepsModulatorBox
 } from "@opendaw/studio-boxes"
 import {
     ArpeggioDeviceBoxAdapter, ChordDeviceBoxAdapter, KadenzDeviceBoxAdapter, AutotuneDeviceBoxAdapter, AutomatableParameterFieldAdapter, BoxAdapters, BoxAdaptersContext, CompressorDeviceBoxAdapter,
     ConvolverDeviceBoxAdapter, CrusherDeviceBoxAdapter, DattorroReverbDeviceBoxAdapter, DelayDeviceBoxAdapter, FoldDeviceBoxAdapter,
     GateDeviceBoxAdapter, NeonDeviceBoxAdapter, MaximizerDeviceBoxAdapter, NanoDeviceBoxAdapter, NeuralAmpDeviceBoxAdapter,
-    ParameterFieldAdapters, PitchDeviceBoxAdapter, PlayfieldSampleBoxAdapter, ProjectSkeleton,
+    ParameterFieldAdapters, PitchDeviceBoxAdapter, PlayfieldSampleBoxAdapter, ProjectSkeleton, SfzRegionBoxAdapter,
     RevampDeviceBoxAdapter, ReverbDeviceBoxAdapter, SampleLoader, SampleLoaderManager, StereoToolDeviceBoxAdapter,
     TidalDeviceBoxAdapter, VaporisateurDeviceBoxAdapter, VelocityDeviceBoxAdapter, VocoderDeviceBoxAdapter,
     WaveshaperDeviceBoxAdapter, LfoModulatorBoxAdapter, MacroModulatorBoxAdapter, RandomModulatorBoxAdapter,
@@ -144,6 +144,12 @@ const buildBoxes = () => {
         box.file.refer(file)
         box.index.setValue(60)
     })
+    const sfzUnit = createUnit(9)
+    const sfz = SfzDeviceBox.create(boxGraph, UUID.generate(), box => box.host.refer(sfzUnit.input))
+    const sfzRegion = SfzRegionBox.create(boxGraph, UUID.generate(), box => {
+        box.device.refer(sfz.regions)
+        box.file.refer(file)
+    })
     const groove = GrooveShuffleBox.create(boxGraph, UUID.generate(), box => {box.label.setValue("Shuffle"); box.duration.setValue(480)})
     const zeitgeist = ZeitgeistDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.midiEffects); box.groove.refer(groove); box.index.setValue(3)})
     const werkstatt = WerkstattDeviceBox.create(boxGraph, UUID.generate(), box => {box.host.refer(effectUnit.audioEffects); box.index.setValue(15)})
@@ -160,7 +166,7 @@ const buildBoxes = () => {
     const randomModulator = RandomModulatorBox.create(boxGraph, UUID.generate(), box => {box.collection.refer(rootBox.modulators); box.index.setValue(3)})
     boxGraph.endTransaction()
     return {boxGraph, zeitgeist, werkstatt, spielwerk, apparat, cubed, soundfont, compressor, convolver, crusher, dattorro, delay, fold, gate, maximizer, neuralAmp, revamp, reverb,
-        stereoTool, tidal, vocoder, waveshaper, autotune, arpeggio, chord, kadenz, pitch, velocity, vaporisateur, neon, nano, playfieldSample,
+        stereoTool, tidal, vocoder, waveshaper, autotune, arpeggio, chord, kadenz, pitch, velocity, vaporisateur, neon, nano, playfieldSample, sfzRegion,
         lfoModulator, stepsModulator, macroModulator, randomModulator}
 }
 
@@ -272,6 +278,11 @@ const CASES: ReadonlyArray<DeviceCase> = [
             fieldPath(boxes.playfieldSample.exclude.address),
             // volume / panning are the slot's channel STRIP, applied by the composite engine-side, not the device.
             fieldPath(boxes.playfieldSample.volume.address), fieldPath(boxes.playfieldSample.panning.address)]},
+    {name: "sfz-region", file: "device_sfz_region.wasm",
+        createAdapter: context => new SfzRegionBoxAdapter(context, boxes.sfzRegion),
+        // volume / pan are the region's channel STRIP, applied by the composite engine-side (childVolumeKey /
+        // childPanKey), not the device — same reasoning as playfield-sample's volume / panning above.
+        tsOnly: [fieldPath(boxes.sfzRegion.volume.address), fieldPath(boxes.sfzRegion.pan.address)]},
     {name: "revamp", file: "device_revamp.wasm",
         createAdapter: context => new RevampDeviceBoxAdapter(context, boxes.revamp), tsOnly: []},
     {name: "reverb", file: "device_reverb.wasm",

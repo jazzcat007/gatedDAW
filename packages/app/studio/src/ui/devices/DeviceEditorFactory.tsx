@@ -29,6 +29,7 @@ import {
     RevampDeviceBox,
     ReverbDeviceBox,
     SoundfontDeviceBox,
+    SfzDeviceBox,
     SpielwerkDeviceBox,
     StereoToolDeviceBox,
     TapeDeviceBox,
@@ -81,6 +82,7 @@ import {
     RevampDeviceBoxAdapter,
     ReverbDeviceBoxAdapter,
     SoundfontDeviceBoxAdapter,
+    SfzDeviceBoxAdapter,
     SpielwerkDeviceBoxAdapter,
     StereoToolDeviceBoxAdapter,
     TapeDeviceBoxAdapter,
@@ -117,6 +119,7 @@ import {ZeitgeistDeviceEditor} from "@/ui/devices/midi-effects/ZeitgeistDeviceEd
 import {UnknownEffectDeviceEditor} from "@/ui/devices/UnknownEffectDeviceEditor"
 import {StudioService} from "@/service/StudioService"
 import {SoundfontDeviceEditor} from "@/ui/devices/instruments/SoundfontDeviceEditor"
+import {SfzDeviceEditor} from "@/ui/devices/instruments/SfzDeviceEditor"
 import {MaximizerDeviceEditor} from "@/ui/devices/audio-effects/MaximizerDeviceEditor"
 import {CompressorDeviceEditor} from "@/ui/devices/audio-effects/CompressorDeviceEditor"
 import {GateDeviceEditor} from "@/ui/devices/audio-effects/GateDeviceEditor"
@@ -240,6 +243,12 @@ export namespace DeviceEditorFactory {
                                        service={service}
                                        adapter={service.project.boxAdapters.adapterFor(box, SoundfontDeviceBoxAdapter)}
                                        deviceHost={deviceHost}/>
+            ),
+            visitSfzDeviceBox: (box: SfzDeviceBox): JsxValue => (
+                <SfzDeviceEditor lifecycle={lifecycle}
+                                 service={service}
+                                 adapter={service.project.boxAdapters.adapterFor(box, SfzDeviceBoxAdapter)}
+                                 deviceHost={deviceHost}/>
             ),
             visitNanoDeviceBox: (box: NanoDeviceBox): JsxValue => (
                 <NanoDeviceEditor lifecycle={lifecycle}
