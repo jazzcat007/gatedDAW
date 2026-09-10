@@ -75,6 +75,22 @@ const toRegion = (raw: Scope): SfzParsedRegion => {
     }
 }
 
+const posixDirname = (path: string): string => {
+    const normalized = path.replaceAll("\\", "/")
+    const index = normalized.lastIndexOf("/")
+    return index === -1 ? "" : normalized.slice(0, index)
+}
+
+const posixJoin = (...segments: ReadonlyArray<string>): string => {
+    const parts = segments.flatMap(segment => segment.replaceAll("\\", "/").split("/"))
+        .filter(part => part.length > 0 && part !== ".")
+    const resolved: Array<string> = []
+    for (const part of parts) {
+        if (part === "..") {resolved.pop()} else {resolved.push(part)}
+    }
+    return resolved.join("/")
+}
+
 export namespace SfzParser {
     // Parses a single, already-flattened `.sfz` text (no `#include`, deferred per plan) into inheritance-
     // resolved regions: `<control>` / `<global>` / `<master>` / `<group>` opcodes cascade down, each `<region>`
@@ -111,4 +127,10 @@ export namespace SfzParser {
         const regions = raw.filter(scope => isDefined(scope.sample)).map(toRegion)
         return {regions, unsupportedOpcodes}
     }
+
+    // A region's `sample=` opcode is relative to `default_path=` which is itself relative to the `.sfz`
+    // file's own directory (SFZ spec). `definitionRelativePath` is that `.sfz` file's own path relative to
+    // its library root, so the result is a path relative to that same root — the shape catalog storage uses.
+    export const resolveSamplePath = (definitionRelativePath: string, region: SfzParsedRegion): string =>
+        posixJoin(posixDirname(definitionRelativePath), region.defaultPath, region.sample)
 }

@@ -50,7 +50,10 @@ type Construct<T> = {
 type Loaded<T> = { root: ResourceFolder<T>, tree: Option<LocalTree<T>> }
 
 const dragUuid = (data: AnyDragData): Optional<UUID.String> =>
-    data.type === "sample" ? data.sample.uuid : data.type === "soundfont" ? data.soundfont.uuid : undefined
+    data.type === "sample" ? data.sample.uuid
+        : data.type === "soundfont" ? data.soundfont.uuid
+            : data.type === "sfz" ? data.sfz.uuid
+                : undefined
 
 export const ResourceBrowser = <T, >({
                                          lifecycle,

@@ -8,6 +8,7 @@ import {PresetBrowser} from "@/ui/browse/PresetBrowser.tsx"
 import {BrowseScope} from "@/ui/browse/BrowseScope"
 import {Html} from "@opendaw/lib-dom"
 import {SoundfontBrowser} from "@/ui/browse/SoundfontBrowser"
+import {SfzBrowser} from "@/ui/browse/SfzBrowser"
 
 const className = Html.adoptStyleSheet(css, "BrowserPanel")
 
@@ -37,6 +38,11 @@ export const BrowserPanel = ({lifecycle, service}: Construct) => {
                                              service={service}
                                              background
                                              fontSize="0.75em"/>
+                case BrowseScope.Sfz:
+                    return <SfzBrowser lifecycle={contentLifecycle}
+                                       service={service}
+                                       background
+                                       fontSize="0.75em"/>
                 default:
                     return <span>Unknown</span>
             }
@@ -47,7 +53,8 @@ export const BrowserPanel = ({lifecycle, service}: Construct) => {
             <RadioGroup lifecycle={lifecycle} elements={[
                 {value: BrowseScope.Presets, element: <span>Presets</span>},
                 {value: BrowseScope.Samples, element: <span>Samples</span>},
-                {value: BrowseScope.Soundfonts, element: <span>Soundfonts</span>}
+                {value: BrowseScope.Soundfonts, element: <span>Soundfonts</span>},
+                {value: BrowseScope.Sfz, element: <span>SFZ</span>}
             ]} model={scope} style={{fontSize: "11px", columnGap: "8px", padding: "0.5em 0.75em"}}/>
             {placeholder}
         </div>

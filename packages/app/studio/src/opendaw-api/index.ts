@@ -1,4 +1,6 @@
 export * from "./OpenDAWHeaders"
 export * from "./OpenSampleAPI"
 export * from "./OpenSoundfontAPI"
+export * from "./OpenSfzAPI"
+export * from "./SfzIndex"
 export * from "./OpenPresetAPI"
