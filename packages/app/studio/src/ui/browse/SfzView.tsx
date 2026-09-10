@@ -51,7 +51,7 @@ export const SfzView = ({lifecycle, sfzSelection, sfz, tree, refresh}: Construct
             collector.addItems(
                 MenuItem.header({
                     label: targets.length > 1 ? `${targets.length} SFZ instruments` : name,
-                    icon: IconSymbol.SoundFont,
+                    icon: IconSymbol.Sfz,
                     color: Colors.blue
                 }),
                 MenuItem.default({label: "Create SFZ Device"})

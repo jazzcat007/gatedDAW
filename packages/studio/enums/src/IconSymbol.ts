@@ -137,6 +137,7 @@ export enum IconSymbol {
     Sine,
     Solo,
     SoundFont,
+    Sfz,
     Speaker,
     SpeakerHeadphone,
     Square,
