@@ -463,7 +463,7 @@ if [[ "$RUN_SFZ_IMPORTS" == "1" ]]; then
   fi
   if [[ -d "$INTAKE_ROOT/sfz/VSCO-2-CE" ]]; then
     node "$REPO_ROOT/scripts/import-sfz-instruments.mjs" "$INTAKE_ROOT/sfz/VSCO-2-CE" \
-      --root "$FACTORY_ROOT" --library "VSCO 2 CE" --license "See upstream distribution terms" \
+      --root "$FACTORY_ROOT" --library "VSCO 2 CE" --license "CC0-1.0" \
       --url "https://github.com/sgossner/VSCO-2-CE/releases/tag/1.1.0"
   else
     echo "skip VSCO 2 CE SFZ import, source not staged"
