@@ -13,6 +13,7 @@
     "build-wasm": "npm run build:wasm -w @opendaw/studio-core-wasm",
     "import-demos": "node scripts/import-demos.mjs",
     "import-samples": "node scripts/import-samples.mjs",
+    "import-sfz": "node scripts/import-sfz-instruments.mjs",
     "import-soundfonts": "node scripts/import-soundfonts.mjs",
     "dev:studio": "turbo run dev --filter=@opendaw/app-studio",
     "dev:lab": "turbo run dev --filter=@opendaw/lab",
