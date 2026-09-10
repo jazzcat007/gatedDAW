@@ -36,15 +36,19 @@ export class OpenSfzAPI {
     // Soundfont's `load`), so this splits into a definition fetch and a per-sample fetch instead.
     async loadDefinition(uuid: UUID.Bytes): Promise<string> {
         const instrument = await this.get(uuid)
-        const url = `${OpenSfzAPI.FileRoot}/${instrument.uuid}/source/${instrument.definition}`
+        const url = `${OpenSfzAPI.FileRoot}/${instrument.uuid}/source/${OpenSfzAPI.#encodePath(instrument.definition)}`
         return fetch(url, OpenDAWHeaders).then(response =>
             response.ok ? response.text() : panic(`${response.status} ${response.statusText}`))
     }
 
     async loadSample(uuid: UUID.Bytes, relativePath: string): Promise<ArrayBuffer> {
         const instrument = await this.get(uuid)
-        const url = `${OpenSfzAPI.FileRoot}/${instrument.uuid}/source/${relativePath}`
+        const url = `${OpenSfzAPI.FileRoot}/${instrument.uuid}/source/${OpenSfzAPI.#encodePath(relativePath)}`
         return fetch(url, OpenDAWHeaders).then(response =>
             response.ok ? response.arrayBuffer() : panic(`${response.status} ${response.statusText}`))
     }
+
+    // Note names like "F#3.wav" are common in keyswitch/articulation libraries. An unencoded "#" in a URL
+    // passed to fetch() is parsed as the start of a fragment and silently stripped from the request path.
+    static #encodePath(path: string): string {return path.split("/").map(encodeURIComponent).join("/")}
 }
