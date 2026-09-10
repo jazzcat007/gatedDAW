@@ -30,6 +30,7 @@ export const SfzView = ({lifecycle, sfzSelection, sfz, tree, refresh}: Construct
     const element: HTMLElement = (
         <div className={className}
              data-selection={JSON.stringify(sfz)}
+             onclick={() => sfzSelection.requestDevice([sfz])}
              draggable>
             <div className="meta">
                 <span className="name">

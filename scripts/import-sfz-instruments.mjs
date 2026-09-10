@@ -62,9 +62,9 @@ const withoutComments = source => source.replace(/\/\*[\s\S]*?\*\//g, "").split(
 
 const parseAttributes = source => {
     const attributes = []
-    const expression = /([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^\s<>=]+)/g
+    const expression = /([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/g
     for (const match of source.matchAll(expression)) {
-        attributes.push([match[1].toLowerCase(), match[2].replace(/^"|"$/g, "")])
+        attributes.push([match[1].toLowerCase(), match[2].trim().replace(/^"|"$/g, "")])
     }
     return attributes
 }
@@ -80,7 +80,7 @@ const parseFile = (file, stack = []) => {
 
 export const parseSfz = file => {
     const {source} = parseFile(file)
-    const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^\s<>=]+)/gi
+    const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/gi
     const scopes = {control: {}, global: {}, master: {}, group: {}, region: {}}
     const regions = []
     let current = "global"
@@ -96,7 +96,7 @@ export const parseSfz = file => {
             }
         } else {
             const key = match[2].toLowerCase()
-            const value = match[3].replace(/^"|"$/g, "")
+            const value = match[3].trim().replace(/^"|"$/g, "")
             scopes[current][key] = value
             if (current === "region") {Object.assign(regions.at(-1), scopes.control, scopes.global, scopes.master, scopes.group, scopes.region)}
         }
@@ -108,6 +108,8 @@ const inside = (root, file) => {
     const path = relative(root, file)
     return path !== "" && !path.startsWith(`..${sep}`) && path !== ".." && !path.includes(`${sep}..${sep}`)
 }
+const resolveSfzPath = (base, ...segments) =>
+    resolve(base, ...segments.flatMap(segment => segment.replaceAll("\\", "/").split("/")).filter(segment => segment.length > 0))
 const contentUuid = buffers => {
     const hash = createHash("sha256"); buffers.forEach(buffer => hash.update(buffer))
     const bytes = hash.digest().subarray(0, 16); bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128
@@ -131,7 +133,7 @@ const main = () => {
         for (const definition of walk(libraryRoot)) {
             const parsed = parseSfz(definition)
             const samples = [...new Set(parsed.regions.filter(region => region.sample).map(region =>
-                resolve(dirname(definition), region.default_path ?? "", region.sample)))]
+                resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)))]
             const missing = samples.filter(sample => !inside(libraryRoot, sample) || !existsSync(sample))
             if (parsed.regions.length === 0 || missing.length > 0) {
                 console.error(`invalid  ${relative(libraryRoot, definition)} regions=${parsed.regions.length} missing=${missing.length}`)

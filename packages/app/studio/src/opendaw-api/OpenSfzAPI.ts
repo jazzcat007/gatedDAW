@@ -50,5 +50,5 @@ export class OpenSfzAPI {
 
     // Note names like "F#3.wav" are common in keyswitch/articulation libraries. An unencoded "#" in a URL
     // passed to fetch() is parsed as the start of a fragment and silently stripped from the request path.
-    static #encodePath(path: string): string {return path.split("/").map(encodeURIComponent).join("/")}
+    static #encodePath(path: string): string {return path.replaceAll("\\", "/").split("/").map(encodeURIComponent).join("/")}
 }
