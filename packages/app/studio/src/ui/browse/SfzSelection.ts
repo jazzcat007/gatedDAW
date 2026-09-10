@@ -1,17 +1,16 @@
 import {Arrays, asDefined, isAbsent, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {InstrumentFactories, SfzInstrument} from "@opendaw/studio-adapters"
-import {SfzParser, toSfzAttachment} from "@opendaw/studio-core"
+import {toSfzAttachment} from "@opendaw/studio-core"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Promises} from "@opendaw/lib-runtime"
-import {OpenSfzAPI} from "@/opendaw-api"
+import {OpenSfzAPI, SfzManifestRegion} from "@/opendaw-api"
 import {HTMLSelection} from "@/ui/HTMLSelection"
 import {StudioService} from "@/service/StudioService"
 import {ResourceSelection} from "@/ui/browse/ResourceSelection"
 
-// Mirrors SoundfontSelection's click-to-device flow, but an SFZ catalog entry is a `.sfz` text file plus N
-// separately-addressed WAVs (not one opaque blob), so this fetches the definition, parses it, then fetches
-// and imports every uniquely-referenced sample before a device can be created — same shape SfzImportTrigger
-// builds from local files, sourced from OpenSfzAPI instead of a FileList.
+// Creating a catalog instrument fetches one small manifest and no audio at all: every region's AudioFileBox
+// is built from the importer's server-side probe (sample uuid, filename, duration), and the bytes are pulled
+// later by GlobalSampleLoaderManager the first time a note actually needs them.
 export class SfzSelection implements ResourceSelection<SfzInstrument> {
     readonly #service: StudioService
     readonly #selection: HTMLSelection
@@ -28,67 +27,45 @@ export class SfzSelection implements ResourceSelection<SfzInstrument> {
             await this.#service.newProject()
             if (!this.#service.hasProfile) {return}
         }
-        const dialog = RuntimeNotifier.progress({headline: `Loading ${sfz.name}`})
-        const {status, value: result, error} = await Promises.tryCatch(this.#loadAttachment(sfz))
-        dialog.terminate()
+        const {status, value: manifest, error} = await Promises.tryCatch(
+            OpenSfzAPI.get().loadRegions(UUID.parse(sfz.uuid)))
         if (status === "rejected") {
             console.warn(`SFZ import: failed to load '${sfz.name}':`, error)
             RuntimeNotifier.notify({message: "Cannot load SFZ instrument.", icon: "Warning"})
             return
         }
-        const {attachment, missing} = result
-        if (attachment.length === 0) {
+        if (manifest.regions.length === 0) {
             RuntimeNotifier.notify({message: "SFZ instrument has no loadable regions.", icon: "Warning"})
             return
         }
-        if (missing > 0) {
-            RuntimeNotifier.notify({message: `${missing} SFZ region(s) skipped.`, icon: "Warning"})
+        if (manifest.unsupportedOpcodes.length > 0) {
+            console.warn(`SFZ import: unsupported opcodes ignored: ${manifest.unsupportedOpcodes.join(", ")}`)
         }
         const {api, editing} = this.#service.project
-        editing.modify(() => api.createInstrument(InstrumentFactories.Sfz, {attachment}))
+        editing.modify(() => {
+            const attachment = this.#toAttachment(manifest.regions)
+            api.createInstrument(InstrumentFactories.Sfz, {attachment})
+        })
     }
 
-    async #loadAttachment(sfz: SfzInstrument): Promise<{attachment: InstrumentFactories.SfzRegionAttachment, missing: number}> {
-        const uuid = UUID.parse(sfz.uuid)
-        const source = await OpenSfzAPI.get().loadDefinition(uuid)
-        const {regions, unsupportedOpcodes} = SfzParser.parse(source)
-        if (unsupportedOpcodes.length > 0) {
-            console.warn(`SFZ import: unsupported opcodes ignored: ${unsupportedOpcodes.join(", ")}`)
-        }
-        const {project} = this.#service
-        const {boxGraph} = project
-        const importedFiles = new Map<string, Promise<AudioFileBox>>()
-        const resolveAudioFile = (relativePath: string): Promise<AudioFileBox> => {
-            const key = relativePath.toLowerCase()
-            const existing = importedFiles.get(key)
-            if (existing !== undefined) {return existing}
-            const promise = (async (): Promise<AudioFileBox> => {
-                const arrayBuffer = await OpenSfzAPI.get().loadSample(uuid, relativePath)
-                const name = relativePath.split("/").pop() ?? relativePath
-                const sample = await this.#service.sampleService.importFile({name, arrayBuffer})
-                const sampleUuid = UUID.parse(sample.uuid)
-                project.trackUserCreatedSample(sampleUuid)
-                return boxGraph.findBox<AudioFileBox>(sampleUuid).unwrapOrElse(() =>
-                    AudioFileBox.create(boxGraph, sampleUuid, box => {
-                        box.fileName.setValue(sample.name)
-                        box.endInSeconds.setValue(sample.duration)
+    #toAttachment(regions: ReadonlyArray<SfzManifestRegion>): InstrumentFactories.SfzRegionAttachment {
+        const {boxGraph} = this.#service.project
+        const files = UUID.newSet<{uuid: UUID.Bytes, box: AudioFileBox}>(entry => entry.uuid)
+        const fileFor = (region: SfzManifestRegion): AudioFileBox => {
+            const uuid = UUID.parse(region.sample)
+            return files.getOrCreate(uuid, () => ({
+                uuid,
+                // The sample uuid is the box uuid by design: it is the identity the loader resolves against
+                // the catalog's sample store, and the identity a preset must preserve to stay playable.
+                box: boxGraph.findBox<AudioFileBox>(uuid).unwrapOrElse(() =>
+                    AudioFileBox.create(boxGraph, uuid, box => {
+                        box.fileName.setValue(region.fileName)
+                        box.startInSeconds.setValue(0.0)
+                        box.endInSeconds.setValue(region.durationInSeconds)
                     }))
-            })()
-            importedFiles.set(key, promise)
-            return promise
+            })).box
         }
-        const attachment: Array<InstrumentFactories.SfzRegionAttachment[number]> = []
-        let missing = 0
-        for (const region of regions) {
-            const relativePath = SfzParser.resolveSamplePath(sfz.definition, region)
-            const {status, value: file} = await Promises.tryCatch(resolveAudioFile(relativePath))
-            if (status === "rejected") {missing++; continue}
-            attachment.push(toSfzAttachment(region, file))
-        }
-        if (missing > 0) {
-            console.warn(`SFZ import: ${missing} region(s) skipped, sample fetch failed`)
-        }
-        return {attachment, missing}
+        return regions.map(region => toSfzAttachment({...region, defaultPath: ""}, fileFor(region)))
     }
 
     async deleteItems(_instruments: ReadonlyArray<SfzInstrument>): Promise<ReadonlyArray<SfzInstrument>> {

@@ -53,7 +53,10 @@ export const SampleBrowser = ({lifecycle, service, background, fontSize}: Constr
         fetchLocal: async () => {
             const openDAW = await OpenSampleAPI.get().all()
             const local = await SampleStorage.get().list()
-            return Arrays.subtract(local, openDAW, ({uuid: a}, {uuid: b}) => a === b)
+            // SFZ region samples are cached like any other factory content but belong to their instrument,
+            // not to the user's library — a single catalog entry would otherwise add dozens of rows here.
+            const owned = local.filter(({origin}) => origin !== "sfz")
+            return Arrays.subtract(owned, openDAW, ({uuid: a}, {uuid: b}) => a === b)
         },
         fetchLocalTree: () => LocalTree.load(SampleStorage.get().structure, (sample: Sample) => sample.uuid),
         expandedKeys,
