@@ -29,18 +29,26 @@ export class SfzSelection implements ResourceSelection<SfzInstrument> {
             if (!this.#service.hasProfile) {return}
         }
         const dialog = RuntimeNotifier.progress({headline: `Loading ${sfz.name}`})
-        const {status, value: attachment, error} = await Promises.tryCatch(this.#loadAttachment(sfz))
+        const {status, value: result, error} = await Promises.tryCatch(this.#loadAttachment(sfz))
         dialog.terminate()
         if (status === "rejected") {
             console.warn(`SFZ import: failed to load '${sfz.name}':`, error)
+            RuntimeNotifier.notify({message: "Cannot load SFZ instrument.", icon: "Warning"})
             return
         }
-        if (attachment.length === 0) {return}
+        const {attachment, missing} = result
+        if (attachment.length === 0) {
+            RuntimeNotifier.notify({message: "SFZ instrument has no loadable regions.", icon: "Warning"})
+            return
+        }
+        if (missing > 0) {
+            RuntimeNotifier.notify({message: `${missing} SFZ region(s) skipped.`, icon: "Warning"})
+        }
         const {api, editing} = this.#service.project
         editing.modify(() => api.createInstrument(InstrumentFactories.Sfz, {attachment}))
     }
 
-    async #loadAttachment(sfz: SfzInstrument): Promise<InstrumentFactories.SfzRegionAttachment> {
+    async #loadAttachment(sfz: SfzInstrument): Promise<{attachment: InstrumentFactories.SfzRegionAttachment, missing: number}> {
         const uuid = UUID.parse(sfz.uuid)
         const source = await OpenSfzAPI.get().loadDefinition(uuid)
         const {regions, unsupportedOpcodes} = SfzParser.parse(source)
@@ -80,7 +88,7 @@ export class SfzSelection implements ResourceSelection<SfzInstrument> {
         if (missing > 0) {
             console.warn(`SFZ import: ${missing} region(s) skipped, sample fetch failed`)
         }
-        return attachment
+        return {attachment, missing}
     }
 
     async deleteItems(_instruments: ReadonlyArray<SfzInstrument>): Promise<ReadonlyArray<SfzInstrument>> {
