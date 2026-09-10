@@ -6,6 +6,7 @@ import {
     NanoDeviceBox,
     PlayfieldDeviceBox,
     SoundfontDeviceBox,
+    SfzDeviceBox,
     TapeDeviceBox,
     VaporisateurDeviceBox
 } from "@opendaw/studio-boxes"
@@ -19,4 +20,5 @@ export type InstrumentBox =
     | NanoDeviceBox
     | PlayfieldDeviceBox
     | SoundfontDeviceBox
+    | SfzDeviceBox
     | MIDIOutputDeviceBox

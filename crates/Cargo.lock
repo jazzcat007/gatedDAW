@@ -437,6 +437,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "device-sfz-region"
+version = "0.0.0"
+dependencies = [
+ "abi",
+ "libm",
+ "math",
+]
+
+[[package]]
 name = "device-sine"
 version = "0.0.0"
 dependencies = [

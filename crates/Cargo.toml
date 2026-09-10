@@ -70,6 +70,8 @@ opt-level = 3
 opt-level = 3
 [profile.release.package.device-playfield-sample]
 opt-level = 3
+[profile.release.package.device-sfz-region]
+opt-level = 3
 [profile.release.package.device-sine]
 opt-level = 3
 [profile.release.package.device-soundfont]

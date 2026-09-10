@@ -10,10 +10,12 @@ import {
     PlayfieldSampleBox,
     SoundfontDeviceBox,
     SoundfontFileBox,
+    SfzDeviceBox,
+    SfzRegionBox,
     TapeDeviceBox,
     VaporisateurDeviceBox
 } from "@opendaw/studio-boxes"
-import {byte, isDefined, UUID} from "@opendaw/lib-std"
+import {byte, int, isDefined, UUID} from "@opendaw/lib-std"
 import {ClassicWaveform} from "@opendaw/lib-dsp"
 import {BoxGraph, Field} from "@opendaw/lib-box"
 import {IconSymbol, Pointers, VoicingMode} from "@opendaw/studio-enums"
@@ -228,6 +230,59 @@ export namespace InstrumentFactories {
             })
     }
 
+    export type SfzRegionAttachment = ReadonlyArray<{
+        file: AudioFileBox
+        keyLo: byte, keyHi: byte, rootKey: byte, velLo: byte, velHi: byte
+        loopMode: int, loopStart: int, loopEnd: int
+        attack: number, decay: number, sustain: number, release: number
+        volume: number, pan: number, tune: number
+    }>
+
+    export const Sfz: InstrumentFactory<SfzRegionAttachment, SfzDeviceBox> = {
+        defaultName: "SFZ",
+        defaultIcon: IconSymbol.SoundFont,
+        briefDescription: "SFZ Sampler",
+        description: "Multi-sample instrument from an SFZ definition",
+        manualPage: DeviceManualUrls.Sfz,
+        trackType: TrackType.Notes,
+        create: (boxGraph: BoxGraph,
+                 host: Field<Pointers.InstrumentHost | Pointers.AudioOutput>,
+                 name: string,
+                 icon: IconSymbol,
+                 attachment?: SfzRegionAttachment): SfzDeviceBox => {
+            const deviceBox = SfzDeviceBox.create(boxGraph, UUID.generate(), box => {
+                box.label.setValue(name)
+                box.icon.setValue(IconSymbol.toName(icon))
+                box.host.refer(host)
+            })
+            if (isDefined(attachment)) {
+                attachment.forEach((region, index) => {
+                    SfzRegionBox.create(boxGraph, UUID.generate(), box => {
+                        box.device.refer(deviceBox.regions)
+                        box.file.refer(region.file)
+                        box.regionIndex.setValue(index)
+                        box.keyLo.setValue(region.keyLo)
+                        box.keyHi.setValue(region.keyHi)
+                        box.rootKey.setValue(region.rootKey)
+                        box.velLo.setValue(region.velLo)
+                        box.velHi.setValue(region.velHi)
+                        box.loopMode.setValue(region.loopMode)
+                        box.loopStart.setValue(region.loopStart)
+                        box.loopEnd.setValue(region.loopEnd)
+                        box.attack.setValue(region.attack)
+                        box.decay.setValue(region.decay)
+                        box.sustain.setValue(region.sustain)
+                        box.release.setValue(region.release)
+                        box.volume.setValue(region.volume)
+                        box.pan.setValue(region.pan)
+                        box.tune.setValue(region.tune)
+                    })
+                })
+            }
+            return deviceBox
+        }
+    }
+
     export const Apparat: InstrumentFactory<void, ApparatDeviceBox> = {
         defaultName: "Apparat",
         defaultIcon: IconSymbol.Code,
@@ -245,7 +300,7 @@ export namespace InstrumentFactories {
         })
     }
 
-    export const Named = {Apparat, Cubed, Neon, MIDIOutput, Nano, Playfield, Soundfont, Tape, Vaporisateur}
+    export const Named = {Apparat, Cubed, Neon, MIDIOutput, Nano, Playfield, Sfz, Soundfont, Tape, Vaporisateur}
     export type Keys = keyof typeof Named
 
     const useAudioFile = (boxGraph: BoxGraph, fileUUID: UUID.Bytes, name: string, duration: number) =>

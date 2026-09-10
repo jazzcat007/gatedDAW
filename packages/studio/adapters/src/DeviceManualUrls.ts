@@ -43,5 +43,6 @@ export namespace DeviceManualUrls {
     export const Neon = "manuals/devices/instruments/neon"
     export const MIDIOutput = "manuals/devices/instruments/midioutput"
     export const Soundfont = "manuals/devices/instruments/soundfont"
+    export const Sfz = "manuals/devices/instruments/sfz"
     export const FrequencySplit = "manuals/devices/audio/frequency-split"
 }

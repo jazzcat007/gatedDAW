@@ -105,7 +105,8 @@ export const DEVICES: ReadonlyArray<{ url: string, boxType: string }> = [
     {url: "/wasm/plugins/device_vocoder.wasm", boxType: "VocoderDeviceBox"},   // audio effect (channel vocoder + sidechain)
     {url: "/wasm/plugins/device_neural_amp.wasm", boxType: "NeuralAmpDeviceBox"}, // audio effect (NAM, via the nam bridge)
     {url: "/wasm/plugins/device_autotune.wasm", boxType: "AutotuneDeviceBox"}, // audio effect (pitch correction, PSOLA)
-    {url: "/wasm/plugins/device_playfield_sample.wasm", boxType: "PlayfieldSampleBox"} // composite child (one Playfield slot)
+    {url: "/wasm/plugins/device_playfield_sample.wasm", boxType: "PlayfieldSampleBox"}, // composite child (one Playfield slot)
+    {url: "/wasm/plugins/device_sfz_region.wasm", boxType: "SfzRegionBox"} // composite child (one SFZ region)
 ]
 
 // The composite box types. Playfield hosts its slots in the `samples` field (key 10); each slot's note is its
@@ -121,7 +122,12 @@ export const COMPOSITES: ReadonlyArray<CompositeSpec> = [
     // (field 5, UI position + engine sort). No note routing, no choke.
     {boxType: "CompositeDeviceBox", childrenField: 10, indexKey: 5, excludeKey: 0,
         cellInstrumentField: 2, cellMidiField: 3, cellAudioField: 4, childEnabledKey: 0,
-        childMuteKey: 0, childSoloKey: 0, childVolumeKey: 0, childPanKey: 0}
+        childMuteKey: 0, childSoloKey: 0, childVolumeKey: 0, childPanKey: 0},
+    // SFZ: direct children (self-contained regions, no own chains), routed by key/velocity range (each
+    // region self-filters `handle_event`, see `device-sfz-region`). No choke, no per-region mute/solo.
+    {boxType: "SfzDeviceBox", childrenField: 10, indexKey: 30, excludeKey: 0,
+        cellInstrumentField: 0, cellMidiField: 0, cellAudioField: 0, childEnabledKey: 22,
+        childMuteKey: 0, childSoloKey: 0, childVolumeKey: 44, childPanKey: 45}
 ]
 
 // The EFFECT composite box types (parallel fx / midi stacks). Each hosts its ENTRIES at field 10, ordered by the

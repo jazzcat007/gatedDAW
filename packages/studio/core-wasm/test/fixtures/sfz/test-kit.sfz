@@ -1,0 +1,11 @@
+// A small, hand-written, flat SFZ definition (no #include) exercising the playable-core opcode surface:
+// key-range split, velocity-layered regions on one key, a looping region with explicit loop points, pan, and
+// non-default ADSR both inherited from <group> and overridden per-region.
+<group> ampeg_attack=0.01 ampeg_release=0.3
+
+<region> sample=kick.wav lokey=36 hikey=36 pitch_keycenter=36
+
+<region> sample=snare_soft.wav lokey=38 hikey=38 lovel=0 hivel=63 pitch_keycenter=38
+<region> sample=snare_hard.wav lokey=38 hikey=38 lovel=64 hivel=127 pitch_keycenter=38
+
+<region> sample=pad.wav lokey=60 hikey=72 pitch_keycenter=60 loop_mode=loop_continuous loop_start=200 loop_end=4000 pan=-50 ampeg_attack=0.5 ampeg_decay=0.2 ampeg_sustain=80 ampeg_release=1.0

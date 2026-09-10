@@ -17,6 +17,7 @@ import {ZeitgeistDeviceBox} from "./midi-effects/ZeitGeistDeviceBox"
 import {UnknownAudioEffectDevice} from "./audio-effects/UnknownAudioEffectDevice"
 import {UnknownMidiEffectDevice} from "./midi-effects/UnknownMidiEffectDevice"
 import {SoundfontDeviceBox} from "./instruments/SoundfontDeviceBox"
+import {SfzDeviceBox, SfzRegionBox} from "./instruments/SfzDeviceBox"
 import {MaximizerDeviceBox} from "./audio-effects/MaximizerDeviceBox"
 import {CompressorDeviceBox} from "./audio-effects/CompressorDeviceBox"
 import {AutotuneDeviceBox} from "./audio-effects/AutotuneDeviceBox"
@@ -71,6 +72,8 @@ export const DeviceDefinitions = [
     MIDIOutputBox,
     MIDIOutputParameterBox,
     SoundfontDeviceBox,
+    SfzDeviceBox,
+    SfzRegionBox,
     NeonDeviceBox,
     NanoDeviceBox,
     PlayfieldDeviceBox,
