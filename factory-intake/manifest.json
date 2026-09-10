@@ -252,13 +252,13 @@
       "sourcePath": "sfz/VSCO-2-CE",
       "intakePath": "sfz/VSCO-2-CE",
       "catalogFolder": null,
-      "license": "Confirm upstream distribution terms before publishing",
+      "license": "CC0-1.0",
       "url": "https://github.com/sgossner/VSCO-2-CE",
       "branch": "SFZ",
       "expectedSfzinstruments": 75,
       "expectedWavs": 3168,
       "imported": false,
-      "notes": "License needs confirmation before publishing. SFZ loader required."
+      "notes": "License confirmed CC0-1.0 (LICENSE file on the SFZ branch). SFZ loader now shipped (playable-core device + Browser catalog tab)."
     }
   ]
 }

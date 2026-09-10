@@ -10,7 +10,7 @@ SFZ instrument loader supports them.
 | Library | Ref | SFZ instruments | WAV files | License |
 | --- | --- | ---: | ---: | --- |
 | VCSL | `sfz` branch | 183 | 4,232 | CC0-1.0 |
-| VSCO 2 CE | `SFZ` branch / release 1.1.0 | 75 | 3,168 | Confirm upstream distribution terms before publishing |
+| VSCO 2 CE | `SFZ` branch / release 1.1.0 | 75 | 3,168 | CC0-1.0 (confirmed via the `LICENSE` file on the `SFZ` branch) |
 
 VCSL states that its collection is CC0 and that it includes much of VSCO 2 CE.
 Do not silently deduplicate either library: retain source attribution and let the
@@ -68,7 +68,13 @@ opcodes on each entry; missing samples or zero-region definitions fail the run.
 npm run import-sfz -- "$INTAKE/sfz/VCSL" \
   --root "$FACTORY_ROOT" --library VCSL --license CC0-1.0 \
   --url https://github.com/sgossner/VCSL/tree/sfz
+
+npm run import-sfz -- "$INTAKE/sfz/VSCO-2-CE" \
+  --root "$FACTORY_ROOT" --library "VSCO 2 CE" --license CC0-1.0 \
+  --url https://github.com/sgossner/VSCO-2-CE/releases/tag/1.1.0
 ```
+
+Both commands (and the equivalent `RUN_SFZ_IMPORTS=1` block in `ingest.sh`) are idempotent — content-hash UUIDs mean re-running against an already-staged library just skips duplicates, per `manifest.json`'s `importMode: "idempotent-content-uuid"` policy.
 
 Use `--dry-run` first. Round robin, keyswitch, choke groups, and `#include` are
 still deliberately unsupported by the playable device — opcodes it can't apply are
