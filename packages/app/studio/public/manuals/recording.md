@@ -77,6 +77,6 @@ note input.
 
 ## Latency Compensation
 
-openDAW automatically compensates for system latency when recording. The recorded audio and MIDI data is aligned to the
+gatedDAW automatically compensates for system latency when recording. The recorded audio and MIDI data is aligned to the
 correct timeline position regardless of your output device latency. However, lower latency still provides a better
 real-time playing experience.

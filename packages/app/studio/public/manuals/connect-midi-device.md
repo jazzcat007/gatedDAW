@@ -1,6 +1,6 @@
 # Connect MIDI Device
 
-Play and record openDAW's instruments from a hardware MIDI keyboard or controller. Connecting a device is done per
+Play and record gatedDAW's instruments from a hardware MIDI keyboard or controller. Connecting a device is done per
 track, from the track header's menu, so each instrument can listen to its own controller and channel.
 
 ## 1. Grant MIDI access
@@ -31,7 +31,7 @@ you'll find:
 - **One entry per connected controller** — listen to just that device.
 - **The on-screen keyboard** — a software input for when you have no hardware (see section 5).
 
-Pick a device and openDAW **arms** the track for you. While a MIDI track is armed it monitors its input live, so
+Pick a device and gatedDAW **arms** the track for you. While a MIDI track is armed it monitors its input live, so
 pressing keys on your controller now sounds the instrument — no transport or recording needed.
 
 The currently selected device (and channel) is shown with a check mark, so you can see at a glance what a track is
@@ -50,7 +50,7 @@ its own part.
 
 ## 5. No hardware? Use the on-screen keyboard
 
-If you have no controller, pick the **on-screen keyboard** entry in the device list. openDAW opens a software keyboard
+If you have no controller, pick the **on-screen keyboard** entry in the device list. gatedDAW opens a software keyboard
 you can play with the mouse or your computer keys, routed to the armed track exactly like a hardware device. This is
 handy for sketching an idea or trying a sound before reaching for a controller.
 

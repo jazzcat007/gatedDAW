@@ -22,7 +22,7 @@ The repository is a multi-package workspace managed with npm workspaces, Turbo, 
 
 ## Libraries
 
-openDAW uses minimal external dependencies, avoiding hidden behaviors from bulky UI frameworks.
+gatedDAW uses minimal external dependencies, avoiding hidden behaviors from bulky UI frameworks.
 
 Each in-house library has a clear, focused purpose.
 

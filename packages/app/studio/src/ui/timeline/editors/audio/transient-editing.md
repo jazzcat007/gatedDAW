@@ -1,6 +1,6 @@
 # Transient Marker Editing Implementation
 
-GitHub Issue: https://github.com/jazzcat007/openDAW/issues/114
+GitHub Issue: https://github.com/jazzcat007/gatedDAW/issues/114
 
 ## Overview
 

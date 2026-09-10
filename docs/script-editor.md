@@ -11,7 +11,7 @@ seams are. Package: `packages/studio/scripting` (`@opendaw/studio-scripting`), p
    `moduleDetection` is forced, so scripts never need `export {}`. TS1108 (top-level `return`) is ignored in the
    editor and filtered from the diagnostics before running, see `code-editor/TopLevelReturn.ts`.
 2. The emitted JS goes to `ScriptHost.executeScript`, which posts it to `ScriptWorker.ts`.
-3. `ScriptRunner.run` installs `ScriptGlobals` (`openDAW`, `sampleRate`, `baseFrequency`, `PPQN`, `AudioData`,
+3. `ScriptRunner.run` installs `ScriptGlobals` (`gatedDAW`, `sampleRate`, `baseFrequency`, `PPQN`, `AudioData`,
    dsp helpers, enums) on `globalThis`, strips the `export {};` marker and runs the code as the body of an
    `AsyncFunction`. It is a function body, not a module, so a script may `return` early.
 4. The script talks to `ApiImpl`, which builds or loads a `ProjectSkeleton` (a real `BoxGraph`) and hands it back
