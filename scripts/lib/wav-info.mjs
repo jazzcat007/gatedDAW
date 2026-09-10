@@ -16,9 +16,17 @@ export const wavInfo = bytes => {
             throw new Error("Streaming WAV (0xFFFFFFFF size) not supported")
         }
         const payload = offset + 8
-        if (payload + chunkSize > buffer.length) {throw new Error("Chunk payload runs past end of file")}
+        // A chunk declaring more bytes than the file actually holds is a common real-world defect: a
+        // mis-sized or truncated final `data` chunk. Every real decoder — `decodeAudioData` included —
+        // clamps to the bytes that are present rather than rejecting the file, so this does too. Being
+        // stricter than the decoder that ultimately plays the sample only discards playable content
+        // (it cost VCSL's four TX81Z instruments a whole import). A short chunk also ends the walk:
+        // nothing after it can be a valid chunk header.
+        const available = buffer.length - payload
+        const truncated = chunkSize > available
+        const usableSize = truncated ? available : chunkSize
         if (chunkId === "fmt ") {
-            if (chunkSize < 16) {throw new Error("fmt chunk too small")}
+            if (usableSize < 16) {throw new Error("fmt chunk too small")}
             format = {
                 audioFormat: buffer.readUInt16LE(payload),
                 channels: buffer.readUInt16LE(payload + 2),
@@ -26,8 +34,9 @@ export const wavInfo = bytes => {
                 bitsPerSample: buffer.readUInt16LE(payload + 14)
             }
         } else if (chunkId === "data") {
-            dataSize = chunkSize
+            dataSize = usableSize
         }
+        if (truncated) {break}
         offset = payload + chunkSize + (chunkSize % 2)
     }
     if (format === undefined) {throw new Error("Missing fmt chunk")}
