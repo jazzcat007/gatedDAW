@@ -1,5 +1,19 @@
 # Workspace Agent Instructions
 
+## Remote update process (cross-agent handoff)
+
+This repo is worked on from at least two places: a local Windows checkout (no direct filesystem access from the deployed host) and the OMV server running the deployed instance. GitHub is the only channel between them — `origin` = `jazzcat007/openDAW`, branch `screwpulp/self-hosted` is the shared base every side tracks.
+
+**Whichever side made a change must finish its own portion before asking the user to test:**
+1. Verify the change as thoroughly as your environment allows (type-check, build, run the relevant tests) before handing off — not after.
+2. Commit only the files belonging to that change, on a new branch cut from the latest `origin/screwpulp/self-hosted` (`git fetch origin` first).
+3. Push the branch to `origin` and open a PR against `screwpulp/self-hosted` with a summary and the verification you actually ran.
+4. Hand the other side (via the user) the branch/PR reference — not a patch file, zip, or manual file copy, unless GitHub access is genuinely unavailable.
+
+**On the deploying side** (e.g. the OMV host), before asking the user to test: `git fetch origin && git merge origin/<branch>` (or merge the PR, then `git pull`), rebuild, restart, and confirm the feature is actually live in the running instance. Do not report "ready to test" for a change that exists only as source on disk and hasn't been rebuilt/redeployed.
+
+Neither side hands the user a "please check" until its own half is done: code verified, and — for anything needing deployment — actually pushed, merged, and running where the user will look.
+
 ## Compatibility
 
 - Keep projects backward compatible whenever feasible. Before introducing a breaking change, prefer a compatible migration path and clearly document any unavoidable incompatibility.
