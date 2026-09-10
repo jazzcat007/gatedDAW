@@ -12,6 +12,7 @@ DOWNLOAD_FIRST="${DOWNLOAD_FIRST:-auto}"
 DOWNLOAD_SOUNDFONTS="${DOWNLOAD_SOUNDFONTS:-1}"
 DOWNLOAD_SAMPLES="${DOWNLOAD_SAMPLES:-1}"
 RUN_IMPORTS="${RUN_IMPORTS:-1}"
+RUN_SFZ_IMPORTS="${RUN_SFZ_IMPORTS:-1}"
 DOWNLOAD_ROOT="${DOWNLOAD_ROOT:-$INTAKE_ROOT/_downloads}"
 
 if [[ -w "$(dirname "$LOG_FILE")" ]]; then
@@ -28,6 +29,7 @@ echo "mirror=$TRUSTED_MIRROR"
 echo "download_first=$DOWNLOAD_FIRST"
 echo "download_soundfonts=$DOWNLOAD_SOUNDFONTS"
 echo "download_samples=$DOWNLOAD_SAMPLES"
+echo "run_sfz_imports=$RUN_SFZ_IMPORTS"
 
 require_tool() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -447,6 +449,27 @@ if [[ "$RUN_IMPORTS" == "1" ]]; then
   node "$REPO_ROOT/scripts/import-samples.mjs" "$INTAKE_ROOT/samples/Vocals" --root "$FACTORY_ROOT" --folder "Vocals"
 fi
 
+# SFZ libraries are preserved as multi-sample instrument bundles under
+# /data/factory/sfz.  Do this after staging so every definition is validated and
+# all referenced WAV files are copied into the factory volume.
+if [[ "$RUN_SFZ_IMPORTS" == "1" ]]; then
+  require_tool node
+  if [[ -d "$INTAKE_ROOT/sfz/VCSL" ]]; then
+    node "$REPO_ROOT/scripts/import-sfz-instruments.mjs" "$INTAKE_ROOT/sfz/VCSL" \
+      --root "$FACTORY_ROOT" --library "VCSL" --license "CC0-1.0" \
+      --url "https://github.com/sgossner/VCSL/tree/sfz"
+  else
+    echo "skip VCSL SFZ import, source not staged"
+  fi
+  if [[ -d "$INTAKE_ROOT/sfz/VSCO-2-CE" ]]; then
+    node "$REPO_ROOT/scripts/import-sfz-instruments.mjs" "$INTAKE_ROOT/sfz/VSCO-2-CE" \
+      --root "$FACTORY_ROOT" --library "VSCO 2 CE" --license "See upstream distribution terms" \
+      --url "https://github.com/sgossner/VSCO-2-CE/releases/tag/1.1.0"
+  else
+    echo "skip VSCO 2 CE SFZ import, source not staged"
+  fi
+fi
+
 FACTORY_ROOT="$FACTORY_ROOT" node <<'NODE'
 const {readFileSync, existsSync} = require("node:fs")
 const {join} = require("node:path")
@@ -466,12 +489,15 @@ function collect(folder, key, entries = []) {
 function presetsFrom(data) { return Array.isArray(data) ? data : (data.presets || []) }
 const samples = collect({folders: readJson(join(root, "samples/index.json")).folders}, "samples")
 const soundfonts = collect({folders: readJson(join(root, "soundfonts/index.json")).folders}, "soundfonts")
+const sfz = existsSync(join(root, "sfz/index.json"))
+  ? collect({folders: readJson(join(root, "sfz/index.json")).folders}, "instruments") : []
 const presets = presetsFrom(readJson(join(root, "presets/index.json")))
 const demos = readJson(join(root, "demos/projects.json")).tracks || []
 const all = new Map([...samples, ...soundfonts, ...presets].map(entry => [entry.uuid, entry]))
 console.log(JSON.stringify({
   samples: samples.length,
   soundfonts: soundfonts.length,
+  sfzInstruments: sfz.length,
   presets: presets.length,
   demos: demos.length,
   requiredMissing: required.filter(uuid => !all.has(uuid)),

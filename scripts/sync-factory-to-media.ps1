@@ -13,7 +13,7 @@ if (-not (Test-Path $mediaRoot)) {
     exit 1
 }
 
-foreach ($type in @('presets','soundfonts','samples')) {
+foreach ($type in @('presets','soundfonts','samples','sfz')) {
     $src = Join-Path $staging $type
     $dst = Join-Path $mediaRoot $type
     if (-not (Test-Path $src)) {

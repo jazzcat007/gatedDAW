@@ -35,6 +35,7 @@ function manifestPacks(manifest) {
 
 const samplesCount = countEntries(join(factoryRoot, 'samples/index.json'), 'samples');
 const soundfontsCount = countEntries(join(factoryRoot, 'soundfonts/index.json'), 'soundfonts');
+const sfzCount = countEntries(join(factoryRoot, 'sfz/index.json'), 'instruments');
 const presetsCount = (() => {
   const p = join(factoryRoot, 'presets/index.json');
   if (!existsSync(p)) return 0;
@@ -45,6 +46,7 @@ const presetsCount = (() => {
 console.log('Catalog counts:');
 console.log('samples:', samplesCount);
 console.log('soundfonts:', soundfontsCount);
+console.log('sfz instruments:', sfzCount);
 console.log('presets:', presetsCount);
 
 console.log('\nManifest packs:');
