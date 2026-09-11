@@ -232,14 +232,35 @@ describe("wavInfo", () => {
         expect(() => wavInfo(buffer)).toThrow("Truncated chunk header")
     })
 
-    it("throws for chunk payload running past end", () => {
+    it("throws when a truncated fmt chunk leaves too few bytes to read", () => {
         const buffer = Buffer.alloc(20)
         buffer.write("RIFF")
         buffer.writeUInt32LE(100, 4)
         buffer.write("WAVE", 8)
         buffer.write("fmt ", 12)
         buffer.writeUInt32LE(100, 16)
-        expect(() => wavInfo(buffer)).toThrow("Chunk payload runs past end of file")
+        expect(() => wavInfo(buffer)).toThrow("fmt chunk too small")
+    })
+
+    // A data chunk declaring more bytes than the file holds is a common real-world defect, and the decoder
+    // that ultimately plays the sample clamps rather than rejecting. Being stricter here silently dropped
+    // VCSL's four TX81Z instruments from the catalog, so these two pin the tolerant behaviour.
+    it("clamps a data chunk whose declared size overruns the file", () => {
+        const fmtChunk = createFmtChunk(2, 44100, 16)
+        const wav = buildWav([{id: "fmt ", data: fmtChunk}, {id: "data", data: createDataChunk(1000, 2, 16)}])
+        const dataSizeAt = wav.indexOf(Buffer.from("data", "ascii")) + 4
+        wav.writeUInt32LE(wav.readUInt32LE(dataSizeAt) + 999_999, dataSizeAt)
+        const info = wavInfo(wav)
+        expect(info.numberOfFrames).toBe(1000)
+        expect(info.durationInSeconds).toBeCloseTo(1000 / 44100)
+    })
+
+    it("clamps when the file itself is cut short mid-data", () => {
+        const fmtChunk = createFmtChunk(2, 44100, 16)
+        const wav = buildWav([{id: "fmt ", data: fmtChunk}, {id: "data", data: createDataChunk(1000, 2, 16)}])
+        // Drop 400 bytes = 100 frames of 2ch/16bit audio; the header still claims the original size.
+        const info = wavInfo(wav.subarray(0, wav.length - 400))
+        expect(info.numberOfFrames).toBe(900)
     })
 
     it("throws for 0xFFFFFFFF data size (streaming)", () => {

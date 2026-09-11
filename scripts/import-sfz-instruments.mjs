@@ -96,22 +96,24 @@ const main = () => {
     for (const input of args.paths) {
         const libraryRoot = resolve(input); const library = args.library ?? basename(libraryRoot)
         const entries = []
+        const invalidDefinitions = new Set()
         for (const definition of walk(libraryRoot)) {
+            const key = relative(libraryRoot, definition).replaceAll("\\", "/")
             const parsed = parseSfz(definition)
             const pathOf = region => resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)
             const playable = parsed.regions.filter(region => region.sample)
             const samples = [...new Set(playable.map(pathOf))]
             const missing = samples.filter(sample => !inside(libraryRoot, sample) || !existsSync(sample))
             if (parsed.regions.length === 0 || missing.length > 0) {
-                console.error(`invalid  ${relative(libraryRoot, definition)} regions=${parsed.regions.length} missing=${missing.length}`)
-                failed++; continue
+                console.error(`invalid  ${key} regions=${parsed.regions.length} missing=${missing.length}`)
+                invalidDefinitions.add(key); failed++; continue
             }
             const bytes = new Map(samples.map(sample => [sample, readFileSync(sample)]))
             const {info, unreadable} = probeSamples(samples, bytes)
             if (unreadable.length > 0) {
                 const [{path, reason}] = unreadable
-                console.error(`invalid  ${relative(libraryRoot, definition)} unreadable=${unreadable.length} first='${relative(libraryRoot, path)}' (${reason})`)
-                failed++; continue
+                console.error(`invalid  ${key} unreadable=${unreadable.length} first='${relative(libraryRoot, path)}' (${reason})`)
+                invalidDefinitions.add(key); failed++; continue
             }
             // Hash inputs stay definition-then-sorted-sample-bytes: the instrument uuid must not shift.
             const uuid = contentUuid([readFileSync(definition), ...samples.slice().sort().map(sample => bytes.get(sample))])
@@ -130,7 +132,7 @@ const main = () => {
                 }),
                 unsupportedOpcodes: parsed.unsupported
             }
-            const entry = {uuid, name: basename(definition, ".sfz"), definition: relative(libraryRoot, definition).replaceAll("\\", "/"),
+            const entry = {uuid, name: basename(definition, ".sfz"), definition: key,
                 regions: parsed.regions.length, samples: samples.length, unsupportedOpcodes: parsed.unsupported,
                 license: args.license ?? "No license provided", url: args.url ?? "local import"}
             entries.push({entry, definition, samples, manifest, info})
@@ -138,6 +140,15 @@ const main = () => {
         const folder = catalog.folders.find(candidate => candidate.name === library) ?? {name: library, instruments: []}
         if (!catalog.folders.includes(folder)) {catalog.folders.push(folder)}
         folder.instruments ??= []
+        // The index is additive across runs, so an instrument that stops validating would otherwise keep
+        // advertising an entry whose regions.json was never written — a browser row that hard-fails the
+        // moment it is clicked. This is exactly how VCSL's TX81Z/Gong 2/Tubular Bells entries survived a
+        // run that rejected them. Prune by definition path rather than uuid, because the path is the
+        // identity that survives a content edit: drop every entry for a definition this run walked, then
+        // the loop below re-adds only the ones that actually imported. A definition deleted from the
+        // library outright is not walked at all, so it is not pruned here.
+        const walked = new Set([...invalidDefinitions, ...entries.map(({entry}) => entry.definition)])
+        folder.instruments = folder.instruments.filter(candidate => !walked.has(candidate.definition))
         for (const {entry, definition, samples, manifest, info} of entries) {
             if (!folder.instruments.some(candidate => candidate.uuid === entry.uuid)) {folder.instruments.push(entry)}
             if (!args["dry-run"]) {
