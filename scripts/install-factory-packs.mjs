@@ -116,8 +116,14 @@ const main = async () => {
                 const uuidsFile = join(downloadsRoot, `${pack.id}.uuids.json`)
                 mkdirSync(downloadsRoot, {recursive: true})
                 writeFileSync(uuidsFile, `${JSON.stringify(added, null, 2)}\n`)
-                const npm = process.platform === "win32" ? "npm.cmd" : "npm"
-                await run(npm, ["run", "bake-sfz-presets", "--", "--root", factoryRoot, "--uuids", uuidsFile])
+                // Spawn node directly against tsx's own CLI entry rather than "npm run" (which on
+                // Windows resolves to npm.cmd, a batch file — child_process.spawn cannot execute
+                // .cmd files without shell:true, and fails with EINVAL). node is always a real
+                // executable on every platform, so this sidesteps the whole class of bug rather
+                // than special-casing it, and needs no shell (no quoting/injection surface).
+                const tsxCli = join(repoRoot, "node_modules", "tsx", "dist", "cli.mjs")
+                await run(process.execPath, [tsxCli, join(repoRoot, "scripts", "bake-sfz-presets.ts"),
+                    "--root", factoryRoot, "--uuids", uuidsFile])
             }
             console.log(`== ${pack.id} done ==`)
         } catch (error) {
