@@ -11,6 +11,7 @@ import {WebSocketServer} from "ws"
 import * as Y from "yjs"
 import {setupWSConnection, ROOM_CLEANUP_DELAY_MS, setPersistence} from "./packages/server/yjs-server/utils.js"
 import * as map from "lib0/map"
+import {decideInstall, freeSpaceBytes, isPackInstalled} from "./packages/server/factory-packs/index.mjs"
 
 const root = "/app/packages/app/studio/dist"
 const factoryAssetRoot = process.env.FACTORY_ASSET_ROOT ?? "/data/factory"
@@ -20,6 +21,7 @@ const PROJECT_REVISION_LIMIT = 20
 const PROJECT_UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const roomRoot = process.env.OPENDAW_ROOM_ROOT ?? "/data/rooms"
 const serverRoot = process.env.OPENDAW_SERVER_ROOT ?? "/data/server"
+const packsFile = process.env.OPENDAW_PACKS_FILE ?? "/app/factory-intake/packs.json"
 const factoryOfflineOnly = process.env.OPENDAW_FACTORY_OFFLINE_ONLY === "true"
 const upstreamAssets = "https://assets.opendaw.studio"
 const upstreamUsername = process.env.OPENDAW_UPSTREAM_ASSET_USERNAME ?? "openDAW"
@@ -1292,6 +1294,47 @@ const serveAdminApi = async (req, res) => {
       return
     }
     methodNotAllowed(res, ["DELETE"])
+    return
+  }
+  // Curated content packs (factory-intake/packs.json). The client sends pack ids only; the
+  // manifest is the license/CC0 audit boundary and the only place a source URL can come from.
+  if (segments.length === 2 && segments[0] === "factory" && segments[1] === "packs") {
+    if (req.method === "GET") {
+      const manifest = readJson(packsFile, {version: 1, packs: []})
+      sendJson(res, 200, {
+        packs: manifest.packs.map(pack => ({...pack, installed: isPackInstalled(pack, factoryAssetRoot)})),
+        offlineInstallDisabled: factoryOfflineOnly,
+        freeBytes: freeSpaceBytes(factoryAssetRoot),
+        currentJob: assetImportJob
+      })
+      return
+    }
+    methodNotAllowed(res, ["GET"])
+    return
+  }
+  if (segments.length === 3 && segments[0] === "factory" && segments[1] === "packs" && segments[2] === "install") {
+    if (req.method === "POST") {
+      const parsed = tryParseJson(await readBody(req, 16_384)) ?? {}
+      // Pure decision function from @opendaw/factory-packs: offline gate, id validation against
+      // the manifest, single-job guard, and the free-space preflight all run before any command
+      // is built, so an unknown id can never reach the filesystem or the network.
+      const decision = decideInstall({
+        manifest: readJson(packsFile, {version: 1, packs: []}),
+        packIds: parsed.packIds,
+        freeBytes: freeSpaceBytes(factoryAssetRoot),
+        jobRunning: assetImportJob?.status === "running",
+        offlineInstallDisabled: factoryOfflineOnly
+      })
+      if (decision.status !== 202) {
+        sendJson(res, decision.status, {error: decision.error, ...decision})
+        return
+      }
+      const args = ["run", "install-factory-packs", "--",
+        "--pack-ids", decision.packs.map(pack => pack.id).join(",")]
+      sendJson(res, 202, {job: runAssetImportJob("npm", args)})
+      return
+    }
+    methodNotAllowed(res, ["POST"])
     return
   }
   sendJson(res, 404, {error: "Not found"})

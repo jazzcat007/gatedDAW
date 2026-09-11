@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // Bakes SFZ catalog instruments into factory device presets. Each AudioFileBox keeps the sample-store
-// UUID so the lazy sample loader can resolve the WAV on first playback. Run with tsx, not node:
-// npx tsx scripts/bake-sfz-presets.ts --root <factory-root>
+// UUID so the lazy sample loader can resolve the WAV on first playback. Run via the package script
+// (tsx is a declared dependency, so no implicit npx registry fetch): npm run bake-sfz-presets -- --root <factory-root>
 import {existsSync, mkdirSync, readFileSync, renameSync, writeFileSync} from "node:fs"
 import {createHash} from "node:crypto"
 import {dirname, join, resolve} from "node:path"
@@ -20,11 +20,12 @@ const scriptDir = dirname(fileURLToPath(import.meta.url))
 const defaultSelection = join(scriptDir, "sfz-preset-selection.json")
 
 const usage = `Usage:
-  npx tsx scripts/bake-sfz-presets.ts --root <factory-root> [options]
+  npm run bake-sfz-presets -- --root <factory-root> [options]
 
 Options:
   --root <path>       Factory root containing sfz/ and presets/ (required)
   --selection <file>  JSON array of instrument names to bake (default: scripts/sfz-preset-selection.json)
+  --uuids <file>      JSON array of instrument uuids to bake, matched by uuid instead of name
   --all               Bake every catalog instrument instead of the selection
   --dry-run           Bake in memory and report without writing files
   --help              Show this help
@@ -45,19 +46,19 @@ type CatalogFolder = {name: string, folders?: ReadonlyArray<CatalogFolder>, inst
 type SfzCatalog = {version: number, folders: ReadonlyArray<CatalogFolder>}
 type CatalogInstrument = CatalogEntry & {folder: string}
 
-type Args = {root: Optional<string>, selection: Optional<string>, all: boolean, dryRun: boolean, help: boolean}
+type Args = {root: Optional<string>, selection: Optional<string>, uuids: Optional<string>, all: boolean, dryRun: boolean, help: boolean}
 
 const parseArgs = (argv: ReadonlyArray<string>): Args => {
-    const args: Args = {root: undefined, selection: undefined, all: false, dryRun: false, help: false}
+    const args: Args = {root: undefined, selection: undefined, uuids: undefined, all: false, dryRun: false, help: false}
     for (let index = 2; index < argv.length; index++) {
         const token = argv[index]
         if (token === "--all") {args.all = true; continue}
         if (token === "--dry-run") {args.dryRun = true; continue}
         if (token === "--help") {args.help = true; continue}
-        if (token !== "--root" && token !== "--selection") {throw new Error(usage)}
+        if (token !== "--root" && token !== "--selection" && token !== "--uuids") {throw new Error(usage)}
         const value = argv[++index]
         if (!isDefined(value) || value.startsWith("--")) {throw new Error(`Missing value for ${token}`)}
-        if (token === "--root") {args.root = value} else {args.selection = value}
+        if (token === "--root") {args.root = value} else if (token === "--selection") {args.selection = value} else {args.uuids = value}
     }
     if (!isDefined(args.root) && !args.help) {throw new Error(usage)}
     return args
@@ -100,6 +101,34 @@ const resolveSelection = (instruments: ReadonlyArray<CatalogInstrument>, names: 
         matched.push(...hits)
     }
     return {matched, missing}
+}
+
+// Uuid-based selection for scoped pack installs: a name match can silently hit an unrelated
+// instrument from a different library, but an instrument uuid is unique, so only exactly the
+// instruments the caller means get baked.
+const resolveUuids = (instruments: ReadonlyArray<CatalogInstrument>, uuids: ReadonlyArray<string>) => {
+    const byUuid = new Map(instruments.map(entry => [entry.uuid, entry]))
+    const matched: Array<CatalogInstrument> = []
+    const missing: Array<string> = []
+    for (const uuid of uuids) {
+        const hit = byUuid.get(uuid)
+        if (isDefined(hit)) {matched.push(hit)} else {missing.push(uuid)}
+    }
+    return {matched, missing}
+}
+
+const resolveUuidsFile = (instruments: ReadonlyArray<CatalogInstrument>, file: string) => {
+    const path = resolve(file)
+    const uuids = readJson<ReadonlyArray<string>>(path)
+    if (uuids.isEmpty()) {throw new Error(`Cannot read uuids: ${path}`)}
+    return resolveUuids(instruments, uuids.unwrap())
+}
+
+const resolveSelectionFile = (instruments: ReadonlyArray<CatalogInstrument>, selection: Optional<string>) => {
+    const path = resolve(selection ?? defaultSelection)
+    const names = readJson<ReadonlyArray<string>>(path)
+    if (names.isEmpty()) {throw new Error(`Cannot read selection: ${path}`)}
+    return resolveSelection(instruments, names.unwrap())
 }
 
 const useAudioFile = (boxGraph: BoxGraph, files: Map<string, AudioFileBox>, region: ManifestRegion): AudioFileBox => {
@@ -149,13 +178,13 @@ const main = (): void => {
     const instruments = flattenInstruments(catalog.unwrap())
     const {matched, missing} = args.all
         ? {matched: instruments, missing: [] as ReadonlyArray<string>}
-        : (() => {
-            const selectionPath = resolve(args.selection ?? defaultSelection)
-            const names = readJson<ReadonlyArray<string>>(selectionPath)
-            if (names.isEmpty()) {throw new Error(`Cannot read selection: ${selectionPath}`)}
-            return resolveSelection(instruments, names.unwrap())
-        })()
+        : isDefined(args.uuids)
+            ? resolveUuidsFile(instruments, args.uuids)
+            : resolveSelectionFile(instruments, args.selection)
     missing.forEach(name => console.error(`unmatched  ${name} — no such instrument in the catalog`))
+    if (isDefined(args.uuids) && missing.length > 0) {
+        throw new Error(`Some requested uuids were not found in the catalog: ${missing.join(", ")}`)
+    }
     if (matched.length === 0) {console.log("Nothing to bake."); return}
     const nameCounts = new Map<string, number>()
     matched.forEach(entry => nameCounts.set(entry.name, (nameCounts.get(entry.name) ?? 0) + 1))
