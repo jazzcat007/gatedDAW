@@ -1,6 +1,6 @@
 import {Arrays, asDefined, isAbsent, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {InstrumentFactories, SfzInstrument} from "@opendaw/studio-adapters"
-import {toSfzAttachment} from "@opendaw/studio-core"
+import {toSfzAttachment, withExtendedKeyRange} from "@opendaw/studio-core"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Promises} from "@opendaw/lib-runtime"
 import {OpenSfzAPI, SfzManifestRegion} from "@/opendaw-api"
@@ -65,7 +65,8 @@ export class SfzSelection implements ResourceSelection<SfzInstrument> {
                     }))
             })).box
         }
-        return regions.map(region => toSfzAttachment({...region, defaultPath: ""}, fileFor(region)))
+        return withExtendedKeyRange(
+            regions.map(region => toSfzAttachment({...region, defaultPath: ""}, fileFor(region))))
     }
 
     async deleteItems(_instruments: ReadonlyArray<SfzInstrument>): Promise<ReadonlyArray<SfzInstrument>> {
