@@ -2,6 +2,7 @@
 // Installs curated factory content packs, server-side, one pack at a time:
 //   fetch (git clone / pull --ff-only into the intake tree)
 //   -> import (scripts/import-sfz-instruments.mjs or import-soundfonts.mjs)
+//   -> bake (sfz only: bake the instruments this run just added, via --uuids)
 // Every stage writes straight to stdout/stderr so the admin job panel shows the same lines an
 // operator would see running the importer by hand — including the importer's own
 // "imported=..." / "invalid=..." report, which is relayed verbatim, never reformatted.
@@ -9,14 +10,16 @@
 // Pack ids are resolved against the committed factory-intake/packs.json (or --packs-file) only.
 // The admin endpoint has already validated them, but this script re-validates on its own so a bad
 // id can never reach git or an importer even if invoked directly.
+import {mkdirSync, writeFileSync} from "node:fs"
 import {dirname, join, resolve} from "node:path"
 import {spawn} from "node:child_process"
 import {fileURLToPath} from "node:url"
 import {checkFreeSpace, freeSpaceBytes, readPackManifest, resolvePacks} from "../packages/server/factory-packs/index.mjs"
 import {fetchPack} from "../packages/server/factory-packs/fetch-pack.mjs"
-import {importCommandFor} from "../packages/server/factory-packs/install-steps.mjs"
+import {importCommandFor, sfzInstrumentUuids} from "../packages/server/factory-packs/install-steps.mjs"
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
+const repoRoot = join(scriptDir, "..")
 
 const usage = `Usage:
   node scripts/install-factory-packs.mjs --pack-ids <id1,id2,...> [options]
@@ -67,7 +70,7 @@ const main = async () => {
 
     const factoryRoot = resolve(args.root ?? process.env.FACTORY_ASSET_ROOT ?? "/data/factory")
     const intakeRoot = resolve(args.intakeRoot ?? process.env.OPENDAW_INTAKE_ROOT ?? "/data/factory-intake")
-    const packsFile = resolve(args.packsFile ?? join(scriptDir, "..", "factory-intake", "packs.json"))
+    const packsFile = resolve(args.packsFile ?? join(repoRoot, "factory-intake", "packs.json"))
 
     const manifest = readPackManifest(packsFile)
     const {packs, unknown, blocked} = resolvePacks(manifest, args.packIds)
@@ -97,10 +100,25 @@ const main = async () => {
             const {dir, cloned} = await fetchPack(pack, cacheDir)
             console.log(cloned ? `cloned ${pack.source.url}` : `updated ${cacheDir} (fast-forward)`)
 
+            const before = pack.kind === "sfz" ? sfzInstrumentUuids(factoryRoot) : new Set()
             console.log(`-- import --`)
             const {command, args: importArgs} = importCommandFor(pack, dir, factoryRoot, scriptDir)
             console.log(`${command} ${importArgs.join(" ")}`)
             await run(command, importArgs)
+
+            if (pack.kind === "sfz") {
+                const added = [...sfzInstrumentUuids(factoryRoot)].filter(uuid => !before.has(uuid))
+                if (added.length === 0) {
+                    console.log("-- bake -- skipped, no new instruments (pack already installed)")
+                    continue
+                }
+                console.log(`-- bake (${added.length} new instrument${added.length === 1 ? "" : "s"}) --`)
+                const uuidsFile = join(downloadsRoot, `${pack.id}.uuids.json`)
+                mkdirSync(downloadsRoot, {recursive: true})
+                writeFileSync(uuidsFile, `${JSON.stringify(added, null, 2)}\n`)
+                const npm = process.platform === "win32" ? "npm.cmd" : "npm"
+                await run(npm, ["run", "bake-sfz-presets", "--", "--root", factoryRoot, "--uuids", uuidsFile])
+            }
             console.log(`== ${pack.id} done ==`)
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error)
