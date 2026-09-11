@@ -1,0 +1,11 @@
+{
+  "type": "module",
+  "name": "@opendaw/factory-packs",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.mjs",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "license": "LGPL-3.0-or-later"
+}

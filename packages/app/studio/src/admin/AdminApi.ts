@@ -95,6 +95,44 @@ export namespace AdminApi {
         return job
     }
 
+    export type Pack = {
+        id: string
+        kind: "sfz" | "soundfont"
+        name: string
+        genres: ReadonlyArray<string>
+        license: string
+        source: {type: string, url: string, ref?: string}
+        sampleFormat?: string
+        rawSizeBytes: number
+        yields?: ReadonlyArray<string>
+        installable: boolean
+        blockedReason?: string
+        installed: boolean
+    }
+    export type PacksSummary = {
+        packs: ReadonlyArray<Pack>
+        offlineInstallDisabled: boolean
+        freeBytes: number
+        currentJob: AssetImportJob | null
+    }
+
+    export const fetchPacks = async (): Promise<PacksSummary> => {
+        const response = await fetch("/api/admin/factory/packs")
+        if (!response.ok) {return panic(await parseError(response, `Failed to load content packs (${response.status})`))}
+        return response.json()
+    }
+
+    export const installPacks = async (packIds: ReadonlyArray<string>): Promise<AssetImportJob> => {
+        const response = await fetch("/api/admin/factory/packs/install", {
+            method: "POST",
+            headers: {"Content-Type": "application/json", ...CsrfHeader},
+            body: JSON.stringify({packIds})
+        })
+        if (!response.ok) {return panic(await parseError(response, `Failed to start pack install (${response.status})`))}
+        const {job} = await response.json()
+        return job
+    }
+
     export const listUsers = async (): Promise<ReadonlyArray<User>> => {
         const response = await fetch("/api/admin/users")
         if (!response.ok) {return panic(await parseError(response, `Failed to list users (${response.status})`))}

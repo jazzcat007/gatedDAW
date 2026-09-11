@@ -15,6 +15,7 @@
     "import-samples": "node scripts/import-samples.mjs",
     "import-sfz": "node scripts/import-sfz-instruments.mjs",
     "import-soundfonts": "node scripts/import-soundfonts.mjs",
+    "install-factory-packs": "node scripts/install-factory-packs.mjs",
     "dev:studio": "turbo run dev --filter=@opendaw/app-studio",
     "dev:lab": "turbo run dev --filter=@opendaw/lab",
     "dev:yjs-server": "turbo run dev --filter=yjs-server",

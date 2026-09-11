@@ -184,6 +184,18 @@ const SettingsSection = (initialSettings: AdminApi.Settings): HTMLElement => {
     )
 }
 
+const jobText = (job: AdminApi.AssetImportJob | null): string => {
+    if (job === null) {return "No asset import job has run since this server started."}
+    return [
+        `${job.status.toUpperCase()} ${job.command}`,
+        `Started: ${formatDate(job.startedAt)}`,
+        `Finished: ${formatDate(job.finishedAt)}`,
+        job.error === null ? "" : `Error: ${job.error}`,
+        "",
+        job.output.trim()
+    ].filter(line => line.length > 0).join("\n")
+}
+
 const AssetsSection = (lifecycle: Lifecycle, initialAssets: AdminApi.AssetsSummary): HTMLElement => {
     const errorLine: HTMLElement = <div className="error"/>
     const summaryLine: HTMLElement = <p className="asset-summary"/>
@@ -195,18 +207,7 @@ const AssetsSection = (lifecycle: Lifecycle, initialAssets: AdminApi.AssetsSumma
     let currentAssets = initialAssets
 
     const renderJob = (job: AdminApi.AssetImportJob | null) => {
-        if (job === null) {
-            jobOutput.textContent = "No asset import job has run since this server started."
-            return
-        }
-        jobOutput.textContent = [
-            `${job.status.toUpperCase()} ${job.command}`,
-            `Started: ${formatDate(job.startedAt)}`,
-            `Finished: ${formatDate(job.finishedAt)}`,
-            job.error === null ? "" : `Error: ${job.error}`,
-            "",
-            job.output.trim()
-        ].filter(line => line.length > 0).join("\n")
+        jobOutput.textContent = jobText(job)
     }
 
     const renderRows = (assets: AdminApi.AssetsSummary) => {
@@ -285,6 +286,133 @@ const AssetsSection = (lifecycle: Lifecycle, initialAssets: AdminApi.AssetsSumma
                 {body}
             </table>
             <div className="asset-actions">{refreshButton}{importButton}{replaceButton}</div>
+            <h3>Latest Import Job</h3>
+            {jobOutput}
+            {errorLine}
+        </section>
+    )
+}
+
+// The server enforces the real guards (offline gate, id validation, free-space margin, single job);
+// this client-side margin math only disables the button early so the admin sees the problem before
+// clicking instead of after.
+const PACK_MIN_FREE_BYTES = 5_000_000_000
+const selectionFitsFreeSpace = (packs: ReadonlyArray<AdminApi.Pack>, freeBytes: number): boolean => {
+    const total = packs.reduce((sum, pack) => sum + pack.rawSizeBytes, 0)
+    const margin = Math.max(PACK_MIN_FREE_BYTES, 2 * packs.reduce((largest, pack) => Math.max(largest, pack.rawSizeBytes), 0))
+    return freeBytes - total >= margin
+}
+
+const PacksSection = (lifecycle: Lifecycle, initialPacks: AdminApi.PacksSummary): HTMLElement => {
+    const errorLine: HTMLElement = <div className="error"/>
+    const summaryLine: HTMLElement = <p className="asset-summary"/>
+    const body: HTMLTableSectionElement = <tbody/>
+    const jobOutput: HTMLPreElement = <pre className="job-output"/>
+    const showError = (reason: unknown) =>
+        errorLine.textContent = reason instanceof Error ? reason.message : String(reason)
+
+    let currentPacks = initialPacks
+    let currentJob = initialPacks.currentJob
+    const selected = new Set<string>()
+
+    const installButton: HTMLButtonElement = (
+        <button type="button" onclick={async () => {
+            if (selected.size === 0) {return}
+            const packIds = [...selected]
+            if (!confirm(`Install ${packIds.length} content pack(s)? The server downloads and imports them now.`)) {return}
+            errorLine.textContent = ""
+            try {
+                await AdminApi.installPacks(packIds)
+                await reload()
+            } catch (reason) {
+                showError(reason)
+                await reload()
+            }
+        }}>INSTALL SELECTED</button>
+    ) as HTMLButtonElement
+
+    const renderRows = (summary: AdminApi.PacksSummary) => {
+        currentPacks = summary
+        currentJob = summary.currentJob
+        for (const id of [...selected]) {
+            if (!summary.packs.some(pack => pack.id === id)) {selected.delete(id)}
+        }
+        summaryLine.textContent = `Free space: ${Bytes.toString(summary.freeBytes)} · pack installs: `
+            + (summary.offlineInstallDisabled ? "disabled (offline-only mode)" : "enabled")
+        replaceChildren(body, ...summary.packs.map(pack => {
+            const checkbox: HTMLInputElement = (
+                <input type="checkbox" disabled={!pack.installable} checked={selected.has(pack.id)}/>
+            ) as HTMLInputElement
+            checkbox.addEventListener("change", () => {
+                if (checkbox.checked) {selected.add(pack.id)} else {selected.delete(pack.id)}
+                updateInstallButton()
+            })
+            const status = !pack.installable
+                ? `blocked — ${pack.blockedReason ?? "not installable"}`
+                : pack.installed ? "installed" : "not installed"
+            return (
+                <tr>
+                    <td>{pack.name}</td>
+                    <td>{pack.kind}</td>
+                    <td>{pack.genres.join(", ")}</td>
+                    <td>{pack.license}</td>
+                    <td>{Bytes.toString(pack.rawSizeBytes)}</td>
+                    <td>{status}</td>
+                    <td>{checkbox}</td>
+                </tr>
+            )
+        }))
+        jobOutput.textContent = jobText(currentJob)
+        updateInstallButton()
+    }
+
+    const updateInstallButton = () => {
+        const selection = currentPacks.packs.filter(pack => selected.has(pack.id))
+        installButton.disabled = currentPacks.offlineInstallDisabled
+            || selection.length === 0
+            || !selectionFitsFreeSpace(selection, currentPacks.freeBytes)
+    }
+
+    const reload = async () => {
+        errorLine.textContent = ""
+        try {
+            renderRows(await AdminApi.fetchPacks())
+        } catch (reason) {
+            showError(reason)
+        }
+    }
+
+    const refreshButton: HTMLButtonElement = (
+        <button type="button" onclick={reload}>REFRESH PACKS</button>
+    ) as HTMLButtonElement
+
+    renderRows(initialPacks)
+    const interval = setInterval(() => {
+        if (currentJob?.status === "running") {
+            void reload()
+        }
+    }, 2_500)
+    lifecycle.own(Terminable.create(() => clearInterval(interval)))
+
+    return (
+        <section className="packs">
+            <h2>Content Packs</h2>
+            {summaryLine}
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Kind</th>
+                    <th>Genres</th>
+                    <th>License</th>
+                    <th>Size</th>
+                    <th>Status</th>
+                    <th/>
+                </tr>
+                </thead>
+                {body}
+            </table>
+            <div className="asset-actions">{refreshButton}{installButton}</div>
             <h3>Latest Import Job</h3>
             {jobOutput}
             {errorLine}
@@ -393,6 +521,7 @@ export const AdminPage: PageFactory<StudioService> = async ({service, lifecycle}
     const {settings, users} = await AdminApi.fetchSettings()
     const invites = await AdminApi.listInvites()
     const assets = await AdminApi.fetchAssets()
+    const packs = await AdminApi.fetchPacks()
     return (
         <div className={className}>
             <BackButton service={service}/>
@@ -402,6 +531,7 @@ export const AdminPage: PageFactory<StudioService> = async ({service, lifecycle}
                 {UsersSection(lifecycle, me.user.id, users)}
                 {InvitesSection(invites)}
                 {AssetsSection(lifecycle, assets)}
+                {PacksSection(lifecycle, packs)}
                 {SettingsSection(settings)}
             </div>
         </div>
