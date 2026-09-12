@@ -57,11 +57,17 @@ const parseArgs = argv => {
 }
 
 // stdio: "inherit" so the child's output streams into this process's stdout, which the job runner
-// captures — the importer's own report lines land in the admin panel unmodified.
+// captures — the importer's own report lines land in the admin panel unmodified. Resolves with the exit
+// code rather than rejecting on non-zero: scripts/import-sfz-instruments.mjs's own documented contract is
+// to exit 1 whenever it found ANY invalid definition in an otherwise-successful run — normal for
+// virtually every real-world SFZ library (VCSL itself has always been imported=177, invalid=6), and the
+// catalog/regions.json writes for everything that DID validate have already happened by the time this
+// resolves. A non-zero exit only actually means "this pack failed" for callers that decide it does; a
+// process that fails to even spawn still rejects, since that is never a content-quality signal.
 const run = (command, args) => new Promise((done, failed) => {
     const child = spawn(command, args, {stdio: "inherit"})
     child.on("error", failed)
-    child.on("close", code => code === 0 ? done() : failed(new Error(`${command} exited with code ${code}`)))
+    child.on("close", code => done(code))
 })
 
 const main = async () => {
@@ -104,7 +110,17 @@ const main = async () => {
             console.log(`-- import --`)
             const {command, args: importArgs} = importCommandFor(pack, dir, factoryRoot, scriptDir)
             console.log(`${command} ${importArgs.join(" ")}`)
-            await run(command, importArgs)
+            const importCode = await run(command, importArgs)
+            // Only the SFZ importer has the documented "exit 1 means some definitions were invalid, not
+            // that the run failed" contract; import-soundfonts.mjs has no such contract, so a non-zero
+            // exit there stays a hard failure for the pack. Whether this SFZ import actually produced
+            // anything is decided below by diffing the catalog, not by this exit code.
+            if (importCode !== 0 && pack.kind !== "sfz") {
+                throw new Error(`${command} exited with code ${importCode}`)
+            }
+            if (importCode !== 0) {
+                console.log(`-- import -- exited with code ${importCode} (expected when some definitions are invalid)`)
+            }
 
             if (pack.kind === "sfz") {
                 const added = [...sfzInstrumentUuids(factoryRoot)].filter(uuid => !before.has(uuid))
@@ -122,8 +138,11 @@ const main = async () => {
                 // executable on every platform, so this sidesteps the whole class of bug rather
                 // than special-casing it, and needs no shell (no quoting/injection surface).
                 const tsxCli = join(repoRoot, "node_modules", "tsx", "dist", "cli.mjs")
-                await run(process.execPath, [tsxCli, join(repoRoot, "scripts", "bake-sfz-presets.ts"),
+                // Unlike the SFZ import step, the baker has no "expected non-zero" contract — any failure
+                // here is real and should mark the pack failed, so this exit code is checked explicitly.
+                const bakeCode = await run(process.execPath, [tsxCli, join(repoRoot, "scripts", "bake-sfz-presets.ts"),
                     "--root", factoryRoot, "--uuids", uuidsFile])
+                if (bakeCode !== 0) {throw new Error(`bake-sfz-presets exited with code ${bakeCode}`)}
             }
             console.log(`== ${pack.id} done ==`)
         } catch (error) {
