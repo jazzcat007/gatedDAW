@@ -1,9 +1,11 @@
 import {EmptyExec, Errors, isDefined, Option, Provider, Terminable, Terminator} from "@opendaw/lib-std"
-import {AnimationFrame, Events} from "@opendaw/lib-dom"
+import {AnimationFrame, Clipboard, Events} from "@opendaw/lib-dom"
 import {ErrorInfo} from "@/errors/ErrorInfo.ts"
 import {Surface} from "@/ui/surface/Surface.tsx"
 import {Dialogs} from "@/ui/components/dialogs.tsx"
 import {BuildInfo} from "@/BuildInfo"
+import {LogBuffer} from "@/errors/LogBuffer.ts"
+import {IconSymbol} from "@opendaw/studio-enums"
 
 const ExtensionPatterns = ["script-src blocked eval", "extension", "chrome-extension://", "blocked by CSP", "Zotero Connector", "hintMode", "handleHint"]
 const IgnoredErrors = [
@@ -36,6 +38,7 @@ const ModuleUrlPattern = /\.(?:m?jsx?|tsx?)(?:[?:#]|$)/
 export class ErrorHandler {
     readonly #terminator = new Terminator()
     readonly #recover: Provider<Option<Provider<Promise<void>>>>
+    readonly #buildInfo: BuildInfo
 
     #errorThrown: boolean = false
     #rejectionReported: boolean = false
@@ -43,8 +46,43 @@ export class ErrorHandler {
     #browserInternalNotified: boolean = false
 
     constructor(buildInfo: BuildInfo, recover: Provider<Option<Provider<Promise<void>>>>) {
-        void buildInfo
+        this.#buildInfo = buildInfo
         this.#recover = recover
+    }
+
+    // A copy-pasteable diagnostic block for every error dialog: without this, a user's only way to hand us
+    // a real error is opening DevTools and reading the [ErrorHandler] console.warn themselves (they usually don't).
+    #buildReport(scope: string, error: ErrorInfo, note?: string): string {
+        const recentLogs = LogBuffer.get().slice(-20)
+            .map(({time, level, args}) => `${new Date(time).toISOString()} [${level}] ${args.join(" ")}`)
+            .join("\n")
+        return [
+            "Please help me fix this error in Metal-Duck Studio.",
+            "",
+            `Scope: ${scope}`,
+            `When: ${new Date().toISOString()}`,
+            `Build: ${this.#buildInfo.uuid} (${this.#buildInfo.env}, built ${new Date(this.#buildInfo.date).toISOString()})`,
+            `User agent: ${navigator.userAgent}`,
+            `Script tags on page: ${document.scripts.length}`,
+            ...(isDefined(note) ? [`Note: ${note}`] : []),
+            "",
+            `${error.name}: ${error.message ?? "(no message)"}`,
+            error.stack ?? "(no stack)",
+            "",
+            "Recent console output:",
+            recentLogs.length > 0 ? recentLogs : "(none captured)"
+        ].join("\n")
+    }
+
+    #copyReportButton(scope: string, error: ErrorInfo, note?: string) {
+        return {
+            text: "Copy Details",
+            onClick: () => {
+                const report = this.#buildReport(scope, error, note)
+                Clipboard.writeText(report)
+                    .then(() => Surface.get().toast("Error details copied to clipboard", IconSymbol.Copy))
+            }
+        }
     }
 
     #looksLikeExtension(error: ErrorInfo): boolean {
@@ -103,17 +141,18 @@ export class ErrorHandler {
 
     // The browser (or something injected into the page) threw, not openDAW, so the session continues. Tell the
     // user once per session: a shimmed API can throw on every call, and stacking dialogs would be worse.
-    #notifyBrowserInternal(message: string): void {
-        console.warn(`Browser internal error ignored: ${message}`)
+    #notifyBrowserInternal(scope: string, error: ErrorInfo): void {
+        console.warn(`Browser internal error ignored: ${error.message}`)
         if (this.#browserInternalNotified || !Surface.isAvailable()) {return}
         this.#browserInternalNotified = true
         Dialogs.info({
             headline: "Warning",
-            message: "Your browser or one of its extensions blocked an operation the studio relies on. Consider disabling extensions or strict privacy settings for a more stable experience."
+            message: "Your browser or one of its extensions blocked an operation the studio relies on. Consider disabling extensions or strict privacy settings for a more stable experience.",
+            buttons: [this.#copyReportButton(scope, error)]
         }).then(EmptyExec)
     }
 
-    #tryIgnore(event: Event): boolean {
+    #tryIgnore(scope: string, event: Event): boolean {
         if (event instanceof ErrorEvent && IgnoredErrors.includes(event.message)) {
             console.warn(event.message)
             event.preventDefault()
@@ -131,7 +170,7 @@ export class ErrorHandler {
             && BrowserInternalPatterns.some(pattern => event.message.includes(pattern)
                 || (event.error instanceof Error && event.error.message.includes(pattern)))) {
             event.preventDefault()
-            this.#notifyBrowserInternal(event.message)
+            this.#notifyBrowserInternal(scope, ErrorInfo.extract(event))
             return true
         }
         // Handle Monaco editor errors from error events
@@ -236,14 +275,14 @@ export class ErrorHandler {
         if (isDefined(reasonMessage)
             && BrowserInternalPatterns.some(pattern => reasonMessage.includes(pattern))) {
             event.preventDefault()
-            this.#notifyBrowserInternal(reasonMessage)
+            this.#notifyBrowserInternal(scope, ErrorInfo.extract(event))
             return true
         }
         return false
     }
 
     processError(scope: string, event: Event): boolean {
-        if (this.#tryIgnore(event)) {return false}
+        if (this.#tryIgnore(scope, event)) {return false}
         const error = ErrorInfo.extract(event)
         const foreignOrigin = this.#extractForeignOrigin(error)
         const looksLikeExtension = this.#looksLikeExtension(error) || foreignOrigin !== null
@@ -263,7 +302,8 @@ export class ErrorHandler {
                 : "A browser extension may have caused an error."
             Dialogs.info({
                 headline: "Warning",
-                message: `${originInfo} Consider disabling extensions for a more stable experience.`
+                message: `${originInfo} Consider disabling extensions for a more stable experience.`,
+                buttons: [this.#copyReportButton(scope, error, originInfo)]
             }).then(EmptyExec)
             return false
         }
@@ -300,6 +340,7 @@ export class ErrorHandler {
                 message: error.message ?? "no message",
                 probablyHasExtension,
                 foreignOrigin,
+                report: this.#buildReport(scope, error),
                 backupCommand: this.#recover()
             })
         } else {
