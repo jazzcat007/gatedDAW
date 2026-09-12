@@ -95,31 +95,96 @@ const main = () => {
     let imported = 0; let failed = 0
     for (const input of args.paths) {
         const libraryRoot = resolve(input); const library = args.library ?? basename(libraryRoot)
+        const definitions = walk(libraryRoot)
+
+        // Phase 1: parse every definition once. A single bad `#include` (a circular reference, or one
+        // that genuinely resolves nowhere even after parseSfz's own root-relative fallback) used to throw
+        // out of `parseSfz` uncaught and crash the whole run for the entire library — Caveman Cosmonaut
+        // lost 100% of its instruments this way. Catching per-definition means one bad file degrades to
+        // "invalid" instead of taking every other instrument in the library down with it. This pass also
+        // collects which files get pulled in via `#include` anywhere in the library, needed by phase 2.
+        const parses = new Map()
+        const includedAnywhere = new Set()
+        for (const definition of definitions) {
+            try {
+                const parsed = parseSfz(definition)
+                parses.set(definition, parsed)
+                parsed.includedFiles.forEach(file => includedAnywhere.add(resolve(file)))
+            } catch (error) {
+                parses.set(definition, {error: error instanceof Error ? error.message : String(error)})
+            }
+        }
+
         const entries = []
         const invalidDefinitions = new Set()
-        for (const definition of walk(libraryRoot)) {
+        for (const definition of definitions) {
             const key = relative(libraryRoot, definition).replaceAll("\\", "/")
-            const parsed = parseSfz(definition)
-            const pathOf = region => resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)
-            const playable = parsed.regions.filter(region => region.sample)
+            const parsed = parses.get(definition)
+            // Sforzando-authored banks (Karoryfer's Shinyguitar and siblings) set `default_path=$sample_dir/`
+            // — a variable Sforzando's own GUI populates when a .bank.xml is registered, never a real path
+            // an SFZ-spec parser can resolve. There is no general way to discover what it should be, but the
+            // one convention actually observed (and Karoryfer's stated layout) is a "Samples" folder sibling
+            // to "Programs": tried only as a fallback, so a library that never uses this variable is unaffected.
+            const pathOf = region => {
+                const primary = resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)
+                if (existsSync(primary) || !(region.default_path ?? "").includes("$sample_dir")) {return primary}
+                const fallbackPath = (region.default_path ?? "").replaceAll("$sample_dir", "../Samples")
+                return resolveSfzPath(dirname(definition), fallbackPath, region.sample)
+            }
+            // A file that only ever shows up as someone else's #include target — a shared curves/envelope/
+            // articulation-map fragment, common in newer Karoryfer libraries — was never meant to load on
+            // its own. It correctly produces nothing standalone; that is not a real failure, so it is
+            // skipped silently instead of counted against the library. A file that DOES validate on its
+            // own is never skipped by this, even if something else also happens to include it.
+            const reportInvalid = reason => {
+                if (includedAnywhere.has(resolve(definition))) {return}
+                console.error(`invalid  ${key} ${reason}`)
+                invalidDefinitions.add(key); failed++
+            }
+            if (parsed.error !== undefined) {reportInvalid(`error=${parsed.error}`); continue}
+            // `sample=*name` is an SFZ built-in generator/oscillator reference (e.g. `*sine`), not a file —
+            // a real engine resolves it internally. Nothing on disk will ever back it, so it must never
+            // count as "missing"; it is simply an opcode value this importer doesn't support yet, dropped
+            // the same as any other unsupported feature rather than failing the whole instrument over it.
+            const playable = parsed.regions.filter(region => region.sample && !region.sample.startsWith("*"))
             const samples = [...new Set(playable.map(pathOf))]
-            const missing = samples.filter(sample => !inside(libraryRoot, sample) || !existsSync(sample))
-            if (parsed.regions.length === 0 || missing.length > 0) {
-                console.error(`invalid  ${key} regions=${parsed.regions.length} missing=${missing.length}`)
-                invalidDefinitions.add(key); failed++; continue
+            const missingSamples = new Set(samples.filter(sample => !inside(libraryRoot, sample) || !existsSync(sample)))
+            const resolvableSamples = samples.filter(sample => !missingSamples.has(sample))
+            const bytes = new Map(resolvableSamples.map(sample => [sample, readFileSync(sample)]))
+            const {info, unreadable} = probeSamples(resolvableSamples, bytes)
+            const unreadableReasons = new Map(unreadable.map(({path, reason}) => [path, reason]))
+            // A single bad reference — one corrupt upstream WAV, one stray missing file — used to
+            // invalidate the entire definition, discarding thousands of otherwise-good regions over one
+            // broken one (verified against real Karoryfer content: a 5520-region instrument losing
+            // everything to a single `*sine` reference, a 1128-region instrument to one corrupted WAV).
+            // Drop just the affected regions instead; only give up on the file if nothing survives at all.
+            const usableRegions = playable.filter(region => {
+                const path = pathOf(region)
+                return !missingSamples.has(path) && !unreadableReasons.has(path)
+            })
+            // A file with zero <region> opcodes anywhere in its (#include-flattened) text can never be a
+            // playable instrument under any interpretation — a keyswitch/keymap label table, a pure curves/
+            // envelope fragment, a metadata-only file meant for a DAW's own GUI layer rather than #include.
+            // Unlike a file whose regions exist but fail to resolve, this can never represent a real loss,
+            // so it is always skipped silently rather than gated on being #include-detectable (some of
+            // these — Swirly Drums' Programs/keymaps/*.sfz — are never #include'd by anything at all).
+            if (parsed.regions.length === 0) {continue}
+            if (usableRegions.length === 0) {
+                const [firstUnreadable] = unreadableReasons
+                const detail = firstUnreadable ? ` first='${relative(libraryRoot, firstUnreadable[0])}' (${firstUnreadable[1]})` : ""
+                reportInvalid(`regions=${parsed.regions.length} missing=${missingSamples.size} unreadable=${unreadableReasons.size}${detail}`)
+                continue
             }
-            const bytes = new Map(samples.map(sample => [sample, readFileSync(sample)]))
-            const {info, unreadable} = probeSamples(samples, bytes)
-            if (unreadable.length > 0) {
-                const [{path, reason}] = unreadable
-                console.error(`invalid  ${key} unreadable=${unreadable.length} first='${relative(libraryRoot, path)}' (${reason})`)
-                invalidDefinitions.add(key); failed++; continue
+            const dropped = playable.length - usableRegions.length
+            if (dropped > 0) {
+                console.error(`partial  ${key} dropped ${dropped}/${playable.length} region(s): missing=${missingSamples.size} unreadable=${unreadableReasons.size}`)
             }
+            const usableSamples = [...new Set(usableRegions.map(pathOf))]
             // Hash inputs stay definition-then-sorted-sample-bytes: the instrument uuid must not shift.
-            const uuid = contentUuid([readFileSync(definition), ...samples.slice().sort().map(sample => bytes.get(sample))])
+            const uuid = contentUuid([readFileSync(definition), ...usableSamples.slice().sort().map(sample => bytes.get(sample))])
             const manifest = {
                 version: 1,
-                regions: playable.map(region => {
+                regions: usableRegions.map(region => {
                     const probe = info.get(pathOf(region))
                     return {
                         sample: probe.uuid,
@@ -133,9 +198,9 @@ const main = () => {
                 unsupportedOpcodes: parsed.unsupported
             }
             const entry = {uuid, name: basename(definition, ".sfz"), definition: key,
-                regions: parsed.regions.length, samples: samples.length, unsupportedOpcodes: parsed.unsupported,
+                regions: usableRegions.length, samples: usableSamples.length, unsupportedOpcodes: parsed.unsupported,
                 license: args.license ?? "No license provided", url: args.url ?? "local import"}
-            entries.push({entry, definition, samples, manifest, info})
+            entries.push({entry, definition, samples: usableSamples, manifest, info})
         }
         const folder = catalog.folders.find(candidate => candidate.name === library) ?? {name: library, instruments: []}
         if (!catalog.folders.includes(folder)) {catalog.folders.push(folder)}
