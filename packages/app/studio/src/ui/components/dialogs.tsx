@@ -273,20 +273,27 @@ export namespace Dialogs {
         dialog.showModal()
     }
 
-    export const error = ({name, message, probablyHasExtension, foreignOrigin, backupCommand = Option.None}: {
+    export const error = ({name, message, probablyHasExtension, foreignOrigin, report, backupCommand = Option.None}: {
         scope: string,
         name: string,
         message: string,
         probablyHasExtension: boolean,
         foreignOrigin: string | null,
+        report: string,
         backupCommand: Option<Provider<Promise<void>>>
     }): void => {
         console.debug(`Recovery enabled: ${backupCommand}`)
         const foreignHostname = foreignOrigin !== null ? new URL(foreignOrigin).hostname : null
+        const copyReportButton: Button = {
+            text: "Copy Error Report",
+            onClick: () =>
+                Clipboard.writeText(report)
+                    .then(() => Surface.get().toast("Error report copied to clipboard", IconSymbol.Copy))
+        }
         const dialog: HTMLDialogElement = (
             <Dialog headline="You Found A Bug ❤️"
                     icon={IconSymbol.Bug}
-                    buttons={backupCommand.nonEmpty() ? [{
+                    buttons={backupCommand.nonEmpty() ? [copyReportButton, {
                         text: "Dismiss",
                         onClick: () => {
                             if (Browser.isLocalHost()) {
@@ -302,7 +309,11 @@ export namespace Dialogs {
                             const command = backupCommand.unwrap()
                             command().then(() => location.reload())
                         }
-                    }] : Arrays.empty()}
+                    }] : [copyReportButton, {
+                        text: "Reload",
+                        primary: true,
+                        onClick: () => location.reload()
+                    }]}
                     cancelable={false}
                     error>
                 <div style={{padding: "1em 0", maxWidth: "50vw"}}>
@@ -322,7 +333,7 @@ export namespace Dialogs {
                     <p style={{
                         color: Colors.shadow.toString(),
                         fontWeight: "bolder"
-                    }}>Please report (opens in new tab) and then recover. Thanks!</p>
+                    }}>Click "Copy Error Report" and send it over, then recover. Thanks!</p>
                 </div>
             </Dialog>
         )
