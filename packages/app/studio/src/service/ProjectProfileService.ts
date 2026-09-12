@@ -166,10 +166,15 @@ export class ProjectProfileService {
             RuntimeNotifier.notify({message: "Could not load project.", icon: "Warning"})
             return
         }
-        await this.#sampleService.replaceMissingFiles(project.boxGraph, this.#sampleManager)
-        await this.#soundfontService.replaceMissingFiles(project.boxGraph, this.#soundfontManager)
         const cover = serverAvailable ? await ServerProjects.loadCover(uuid) : await ProjectStorage.loadCover(uuid)
-        this.#setProfile(uuid, project, meta, cover, true)
+        // Opens the workspace immediately instead of blocking behind one confirm dialog per missing sample/
+        // soundfont — a project referencing dozens of unavailable samples (e.g. from a machine whose local
+        // sample library differs) used to stall here indefinitely. Missing assets are scanned in the
+        // background instead and surfaced as a persistent, actionable indicator that stays until each one
+        // is resolved (ProjectProfile.missingAssets), rather than a dialog that must be clicked through
+        // before the project is even visible.
+        const profile = this.#setProfile(uuid, project, meta, cover, true)
+        this.#scanMissingAssets(profile)
     }
 
     async exportBundle() {
@@ -274,11 +279,23 @@ export class ProjectProfileService {
         this.#setProfile(UUID.generate(), project, ProjectMeta.init(name), Option.None)
     }
 
-    #setProfile(...args: ConstructorParameters<typeof ProjectProfile>): void {
-        this.#profile.wrap(this.#createProfile(...args))
+    #setProfile(...args: ConstructorParameters<typeof ProjectProfile>): ProjectProfile {
+        const profile = this.#createProfile(...args)
+        this.#profile.wrap(profile)
+        return profile
     }
 
     #createProfile(...args: ConstructorParameters<typeof ProjectProfile>): ProjectProfile {
         return new ProjectProfile(...args)
+    }
+
+    // Runs both scans concurrently, in the background, well after the project is already open and
+    // interactive — each updates the profile's observable missing-asset state independently as it resolves.
+    #scanMissingAssets(profile: ProjectProfile): void {
+        const {boxGraph} = profile.project
+        this.#sampleService.replaceMissingFiles(boxGraph, this.#sampleManager, {prompt: false})
+            .then(missing => profile.setMissingAssets("sample", missing))
+        this.#soundfontService.replaceMissingFiles(boxGraph, this.#soundfontManager, {prompt: false})
+            .then(missing => profile.setMissingAssets("soundfont", missing))
     }
 }

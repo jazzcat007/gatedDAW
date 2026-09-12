@@ -6,12 +6,13 @@ import {Surface} from "@/ui/surface/Surface"
 import {AnimationFrame, Events, Html} from "@opendaw/lib-dom"
 import {Runtime} from "@opendaw/lib-runtime"
 import {FooterLabel} from "@/service/FooterLabel"
-import {ProjectMeta, StudioPreferences} from "@opendaw/studio-core"
+import {MissingAssetEntry, ProjectMeta, ProjectProfile, StudioPreferences} from "@opendaw/studio-core"
 import {Colors} from "@opendaw/studio-enums"
 import {AudioData} from "@opendaw/lib-dsp"
 import {FooterItem} from "@/ui/FooterItem"
 import {EngineAddresses} from "@opendaw/studio-adapters"
 import {LatencyWarning} from "@/ui/LatencyWarning"
+import {MissingAssetsWarning} from "@/ui/MissingAssetsWarning"
 
 const className = Html.adoptStyleSheet(css, "footer")
 
@@ -52,6 +53,53 @@ export const Footer = ({lifecycle, service}: Construct) => {
                                     } else {
                                         value.textContent = "âï¸Ž"
                                     }
+                                }))
+                        }}/>
+            <FooterItem title="Missing Assets" className="missing-assets"
+                        onInit={({component, value}) => {
+                            const profileLifecycle = lifecycle.own(new Terminator())
+                            const state: { panel: Nullable<HTMLElement>, open: boolean } = {panel: null, open: false}
+                            const closePanel = () => {state.panel?.remove(); state.panel = null}
+                            // Re-rendered (not patched) whenever the entry list changes, including right after
+                            // the user resolves one — stays open across that, closes on its own once empty.
+                            const render = (entries: ReadonlyArray<MissingAssetEntry>, profile: ProjectProfile) => {
+                                component.classList.toggle("hidden", entries.length === 0)
+                                value.textContent = entries.length === 0 ? "" : String(entries.length)
+                                closePanel()
+                                if (!state.open || entries.length === 0) {
+                                    state.open = false
+                                    return
+                                }
+                                const panel: HTMLElement = (
+                                    <MissingAssetsWarning anchor={component} entries={entries} onResolve={async entry => {
+                                        const assetService = entry.kind === "sample"
+                                            ? service.sampleService : service.soundfontService
+                                        const manager = entry.kind === "sample"
+                                            ? service.sampleManager : service.soundfontManager
+                                        const resolved = await assetService.resolveOne(entry.uuid, entry.fileName, manager)
+                                        if (resolved) {profile.resolveMissingAsset(entry.uuid)}
+                                        return resolved
+                                    }}/>
+                                )
+                                state.panel = panel
+                                component.appendChild(panel)
+                            }
+                            lifecycle.ownAll(
+                                Events.subscribe(component, "click", () => {
+                                    state.open = !state.open
+                                    projectProfileService.getValue().ifSome(profile =>
+                                        render(profile.missingAssets, profile))
+                                }),
+                                {terminate: closePanel},
+                                projectProfileService.catchupAndSubscribe(optProfile => {
+                                    profileLifecycle.terminate()
+                                    state.open = false
+                                    component.classList.add("hidden")
+                                    value.textContent = ""
+                                    if (optProfile.isEmpty()) {return}
+                                    const profile = optProfile.unwrap()
+                                    profileLifecycle.own(profile.catchupAndSubscribeMissingAssets(entries =>
+                                        render(entries, profile)))
                                 }))
                         }}/>
             <FooterItem title="SampleRate">{audioContext.sampleRate}</FooterItem>

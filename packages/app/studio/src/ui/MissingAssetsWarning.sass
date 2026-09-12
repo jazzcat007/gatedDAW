@@ -1,0 +1,70 @@
+@use "@/mixins"
+
+component
+  @include mixins.floating
+  position: fixed
+  display: flex
+  flex-direction: column
+  row-gap: 0.5em
+  padding: 0.5em 0.75em
+  font-size: 0.625rem
+  color: var(--color-bright)
+  pointer-events: auto
+  z-index: 100
+  max-width: 22em
+
+  &:after
+    content: ""
+    position: absolute
+    top: 100%
+    left: 1.5em
+    border: 0.5em solid transparent
+    border-top-color: var(--color-orange)
+
+  border: 1px solid var(--color-orange)
+
+  .header
+    display: flex
+    align-items: center
+    column-gap: 0.75em
+
+    > svg
+      color: var(--color-orange)
+
+  .list
+    display: flex
+    flex-direction: column
+    row-gap: 0.375em
+    max-height: 12em
+    overflow-y: auto
+
+  .row
+    display: flex
+    align-items: center
+    column-gap: 0.5em
+
+    .name
+      flex: 1
+      overflow: hidden
+      text-overflow: ellipsis
+      white-space: nowrap
+
+    .kind
+      color: var(--color-shadow)
+
+    button
+      cursor: pointer
+      color: var(--color-orange)
+      background: none
+      border: 1px solid var(--color-orange)
+      border-radius: 0.25em
+      padding: 0.125em 0.5em
+      font-size: inherit
+
+      &:hover
+        background: var(--color-orange)
+        color: var(--color-dark)
+
+      &:disabled
+        opacity: 0.5
+        cursor: default
