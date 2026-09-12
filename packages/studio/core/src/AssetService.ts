@@ -3,7 +3,6 @@ import {
     DefaultObservableValue,
     Errors,
     isInstanceOf,
-    isNotUndefined,
     Notifier,
     Observer,
     Progress,
@@ -26,6 +25,8 @@ export namespace AssetService {
         progressHandler?: Progress.Handler,
         origin?: "import" | "recording"
     }
+    export type MissingAsset = {uuid: UUID.Bytes, fileName: string}
+    export type InvalidateManager = {invalidate: (uuid: UUID.Bytes) => void}
 }
 
 export abstract class AssetService<T extends Sample | Soundfont, RAW = void> {
@@ -46,59 +47,84 @@ export abstract class AssetService<T extends Sample | Soundfont, RAW = void> {
 
     async list(): Promise<ReadonlyArray<T>> {return this.collectAllFiles()}
 
-    async replaceMissingFiles(boxGraph: BoxGraph, manager: { invalidate: (uuid: UUID.Bytes) => void }): Promise<void> {
+    // `prompt: false` opens a file picker per missing asset with zero blocking dialogs: it just reports what
+    // is missing (see ProjectProfileService, which surfaces this as a persistent, actionable indicator
+    // rather than a dialog the user must click through before the project even opens). `prompt: true`
+    // (default) is the original interactive behavior, still used wherever a blocking confirm is acceptable.
+    async replaceMissingFiles(boxGraph: BoxGraph, manager: AssetService.InvalidateManager,
+                               {prompt = true}: {prompt?: boolean} = {}): Promise<ReadonlyArray<AssetService.MissingAsset>> {
         const {status, error, value: available} = await Promises.tryCatch(this.collectAllFiles())
         if (status === "rejected") {
             console.warn(`Could not collect ${this.namePlural}:`, error)
-            RuntimeNotifier.notify({
-                message: `Could not reach the ${this.namePlural} catalog. Missing files were not checked.`,
-                icon: "Warning"
-            })
-            return
+            if (prompt) {
+                RuntimeNotifier.notify({
+                    message: `Could not reach the ${this.namePlural} catalog. Missing files were not checked.`,
+                    icon: "Warning"
+                })
+            }
+            return []
         }
         const boxes = boxGraph.boxes().filter(box => isInstanceOf(box, this.boxType))
-        if (boxes.length === 0) {return}
-        for (const box of boxes) {
+        const missing = boxes.filter(box => {
+            const uuidAsString = UUID.toString(box.address.uuid)
+            return available.find(({uuid}) => uuid === uuidAsString) === undefined
+        })
+        if (missing.length === 0) {return []}
+        if (!prompt) {
+            return missing.map(box => ({uuid: box.address.uuid, fileName: box.fileName.getValue()}))
+        }
+        const stillMissing: Array<AssetService.MissingAsset> = []
+        for (const box of missing) {
             const uuid = box.address.uuid
-            const uuidAsString = UUID.toString(uuid)
-            if (isNotUndefined(available.find(({uuid}) => uuid === uuidAsString))) {continue}
+            const fileName = box.fileName.getValue()
             const approved = await RuntimeNotifier.approve({
                 headline: "Missing Asset",
-                message: `Could not find ${this.nameSingular} '${box.fileName.getValue()}'`,
+                message: `Could not find ${this.nameSingular} '${fileName}'`,
                 cancelText: "Ignore",
                 approveText: "Browse"
             })
-            if (!approved) {continue}
-            const {error, status, value: files} =
-                await Promises.tryCatch(Files.open({...this.filePickerOptions, multiple: false}))
-            if (status === "rejected") {
-                if (Errors.isAbort(error) || Errors.isNotAllowed(error)) {return}
+            if (!approved) {stillMissing.push({uuid, fileName}); continue}
+            const resolved = await this.resolveOne(uuid, fileName, manager)
+            if (!resolved) {stillMissing.push({uuid, fileName})}
+        }
+        return stillMissing
+    }
+
+    // Resolves exactly one missing asset by browsing for a replacement file, importing it, and invalidating
+    // the box's loader entry — the same interactive step `replaceMissingFiles` runs per box, extracted so a
+    // persistent "N missing assets" indicator can drive it on demand, one at a time, well after project load.
+    async resolveOne(uuid: UUID.Bytes, fileName: string, manager: AssetService.InvalidateManager): Promise<boolean> {
+        const {error, status, value: files} =
+            await Promises.tryCatch(Files.open({...this.filePickerOptions, multiple: false}))
+        if (status === "rejected") {
+            if (!Errors.isAbort(error) && !Errors.isNotAllowed(error)) {
                 console.warn(`File browse failed: ${error}`)
                 RuntimeNotifier.notify({message: "File access error.", icon: "Warning"})
-                return
             }
-            if (files.length === 0) {return}
-            const readResult = await Promises.tryCatch(files[0].arrayBuffer())
-            if (readResult.status === "rejected") {
-                await RuntimeNotifier.info({
-                    headline: "File Read Error",
-                    message: `'${files[0].name}' could not be read. The file may be on an inaccessible location.`
-                })
-                continue
-            }
-            const importResult = await Promises.tryCatch(this.importFile({
-                uuid, name: files[0].name, arrayBuffer: readResult.value, progressHandler: Progress.Empty
-            }))
-            if (importResult.status === "rejected") {
-                await RuntimeNotifier.info({
-                    headline: `${this.nameSingular} Import Failed`,
-                    message: `'${files[0].name}' could not be imported: ${String(importResult.error)}`
-                })
-                continue
-            }
-            RuntimeNotifier.notify({message: `${importResult.value.name} has been replaced`, icon: "Checkbox"})
-            manager.invalidate(uuid)
+            return false
         }
+        if (files.length === 0) {return false}
+        const readResult = await Promises.tryCatch(files[0].arrayBuffer())
+        if (readResult.status === "rejected") {
+            await RuntimeNotifier.info({
+                headline: "File Read Error",
+                message: `'${files[0].name}' could not be read. The file may be on an inaccessible location.`
+            })
+            return false
+        }
+        const importResult = await Promises.tryCatch(this.importFile({
+            uuid, name: files[0].name, arrayBuffer: readResult.value, progressHandler: Progress.Empty
+        }))
+        if (importResult.status === "rejected") {
+            await RuntimeNotifier.info({
+                headline: `${this.nameSingular} Import Failed`,
+                message: `'${files[0].name}' could not be imported: ${String(importResult.error)}`
+            })
+            return false
+        }
+        RuntimeNotifier.notify({message: `${importResult.value.name} has been replaced`, icon: "Checkbox"})
+        manager.invalidate(uuid)
+        return true
     }
 
     protected async browseFiles(multiple: boolean, filePickerSettings: FilePickerOptions): Promise<ReadonlyArray<T>> {

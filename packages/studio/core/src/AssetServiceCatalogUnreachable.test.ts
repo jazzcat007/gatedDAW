@@ -1,10 +1,18 @@
-import {describe, expect, it} from "vitest"
+import {beforeEach, describe, expect, it, vi} from "vitest"
 import {isDefined, RuntimeNotification, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {PPQN, TimeBase} from "@opendaw/lib-dsp"
 import {AudioFileBox, AudioRegionBox, TrackBox, ValueEventCollectionBox} from "@opendaw/studio-boxes"
 import {ProjectSkeleton, Sample, TrackType} from "@opendaw/studio-adapters"
 import {AssetService} from "./AssetService"
 import {FilePickerAcceptTypes} from "./FilePickerAcceptTypes"
+
+vi.mock("@opendaw/lib-dom", async importOriginal => {
+    const actual = await importOriginal<typeof import("@opendaw/lib-dom")>()
+    return {...actual, Files: {open: vi.fn()}}
+})
+import {Files} from "@opendaw/lib-dom"
+
+const fakeFile = (name: string): File => ({name, arrayBuffer: async () => new ArrayBuffer(4)}) as unknown as File
 
 // Reproduces live error 1096 (TypeError: Failed to fetch). Opening a project runs replaceMissingFiles, which
 // awaits the stock catalog over the network. A rejected fetch escaped all the way out of
@@ -32,9 +40,10 @@ class TestSampleService extends AssetService<Sample, void> {
     protected readonly boxType = AudioFileBox
     protected readonly filePickerOptions: FilePickerOptions = FilePickerAcceptTypes.WavFiles
 
-    constructor(readonly catalog: () => Promise<ReadonlyArray<Sample>>) {super()}
+    constructor(readonly catalog: () => Promise<ReadonlyArray<Sample>>,
+                private readonly onImport: () => Promise<Sample> = () => Promise.reject("not expected")) {super()}
 
-    async importFile(): Promise<Sample> {return Promise.reject("not expected")}
+    async importFile(): Promise<Sample> {return this.onImport()}
 
     protected async collectAllFiles(): Promise<ReadonlyArray<Sample>> {return this.catalog()}
 }
@@ -72,7 +81,7 @@ describe("replaceMissingFiles with an unreachable catalog (live error 1096)", ()
     it("resolves instead of rejecting when the catalog fetch fails", async () => {
         approvals.length = 0
         const service = new TestSampleService(() => Promise.reject(new TypeError("Failed to fetch")))
-        await expect(service.replaceMissingFiles(createGraphWithMissingFile(), manager)).resolves.toBeUndefined()
+        await expect(service.replaceMissingFiles(createGraphWithMissingFile(), manager)).resolves.toEqual([])
     })
 
     it("does not report stock assets as missing when the catalog is unreachable", async () => {
@@ -88,5 +97,73 @@ describe("replaceMissingFiles with an unreachable catalog (live error 1096)", ()
         await service.replaceMissingFiles(createGraphWithMissingFile(), manager)
         expect(approvals).toHaveLength(1)
         expect(approvals[0]).toContain("missing.wav")
+    })
+})
+
+// The actual DrawnIn-style regression: a project referencing many unavailable samples used to block behind
+// one "Missing Asset" confirm dialog per file before the project was even visible. `prompt: false` is what
+// ProjectProfileService now uses to open the workspace first and resolve assets in the background instead.
+describe("replaceMissingFiles with prompt: false", () => {
+    beforeEach(() => {approvals.length = 0})
+
+    it("never shows a dialog, and reports every missing file instead", async () => {
+        const service = new TestSampleService(() => Promise.resolve([]))
+        const missing = await service.replaceMissingFiles(createGraphWithMissingFile(), manager, {prompt: false})
+        expect(approvals).toEqual([])
+        expect(missing).toHaveLength(1)
+        expect(missing[0].fileName).toBe("missing.wav")
+    })
+
+    it("reports nothing missing when every referenced file is actually available", async () => {
+        const graph = createGraphWithMissingFile()
+        const [box] = graph.boxes().filter(candidate => candidate instanceof AudioFileBox)
+        const service = new TestSampleService(async () => [{uuid: UUID.toString(box.address.uuid)} as Sample])
+        const missing = await service.replaceMissingFiles(graph, manager, {prompt: false})
+        expect(missing).toEqual([])
+    })
+
+    it("still returns [] (not undefined) when the catalog is unreachable", async () => {
+        const service = new TestSampleService(() => Promise.reject(new TypeError("Failed to fetch")))
+        const missing = await service.replaceMissingFiles(createGraphWithMissingFile(), manager, {prompt: false})
+        expect(missing).toEqual([])
+        expect(approvals).toEqual([])
+    })
+})
+
+describe("resolveOne", () => {
+    beforeEach(() => {
+        approvals.length = 0
+        vi.mocked(Files.open).mockReset()
+    })
+
+    it("imports the browsed file and invalidates the loader entry on success", async () => {
+        vi.mocked(Files.open).mockResolvedValueOnce([fakeFile("replacement.wav")])
+        const service = new TestSampleService(() => Promise.resolve([]),
+            async () => ({name: "replacement.wav"}) as Sample)
+        const invalidated: Array<string> = []
+        const uuid = UUID.generate()
+        const resolved = await service.resolveOne(uuid, "missing.wav", {
+            invalidate: id => invalidated.push(UUID.toString(id))
+        })
+        expect(resolved).toBe(true)
+        expect(invalidated).toEqual([UUID.toString(uuid)])
+    })
+
+    it("returns false without invalidating anything when the user cancels the file picker", async () => {
+        vi.mocked(Files.open).mockResolvedValueOnce([])
+        const service = new TestSampleService(() => Promise.resolve([]))
+        const invalidated: Array<string> = []
+        const resolved = await service.resolveOne(UUID.generate(), "missing.wav", {
+            invalidate: id => invalidated.push(UUID.toString(id))
+        })
+        expect(resolved).toBe(false)
+        expect(invalidated).toEqual([])
+    })
+
+    it("returns false when the import itself fails", async () => {
+        vi.mocked(Files.open).mockResolvedValueOnce([fakeFile("bad.wav")])
+        const service = new TestSampleService(() => Promise.resolve([]), () => Promise.reject("boom"))
+        const resolved = await service.resolveOne(UUID.generate(), "missing.wav", {invalidate: () => {}})
+        expect(resolved).toBe(false)
     })
 })

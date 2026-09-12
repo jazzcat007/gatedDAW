@@ -18,6 +18,10 @@ import {Project} from "./Project"
 import {ServerProjects} from "./ServerProjects"
 import {Workers} from "../Workers"
 import {ProjectPaths} from "./ProjectPaths"
+import {AssetService} from "../AssetService"
+
+export type MissingAssetKind = "sample" | "soundfont"
+export type MissingAssetEntry = AssetService.MissingAsset & {kind: MissingAssetKind}
 
 export class ProjectSaveError extends Error {
     constructor(readonly kind: "storage" | "server", readonly originalError: unknown) {
@@ -41,6 +45,12 @@ export class ProjectProfile {
     #saved: boolean
     #hasChanges: boolean = false
     #applyingLocal: boolean = false
+
+    // Populated after load, in the background (see ProjectProfileService) rather than blocking project open
+    // with one dialog per missing sample/soundfont. Stays populated — and the UI's indicator stays visible —
+    // until each entry is individually resolved, so a project can never silently run with dead references.
+    #missingAssets: ReadonlyArray<MissingAssetEntry> = []
+    readonly #missingAssetsUpdated: Notifier<ReadonlyArray<MissingAssetEntry>> = new Notifier()
 
     constructor(uuid: UUID.Bytes,
                 project: Project,
@@ -115,6 +125,28 @@ export class ProjectProfile {
 
     subscribeCover(observer: Observer<Option<ArrayBuffer>>): Subscription {
         return this.#coverUpdated.subscribe(observer)
+    }
+
+    get missingAssets(): ReadonlyArray<MissingAssetEntry> {return this.#missingAssets}
+
+    catchupAndSubscribeMissingAssets(observer: Observer<ReadonlyArray<MissingAssetEntry>>): Subscription {
+        observer(this.#missingAssets)
+        return this.#missingAssetsUpdated.subscribe(observer)
+    }
+
+    // Replaces the full set for one kind (sample/soundfont) — called once after the background scan
+    // completes — and also removes a single entry once the user resolves it via the persistent indicator.
+    setMissingAssets(kind: MissingAssetKind, entries: ReadonlyArray<AssetService.MissingAsset>): void {
+        const rest = this.#missingAssets.filter(entry => entry.kind !== kind)
+        this.#missingAssets = [...rest, ...entries.map(entry => ({...entry, kind}))]
+        this.#missingAssetsUpdated.notify(this.#missingAssets)
+    }
+
+    resolveMissingAsset(uuid: UUID.Bytes): void {
+        const next = this.#missingAssets.filter(entry => !UUID.equals(entry.uuid, uuid))
+        if (next.length === this.#missingAssets.length) {return}
+        this.#missingAssets = next
+        this.#missingAssetsUpdated.notify(this.#missingAssets)
     }
 
     /** Notifies whenever the shared cover-id changes (a peer set a different cover). */
