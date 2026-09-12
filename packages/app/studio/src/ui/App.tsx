@@ -14,6 +14,7 @@ import {ColorsPage} from "@/ui/pages/ColorsPage"
 import {Header} from "@/ui/header/Header"
 import {ErrorsPage} from "@/ui/pages/ErrorsPage.tsx"
 import {ImprintPage} from "@/ui/pages/ImprintPage.tsx"
+import {AttributionPage} from "@/ui/pages/AttributionPage.tsx"
 import {GraphPage} from "@/ui/pages/GraphPage"
 import {CodeEditorPage} from "@/ui/pages/CodeEditorPage"
 import {OpenBundlePage} from "@/ui/pages/OpenBundlePage"
@@ -57,6 +58,7 @@ export const App = (service: StudioService) => {
                     {path: "/preferences", factory: PreferencesPage},
                     {path: "/profile", factory: UserProfilePage},
                     {path: "/imprint", factory: ImprintPage},
+                    {path: "/attribution", factory: AttributionPage},
                     {path: "/privacy", factory: PrivacyPage},
                     {path: "/icons", factory: IconsPage},
                     {path: "/code", factory: CodeEditorPage},

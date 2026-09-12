@@ -198,7 +198,7 @@ export const Footer = ({lifecycle, service}: Construct) => {
                  })}/>
             <div style={{flex: "1"}}/>
             <div style={{color: 'var(--md-primary-cyan)'}}>
-                <LocalLink href="/privacy">Privacy</LocalLink> · <LocalLink href="/imprint">Imprint</LocalLink>
+                <LocalLink href="/privacy">Privacy</LocalLink> · <LocalLink href="/imprint">Imprint</LocalLink> · <LocalLink href="/attribution">Attribution</LocalLink>
                 <span style={{marginLeft: '0.75rem'}}>Metal-Duck Studio — write loud. mix neon.</span>
             </div>
         </footer>
