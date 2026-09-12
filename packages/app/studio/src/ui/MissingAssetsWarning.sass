@@ -10,7 +10,10 @@ component
   font-size: 0.625rem
   color: var(--color-bright)
   pointer-events: auto
-  z-index: 100
+  // Above LatencyWarning's z-index:100: when both are open at once (a real overlap, confirmed live —
+  // narrow footer items sit close enough together that the panels' fixed-width floats collide), this one
+  // was opened by a deliberate click and should never have its controls covered by a passively-shown one.
+  z-index: 101
   max-width: 22em
 
   &:after
