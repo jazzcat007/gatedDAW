@@ -1,7 +1,7 @@
 // Offline twin of packages/studio/core/src/sfz/SfzParser.ts. Kept as its own dependency-free module so the
 // importer runs on the deploy host without a built checkout, and so `importer-parity.test.ts` can import the
 // parse surface without pulling in the CLI. Any change here must keep parity with SfzParser.
-import {readFileSync} from "node:fs"
+import {existsSync, readFileSync} from "node:fs"
 import {dirname, resolve} from "node:path"
 
 const SUPPORTED = new Set([
@@ -30,17 +30,29 @@ const parseAttributes = source => {
     return attributes
 }
 
-const parseFile = (file, stack = []) => {
+// `root` is the directory of the file `parseSfz` was originally called with (not the immediate parent of
+// whichever file is being expanded right now). Some libraries (e.g. Karoryfer's Caveman Cosmonaut) nest
+// `#include` directives several levels deep where every `#include "mappings/x.sfz"` string is written
+// relative to that original top-level file's folder, not to the including file's own folder — a file
+// already inside `mappings/` including `"mappings/x.sfz"` means the sibling `x.sfz`, not `mappings/mappings/
+// x.sfz`. Resolving relative to the including file first (the SFZ-spec-correct behavior, kept as the
+// primary path so ordinary single-level includes are unaffected) and falling back to root-relative only
+// when that path doesn't exist handles both conventions without guessing wrong for the common case.
+const parseFile = (file, stack = [], root = dirname(resolve(file)), included = new Set()) => {
     const resolved = resolve(file)
     if (stack.includes(resolved)) {throw new Error(`Circular #include: ${[...stack, resolved].join(" -> ")}`)}
     const raw = readFileSync(resolved, "utf8")
-    const expanded = withoutComments(raw).replace(/^\s*#include\s+"([^"]+)"\s*$/gm, (_match, include) =>
-        parseFile(resolve(dirname(resolved), include), [...stack, resolved]).source)
-    return {source: expanded, attributes: parseAttributes(expanded)}
+    const expanded = withoutComments(raw).replace(/^\s*#include\s+"([^"]+)"\s*$/gm, (_match, include) => {
+        const selfRelative = resolve(dirname(resolved), include)
+        const target = existsSync(selfRelative) ? selfRelative : resolve(root, include)
+        included.add(target)
+        return parseFile(target, [...stack, resolved], root, included).source
+    })
+    return {source: expanded, attributes: parseAttributes(expanded), included}
 }
 
 export const parseSfz = file => {
-    const {source} = parseFile(file)
+    const {source, included} = parseFile(file)
     const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/gi
     const scopes = {control: {}, global: {}, master: {}, group: {}, region: {}}
     const regions = []
@@ -62,7 +74,11 @@ export const parseSfz = file => {
             if (current === "region") {Object.assign(regions.at(-1), scopes.control, scopes.global, scopes.master, scopes.group, scopes.region)}
         }
     }
-    return {regions, unsupported: [...new Set([...source.matchAll(/([A-Za-z][A-Za-z0-9_]*)\s*=/g)].map(match => match[1].toLowerCase()).filter(key => !SUPPORTED.has(key)))]}
+    return {
+        regions,
+        unsupported: [...new Set([...source.matchAll(/([A-Za-z][A-Za-z0-9_]*)\s*=/g)].map(match => match[1].toLowerCase()).filter(key => !SUPPORTED.has(key)))],
+        includedFiles: [...included]
+    }
 }
 
 const number = (value, fallback) => value === undefined ? fallback : parseFloat(value)
