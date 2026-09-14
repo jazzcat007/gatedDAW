@@ -279,15 +279,15 @@ Use four workstreams with explicit dependencies:
 
 Maintain no more than one large architecture initiative at a time. Reserve approximately 25% of each cycle for regression tests, observability, migrations, documentation, and debt discovered by the active feature. Every roadmap item must include owner, risk, dependencies, rollback/migration, automated verification, manual verification, and a measurable exit condition.
 
-## Documentation maintenance schedule
+## Documentation and roadmap maintenance schedule
 
-Documentation freshness is part of delivery, not a later cleanup task. Assign a rotating **documentation steward** for each development cycle; the feature owner remains responsible for the accuracy of the pages their change affects.
+Documentation and roadmap freshness are part of delivery, not later cleanup tasks. Assign a rotating **documentation steward** for each development cycle; the feature owner remains responsible for the accuracy of the pages and roadmap entries their change affects.
 
 | Cadence | Required work | Owner | Completion evidence |
 | --- | --- | --- | --- |
 | Every feature/fix PR | Update affected manuals, API/configuration references, screenshots, examples, roadmap status, and migration notes in the same PR. Mark superseded plans explicitly. | PR author; reviewer verifies | Documentation-impact checkbox and links in the PR description; CI link/path checks pass |
 | Weekly automated check | Validate internal links, referenced files, duplicate active roadmap entries, stale generated API/schema docs, and documented CLI commands that can run safely in CI. | Build/release owner | Scheduled workflow result; failures create or update one tracked maintenance issue |
-| Monthly, first working week | Compare shipped menus/devices/Admin capabilities, environment variables, API routes, importers, and deployment behavior with README, manuals, and the canonical roadmap. Triage new TODO/FIXME markers and archive completed plans. | Rotating documentation steward plus one product reviewer | Dated checklist committed under `audits/documentation/`; discrepancies have owner and due date |
+| Monthly, first working week | Compare shipped menus/devices/Admin capabilities, environment variables, API routes, importers, and deployment behavior with README and manuals. Review every **Now** roadmap item for current status, priority, dependencies, owner, target phase, and acceptance evidence; promote the next ready work, move completed items to Done, and mark abandoned or replaced plans as superseded. Triage new TODO/FIXME markers and archive completed plans. | Rotating documentation steward plus one product reviewer | Dated documentation-and-roadmap checklist committed under `audits/documentation/`; roadmap changes are committed and every discrepancy has an owner and due date |
 | Quarterly or before a release candidate, whichever comes first | Run the complete user journey from a clean install: setup, login/invite, project lifecycle, sharing, Live Rooms, imports, export/recovery, Admin, offline operation, and supported-browser notes. Reconcile version numbers, support matrix, screenshots, licensing/attribution, and Now/Next/Later priorities. | Release owner with engineering and product sign-off | Documentation audit attached to the release; no unresolved release-blocking discrepancy |
 | After an incident or breaking migration | Update recovery/runbook material and the relevant architecture decision within two working days of resolution. | Incident owner | Post-incident action links to the updated documents and regression test |
 
