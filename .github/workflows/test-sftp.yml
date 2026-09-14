@@ -42,10 +42,6 @@ jobs:
           
             try {
               console.log('🔌 Attempting to connect...');
-              console.log('Host:', process.env.SFTP_HOST);
-              console.log('Port:', process.env.SFTP_PORT);
-              console.log('Username:', process.env.SFTP_USERNAME);
-          
               await sftp.connect({
                 host: process.env.SFTP_HOST,
                 port: parseInt(process.env.SFTP_PORT) || 22,
@@ -57,13 +53,8 @@ jobs:
           
               console.log('✅ Connection successful!');
           
-              // Test directory listing
-              console.log('📁 Testing directory listing...');
-              const list = await sftp.list('./');
-              console.log('Directory contents:');
-              list.slice(0, 10).forEach(item => {
-                console.log(\`  \${item.type === 'd' ? '📁' : '📄'} \${item.name} (\${item.size} bytes)\`);
-              });
+              await sftp.list('./');
+              console.log('✅ Remote directory is accessible');
           
               // Test file upload if requested
               if ('${{ inputs.test_upload }}' === 'true') {
