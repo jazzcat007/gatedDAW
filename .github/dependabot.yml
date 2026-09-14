@@ -1,0 +1,29 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      npm-minor-patch:
+        update-types: ["minor", "patch"]
+    # monaco-editor is intentionally excluded: it ships to production and its advisory
+    # remediation (audits/dependency-triage-2026-09-14.md, F12) is a deliberate, manually
+    # regression-tested bump, not something to take automatically as a patch/minor update.
+    ignore:
+      - dependency-name: "monaco-editor"
+
+  - package-ecosystem: cargo
+    directory: "/crates"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
