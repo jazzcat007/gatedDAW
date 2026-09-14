@@ -11,7 +11,7 @@ Complete scripts. All of them ship with the studio under File > Open, so you can
 ## A pluck with a reverb send and a looping arpeggio
 
 ```ts
-const project = openDAW.newProject("Hello openDAW")
+const project = gatedDAW.newProject("Hello gatedDAW")
 project.bpm = 110
 
 const synth = project.addInstrumentUnit("Vaporisateur", {label: "Pluck", volume: -9}, {
@@ -37,14 +37,14 @@ project.openInStudio()
 ## Drums from the sample library
 
 ```ts
-const project = openDAW.newProject("Beat")
-const samples = await openDAW.listSamples()
+const project = gatedDAW.newProject("Beat")
+const samples = await gatedDAW.listSamples()
 const pick = (needle: string) => samples.find(sample => sample.name.toLowerCase().includes(needle))
 const kick = pick("kick")
 const snare = pick("snare")
 const hat = pick("hat")
 if (!kick || !snare || !hat) {
-    await openDAW.showInfo("Beat", "Could not find kick, snare and hat samples.")
+    await gatedDAW.showInfo("Beat", "Could not find kick, snare and hat samples.")
     return
 }
 const drums = project.addInstrumentUnit("Playfield", {label: "Drums"})
@@ -74,9 +74,9 @@ for (let index = 0, phase = 0.0; index < numberOfFrames; index++) {
     const freq = 200.0 * Math.pow(20.0, 1.0 - Math.abs(2.0 * t - 1.0))
     phase += freq / sampleRate
 }
-const sample = await openDAW.addSample(audioData, "Chirp")
+const sample = await gatedDAW.addSample(audioData, "Chirp")
 
-const project = openDAW.newProject("Chirp")
+const project = gatedDAW.newProject("Chirp")
 const tape = project.addInstrumentUnit("Tape")
 tape.audioTracks[0].addRegion(sample, {playback: "no-sync"})
 tape.addAudioEffect("Reverb", {wet: -9})
@@ -86,7 +86,7 @@ project.openInStudio()
 ## Automate a filter sweep and wobble it with an LFO
 
 ```ts
-const project = openDAW.newProject("Sweep")
+const project = gatedDAW.newProject("Sweep")
 const synth = project.addInstrumentUnit("Vaporisateur", {label: "Bass"}, {cutoff: 400, resonance: 2})
 synth.noteTracks[0].addRegion({duration: PPQN.Bar * 8}).addEvent({position: 0, duration: PPQN.Bar * 8, pitch: 36})
 
@@ -104,7 +104,7 @@ project.openInStudio()
 ## Transpose every note of the open project
 
 ```ts
-const project = await openDAW.getProject()
+const project = await gatedDAW.getProject()
 project.audioUnits.forEach(unit => unit.noteTracks.forEach(track => {
     track.regions.forEach(region => region.events.forEach(event => event.pitch += 2))
     track.clips.forEach(clip => clip.events.forEach(event => event.pitch += 2))
@@ -117,11 +117,11 @@ project.openInStudio()
 Removes empty tracks, muted regions and clips, regions beyond the end and unused aux units, then reports.
 
 ```ts
-if (!await openDAW.hasProject()) {
-    await openDAW.showInfo("Cleanup", "No project is open.")
+if (!await gatedDAW.hasProject()) {
+    await gatedDAW.showInfo("Cleanup", "No project is open.")
     return
 }
-const project = await openDAW.getProject()
+const project = await gatedDAW.getProject()
 const report: string[] = []
 const note = (amount: number, what: string) => {if (amount > 0) {report.push(`${amount} × ${what}`)}}
 
@@ -158,9 +158,9 @@ unused.forEach(aux => aux.remove())
 note(unused.length, "unused auxiliary units")
 
 if (report.length === 0) {
-    await openDAW.showInfo("Cleanup", "Nothing to remove.")
+    await gatedDAW.showInfo("Cleanup", "Nothing to remove.")
 } else {
-    await openDAW.showInfo("Cleanup", report.join("\n"))
+    await gatedDAW.showInfo("Cleanup", report.join("\n"))
     project.openInStudio()
 }
 ```
@@ -168,7 +168,7 @@ if (report.length === 0) {
 ## Inventory of the open project
 
 ```ts
-const project = await openDAW.getProject()
+const project = await gatedDAW.getProject()
 const count = new Map<string, number>()
 const add = (name: string, amount: number = 1) => count.set(name, (count.get(name) ?? 0) + amount)
 project.audioUnits.forEach(unit => {
@@ -183,5 +183,5 @@ project.audioUnits.forEach(unit => {
 })
 add("modulators", project.modulators.length)
 const lines = [...count.entries()].map(([name, amount]) => `${amount} × ${name}`)
-await openDAW.showInfo("Inventory", lines.join("\n"))
+await gatedDAW.showInfo("Inventory", lines.join("\n"))
 ```

@@ -10,7 +10,7 @@ Scripts have no imports. These names are available everywhere:
 
 | Global                | What it is                                                                                     |
 |-----------------------|------------------------------------------------------------------------------------------------|
-| `openDAW`             | The {@link Api}, entry point of every script                                  |
+| `gatedDAW`             | The {@link Api}, entry point of every script                                  |
 | `sampleRate`          | Sample rate of the studio in Hz                                                                 |
 | `baseFrequency`       | Tuning reference of the studio in Hz                                                            |
 | `PPQN`                | `Bar`, `Quarter`, `SemiQuaver`, `fromSignature()`, `secondsToPulses()`, `pulsesToSeconds()`, `toString()` |

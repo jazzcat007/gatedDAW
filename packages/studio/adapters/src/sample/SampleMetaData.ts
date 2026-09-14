@@ -5,7 +5,9 @@ export const SampleMetaData = z.object({
     bpm: z.number(),
     duration: z.number(),
     sample_rate: z.number(),
-    origin: z.enum(["openDAW", "recording", "import"]),
+    // "sfz" marks a region sample of the SFZ factory catalog: server-hosted, re-fetchable by content uuid,
+    // and deliberately hidden from the local Samples list, which would otherwise fill with thousands of them.
+    origin: z.enum(["openDAW", "recording", "import", "sfz"]),
     custom: z.string().optional()
 })
 

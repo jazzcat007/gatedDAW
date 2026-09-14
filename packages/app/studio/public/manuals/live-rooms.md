@@ -4,7 +4,7 @@ Live Rooms let you collaborate on a project in real time with other users. Every
 
 ## Creating or Joining a Room
 
-Open the openDAW menu and select **Join Live Room...**. A dialog will ask for:
+Open the gatedDAW menu and select **Join Live Room...**. A dialog will ask for:
 
 - **Room Name** -- lowercase letters, numbers, hyphens, dots, and underscores (max 16 characters). If no room with that name exists, a new one is created. If it already exists, you join the existing session.
 - **Your Name** -- how other users will see you (max 16 characters).

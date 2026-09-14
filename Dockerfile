@@ -9,6 +9,7 @@ RUN apt-get update \
         build-essential \
         ca-certificates \
         curl \
+        git \
         openssl \
         pkg-config \
     && rm -rf /var/lib/apt/lists/*
@@ -30,6 +31,7 @@ COPY package.json package-lock.json ./
 COPY packages ./packages
 COPY crates ./crates
 COPY scripts ./scripts
+COPY factory-intake ./factory-intake
 COPY turbo.json lerna.json ./
 
 # Windows checkouts can carry CRLF despite the scripts being executed by Linux in this image.

@@ -9,6 +9,10 @@ type PresetCommon = {
     created: number
     modified: number
     hasTimeline?: boolean
+    // Optional sub-grouping inside a device's preset list. A device with a handful of presets needs none,
+    // but the SFZ catalog bakes hundreds, which is unusable as one flat list — those carry their catalog
+    // family here (e.g. "VCSL / Idiophones"). Optional so every preset written before this stays valid.
+    group?: string
 }
 
 export const CATEGORIES = [

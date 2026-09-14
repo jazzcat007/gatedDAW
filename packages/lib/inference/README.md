@@ -1,6 +1,6 @@
 # @opendaw/lib-inference
 
-In-browser ML inference for openDAW. Lazy-loaded ONNX runtime plus a
+In-browser ML inference for gatedDAW. Lazy-loaded ONNX runtime plus a
 registry-driven task surface (stem separation, pitch estimation,
 audio-to-MIDI, etc.).
 

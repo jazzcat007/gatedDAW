@@ -1,6 +1,6 @@
 # Browser Support
 
-Metal-Duck Studio uses the openDAW engine and is tested on the latest versions of modern browsers such as Chrome, Firefox, and Safari.
+Metal-Duck Studio uses the gatedDAW engine and is tested on the latest versions of modern browsers such as Chrome, Firefox, and Safari.
 
 However, there are differences in which web APIs are supported by each browser.
 

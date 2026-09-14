@@ -1,6 +1,6 @@
 # Presets
 
-The **Presets** tab in the Browser panel is where you create, organise, and reuse devices in openDAW.
+The **Presets** tab in the Browser panel is where you create, organise, and reuse devices in gatedDAW.
 A preset can be a single instrument, a single effect, a chain of effects (a *Chain*), or a complete
 audio unit including its instrument, effects, mixer settings and, optionally, its automation timeline
 (a *Rack*).
@@ -19,7 +19,7 @@ At the top of the Preset browser there is a small filter bar with two toggles an
 
 ![Filter bar](./presets-filter-bar.webp)
 
-- **Cloud-folder icon**, shows or hides *stock* presets shipped with openDAW.
+- **Cloud-folder icon**, shows or hides *stock* presets shipped with gatedDAW.
 - **User-folder icon**, shows or hides *your own* presets stored locally.
 - **Search field**, filters presets and devices by name. The search matches both preset names and
   the underlying device key, so typing `vaporisateur` will reveal every Vaporisateur preset and
@@ -44,7 +44,7 @@ Clicking a preset name creates it.
 
 - **Instrument or Rack preset**, creates a new audio unit. No existing unit needs to be selected.
 - **Effect or Chain preset**, appends the effect(s) to the selected audio unit's effect chain. If
-  no audio unit is selected, openDAW asks you to select one first. MIDI presets are rejected on
+  no audio unit is selected, gatedDAW asks you to select one first. MIDI presets are rejected on
   units that do not accept MIDI.
 
 ### Preset dropdown on the device header
@@ -115,7 +115,7 @@ optionally the timeline. To save one, drag the instrument onto the **Racks** row
 
 There are two scenarios.
 
-1. **You drag only the instrument.** openDAW asks how much you want to capture:
+1. **You drag only the instrument.** gatedDAW asks how much you want to capture:
     - **Cancel**, abort.
     - **Only Instrument**, falls back to a normal instrument-preset save.
     - **Entire Chain**, saves the full audio unit as a Rack.
@@ -127,7 +127,7 @@ The Rack save dialog includes the **Include timeline** toggle.
 ### The "Include timeline" option
 
 When enabled, the audio unit's tracks, regions, clips, and automation are encoded into the preset.
-On load, openDAW recreates these timeline elements alongside the device. This lets you store
+On load, gatedDAW recreates these timeline elements alongside the device. This lets you store
 complete song-fragments (e.g. a finished drum bus, or a full lead with its melody) for re-use in
 other projects.
 
@@ -137,7 +137,7 @@ the preset name.
 ## Replacing an existing preset
 
 You can overwrite any **user** preset by dragging a matching device, chain, or rack onto the existing
-preset entry. openDAW only highlights compatible drop targets, so if a target is not lit the drag
+preset entry. gatedDAW only highlights compatible drop targets, so if a target is not lit the drag
 is rejected.
 
 ![Replace preset dialog](./presets-replace-dialog.webp)
@@ -163,7 +163,7 @@ activate the preset.
 
 ## Stock and user sources
 
-- **Stock** presets are shipped with openDAW and cannot be edited or deleted. They are marked with
+- **Stock** presets are shipped with gatedDAW and cannot be edited or deleted. They are marked with
   the cloud-folder icon, loaded once per session, and cached.
 - **User** presets live in your private OPFS storage and are included in **Cloud Backup** runs the
   same way projects and samples are.

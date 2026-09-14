@@ -211,12 +211,9 @@ pub fn annotations_dir() -> PathBuf {
 
 /// (filename stem prefix used for matching, short id, class)
 pub const FIXTURES: &[(&str, &str, Class)] = &[
-    ("175_F_AttackHitLoop", "drums-attack", Class::Percussive),
     ("RK_Techno_Top_Loop1", "drums-top", Class::Percussive),
-    ("332740__mseq__derelict-pad", "pad-derelict", Class::Sustained),
     ("861020__formaudioworks__fa_free_85_pad_loop_borealis", "pad-borealis", Class::Sustained),
     ("543732__nnaudio__alien-drone-sine-pad", "pad-drone", Class::Sustained),
-    ("568315__valentinsosnitskiy__classical-loop-guitar", "guitar-chords", Class::Tonal),
     ("RK_DTC1_Dub_Chord", "dub-chords", Class::Tonal),
     ("TKNVLT_FREE_HT_STORY", "story", Class::Mixed)
 ];

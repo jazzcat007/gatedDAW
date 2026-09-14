@@ -1,1 +1,1 @@
-This package is part of the openDAW SDK
+This package is part of the gatedDAW SDK

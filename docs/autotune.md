@@ -1,4 +1,4 @@
-# Autotune — Concept, Technical Reference & openDAW Implementation Guide
+# Autotune — Concept, Technical Reference & gatedDAW Implementation Guide
 
 The **Autotune** audio-effect device performs real-time, monophonic **pitch
 correction**: it listens to a sung (or played) monophonic signal, works out what
@@ -8,7 +8,7 @@ inside the live insert chain.
 
 This document explains the whole thing end to end: the concept, every DSP stage
 and why it is built the way it is, the parameters, and a step-by-step recipe for
-how such a device is wired into openDAW's Rust→WASM engine architecture.
+how such a device is wired into gatedDAW's Rust→WASM engine architecture.
 
 ![The Autotune device editor](autotune-device.png)
 
@@ -122,7 +122,7 @@ broadcast(detected_midi, target_note, voiced)      // UI tuner telemetry
 
 ## 3. Engine architecture & determinism
 
-All DSP runs in openDAW's **Rust → WebAssembly engine** — there is no TypeScript
+All DSP runs in gatedDAW's **Rust → WebAssembly engine** — there is no TypeScript
 audio path:
 
 | Layer | Language | Files |
@@ -442,9 +442,9 @@ block for the UI tuner strip.
 
 ---
 
-## 9. Implementing a device like this in openDAW — step by step
+## 9. Implementing a device like this in gatedDAW — step by step
 
-openDAW's box-graph is a code-generated, visitor-dispatched device model. Adding
+gatedDAW's box-graph is a code-generated, visitor-dispatched device model. Adding
 (or, in reverse, removing) a device touches a predictable set of layers. Here is
 the full recipe, in dependency order.
 

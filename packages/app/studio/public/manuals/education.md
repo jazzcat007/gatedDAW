@@ -1,6 +1,6 @@
 # The Break Room
 
-No classrooms here, pal. This is Metal-Duck's private lair — invite-only, friends and family only. If you're reading this, you're in the club. Upstream openDAW has the education stuff; we have the after-hours jam session.
+No classrooms here, pal. This is Metal-Duck's private lair — invite-only, friends and family only. If you're reading this, you're in the club. Upstream gatedDAW has the education stuff; we have the after-hours jam session.
 
 ![Classroom](../images/classroom.webp)
 

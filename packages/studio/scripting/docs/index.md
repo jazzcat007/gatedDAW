@@ -1,12 +1,12 @@
-# openDAW Scripting API
+# gatedDAW Scripting API
 
 ## Create and modify projects with code
 
 A script is a few lines of TypeScript that create a new project or change the one open in the studio. Scripts run
-in the script editor (openDAW menu > Script Editor) and talk to the global `openDAW` object.
+in the script editor (gatedDAW menu > Script Editor) and talk to the global `gatedDAW` object.
 
 ```ts
-const project = openDAW.newProject("Hello")
+const project = gatedDAW.newProject("Hello")
 project.bpm = 120
 const synth = project.addInstrumentUnit("Vaporisateur", {label: "Lead"})
 synth.noteTracks[0].addRegion({duration: PPQN.Bar}).addEvent({position: 0, duration: PPQN.Quarter, pitch: 60})

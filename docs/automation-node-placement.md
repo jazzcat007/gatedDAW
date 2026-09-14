@@ -1,7 +1,7 @@
 # Automation Node Placement Behaviour (#275)
 
 This documents how double-clicking places a value-automation node, so the behaviour is reviewable and can be
-opposed. It implements [#275](https://github.com/jazzcat007/openDAW/issues/275) (a follow-up to #197).
+opposed. It implements [#275](https://github.com/jazzcat007/gatedDAW/issues/275) (a follow-up to #197).
 
 If any of this feels wrong, please comment on #275 — this doc is the spec we implemented against.
 

@@ -1,6 +1,6 @@
-# openDAW
+# gatedDAW
 
-openDAW ist eine browserbasierte Digital Audio Workstation, die mit klarem Fokus auf Bildung, Datenschutz und Offenheit
+gatedDAW ist eine browserbasierte Digital Audio Workstation, die mit klarem Fokus auf Bildung, Datenschutz und Offenheit
 entwickelt wurde.
 Sie ermöglicht **DSGVO-konforme** Musikproduktion im Unterricht – ohne Account, ohne Registrierung, ohne Tracking und
 ohne Abhängigkeit von kommerziellen Plattformen.
@@ -11,18 +11,18 @@ ohne Abhängigkeit von kommerziellen Plattformen.
 
 ---
 
-## Was ist openDAW?
+## Was ist gatedDAW?
 
 ### Open-Source Musikproduktion für Bildungseinrichtungen
 
-openDAW ist Open Source und kann vollständig unter eigener Kontrolle betrieben werden. Damit eignet sich die Plattform
+gatedDAW ist Open Source und kann vollständig unter eigener Kontrolle betrieben werden. Damit eignet sich die Plattform
 besonders für Musikschulen, Verbände und öffentliche Bildungsträger, die Wert auf Datenschutz, Nachhaltigkeit und
 technische Souveränität legen.
 
-### Pädagogische Kernfeatures von openDAW
+### Pädagogische Kernfeatures von gatedDAW
 
 Die Benutzeroberfläche und Arbeitsweise orientieren sich an etablierten Standards professioneller DAWs. Konzepte wie
-Timeline, Mixer, Routing, Automation und MIDI-Editing sind universell übertragbar. Wer openDAW erlernt, kann später
+Timeline, Mixer, Routing, Automation und MIDI-Editing sind universell übertragbar. Wer gatedDAW erlernt, kann später
 problemlos auf andere Software wie Ableton Live, Logic Pro oder Cubase umsteigen.
 
 ### DSGVO-konform und datenschutzfreundlich
@@ -42,7 +42,7 @@ problemlos auf andere Software wie Ableton Live, Logic Pro oder Cubase umsteigen
 
 ### Neue Möglichkeiten jenseits klassischer DAWs
 
-openDAW eröffnet als browserbasierte Plattform Anwendungsfälle, die mit herkömmlicher Desktop-Software nicht oder nur
+gatedDAW eröffnet als browserbasierte Plattform Anwendungsfälle, die mit herkömmlicher Desktop-Software nicht oder nur
 schwer umsetzbar sind:
 
 #### Onlineunterricht und Fernlehre
@@ -71,7 +71,7 @@ schwer umsetzbar sind:
 
 ### Audio- und MIDI-Aufnahme
 
-openDAW unterstützt die Aufnahme von Audio und MIDI direkt im Browser:
+gatedDAW unterstützt die Aufnahme von Audio und MIDI direkt im Browser:
 
 * Aufnahme von Mikrofon, Line-In oder anderen Audio-Eingängen
 * MIDI-Aufnahme von externen Keyboards und Controllern
@@ -87,7 +87,7 @@ openDAW unterstützt die Aufnahme von Audio und MIDI direkt im Browser:
 
 ### Vergleichstabelle zu anderer Musikproduktions-Software
 
-| Kriterium                                          | openDAW | BandLab | Soundtrap | Ableton Live |
+| Kriterium                                          | gatedDAW | BandLab | Soundtrap | Ableton Live |
 |----------------------------------------------------|---------|---------|-----------|--------------|
 | Einstieg ohne Account möglich                      | ✓       | –       | –         | –            |
 | Sofort arbeitsfähig im Browser                     | ✓       | ✓       | ✓         | –            |
@@ -113,7 +113,7 @@ openDAW unterstützt die Aufnahme von Audio und MIDI direkt im Browser:
 
 ### Browser-Unterstützung
 
-openDAW läuft in allen modernen Browsern. Es gibt jedoch Unterschiede in der Unterstützung einzelner Web-APIs:
+gatedDAW läuft in allen modernen Browsern. Es gibt jedoch Unterschiede in der Unterstützung einzelner Web-APIs:
 
 | Funktion             | Chrome | Firefox | Safari |
 |----------------------|--------|---------|--------|
@@ -124,7 +124,7 @@ Chrome bietet die umfassendste Unterstützung und wird für den Einsatz im Unter
 
 ### iPad-Unterstützung
 
-openDAW läuft auch auf dem iPad (Safari). Für eine präzise Bedienung wird eine angeschlossene Maus oder ein Trackpad
+gatedDAW läuft auch auf dem iPad (Safari). Für eine präzise Bedienung wird eine angeschlossene Maus oder ein Trackpad
 empfohlen.
 
 ### Datenspeicherung
@@ -140,7 +140,7 @@ Metal-Duck Studio ist ein privates, einladungsbasiertes Studio. Der Zugriff erfo
 
 ### Self-Hosting
 
-Für Einrichtungen mit besonderen Anforderungen an Datenschutz oder Netzwerkinfrastruktur kann openDAW auf eigenen
+Für Einrichtungen mit besonderen Anforderungen an Datenschutz oder Netzwerkinfrastruktur kann gatedDAW auf eigenen
 Servern betrieben werden. Der vollständige Quellcode ist auf GitHub verfügbar.
 
 ## Angebot für Bildungseinrichtungen
@@ -152,7 +152,7 @@ Metal-Duck Studio ist für eingeladene Nutzer zugänglich. Der Zugang wird indiv
 ### Institutionelle Lizenz
 
 Für Musikschulen, Bildungsträger und Verbände bieten wir ein faires Lizenzmodell an. Die Lizenzgebühren fließen
-vollständig in die Weiterentwicklung von openDAW und sichern die langfristige Verfügbarkeit der Plattform.
+vollständig in die Weiterentwicklung von gatedDAW und sichern die langfristige Verfügbarkeit der Plattform.
 
 Das institutionelle Angebot umfasst:
 
@@ -167,4 +167,4 @@ Sprechen Sie uns an für ein individuelles Angebot, das zu Ihrer Einrichtung pas
 
 Für Fragen, Feedback oder Kooperationsanfragen:
 
-* GitHub: [github.com/jazzcat007/openDAW](https://github.com/jazzcat007/openDAW)
+* GitHub: [github.com/jazzcat007/gatedDAW](https://github.com/jazzcat007/gatedDAW)

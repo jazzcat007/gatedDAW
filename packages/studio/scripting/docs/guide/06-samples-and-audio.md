@@ -8,17 +8,17 @@ order: 6
 
 ## Finding samples
 
-`await openDAW.listSamples()` returns every stock and user sample known to the studio as
+`await gatedDAW.listSamples()` returns every stock and user sample known to the studio as
 {@link Sample} handles with `uuid`, `name`, `duration`, `bpm` and `sample_rate`.
 
 ```ts
-const samples = await openDAW.listSamples()
+const samples = await gatedDAW.listSamples()
 const kick = samples.find(sample => sample.name.toLowerCase().includes("kick"))
 ```
 
 ## Creating samples
 
-`openDAW.addSample(audioData, name)` imports raw audio into the studio and returns a handle. Build the audio with
+`gatedDAW.addSample(audioData, name)` imports raw audio into the studio and returns a handle. Build the audio with
 `AudioData.create(sampleRate, numberOfFrames, numberOfChannels)` and write into `frames[channel]`.
 
 ```ts
@@ -27,7 +27,7 @@ const frames = audio.frames[0]
 for (let index = 0; index < frames.length; index++) {
     frames[index] = Math.sin(index / sampleRate * 220 * Math.PI * 2) * Math.exp(-index / sampleRate * 3)
 }
-const pluck = await openDAW.addSample(audio, "Pluck")
+const pluck = await gatedDAW.addSample(audio, "Pluck")
 ```
 
 `sampleRate` is the global holding the studio's sample rate.

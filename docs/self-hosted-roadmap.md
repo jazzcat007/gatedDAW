@@ -1,8 +1,8 @@
-# Self-Hosted openDAW Roadmap
+# Self-Hosted gatedDAW Roadmap
 
 ## Current Baseline
 
-- Fork: `jazzcat007/openDAW`
+- Fork: `jazzcat007/gatedDAW`
 - Branch: `screwpulp/self-hosted`
 - Factory mirror root: `/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw/factory`
 - Available media volume capacity: about 16T free
@@ -13,7 +13,7 @@
 
 ## Asset Loading
 
-The quickest path to a richer self-hosted studio is to grow the catalog first, because openDAW already knows how to browse factory samples, soundfonts, and presets from `/factory`.
+The quickest path to a richer self-hosted studio is to grow the catalog first, because gatedDAW already knows how to browse factory samples, soundfonts, and presets from `/factory`.
 
 1. Keep the upstream openDAW factory mirror complete.
    - Run `node scripts/mirror-factory-assets.mjs` after upstream catalog changes.
@@ -61,7 +61,7 @@ Direction: retro-future synthwave, under the working brand `Metal-Duck Studios`.
 The current UI is a dense production tool, so the redesign should preserve speed and scanability rather than turning it into a landing page.
 
 1. Create a brand layer.
-   - Rename visible openDAW touchpoints where legally appropriate.
+   - Rename visible gatedDAW touchpoints where legally appropriate.
    - Add a custom app mark, favicon, loading screen, document title, and footer identity.
    - Define brand tokens in one place before changing component-level Sass.
 
@@ -303,24 +303,24 @@ Goal: let people bring projects in from, and take projects out to, the DAWs they
 
 Current state:
 
-- **DAWproject** (the open Bitwig-authored interchange format, `packages/lib/dawproject` + `packages/studio/core/src/dawproject`) is already shipped: `openDAW menu > Export/Import > DAWproject...`. It round-trips tracks, clips, notes, automation, tempo/time signature, audio files, and sends/routing.
+- **DAWproject** (the open Bitwig-authored interchange format, `packages/lib/dawproject` + `packages/studio/core/src/dawproject`) is already shipped: `gatedDAW menu > Export/Import > DAWproject...`. It round-trips tracks, clips, notes, automation, tempo/time signature, audio files, and sends/routing.
 - **Standard MIDI files** (`.mid`) already import/export per track, region, and clip (`MidiImport.ts`, `NoteMidiExport.ts`).
 - DAWproject itself is only natively supported by a handful of DAWs: Bitwig Studio, PreSonus Studio One, Steinberg Cubase/Nuendo (13+), and Tracktion Waveform, plus community extensions for Reaper/Ardour. **Ableton Live and FL Studio — the two DAWs most likely to be a newcomer's "previous DAW" — support neither DAWproject nor any open project format**, so this path can't reach them regardless of how much DAWproject work is done.
 - DAWproject device/FX fidelity is currently asymmetric and incomplete:
   - On import, only the standard `EqualizerSchema` is mapped to a native device (into Revamp); every other foreign plugin or built-in device becomes an "Unknown FX" placeholder box (`DawProjectImporter.ts`, tagged with a ⚠️ comment).
-  - On export, every openDAW device is written as an opaque `deviceVendor: "openDAW"` blob that only openDAW itself can decode (`DawProjectExporter.ts`) — a project reopened in Bitwig or Cubase will show unrecognized plugins on every track.
-  - Round-tripping openDAW's own devices through DAWproject (openDAW → DAWproject → openDAW) is implemented but currently disabled behind a `TODO`, due to a known bug that produces an invalid host pointer (`DawProjectImporter.ts`).
+  - On export, every gatedDAW device is written as an opaque `deviceVendor: "openDAW"` blob that gatedDAW can decode (`DawProjectExporter.ts`) — a project reopened in Bitwig or Cubase will show unrecognized plugins on every track.
+  - Round-tripping gatedDAW's own devices through DAWproject (gatedDAW → DAWproject → gatedDAW) is implemented but currently disabled behind a `TODO`, due to a known bug that produces an invalid host pointer (`DawProjectImporter.ts`).
   - The `lib-dawproject` schema itself only models `EqualizerSchema` as a typed built-in device; the DAWproject spec's other standard device types (compressor, limiter, gate, etc.) aren't represented yet, so there's nothing to map onto even before touching the importer/exporter.
 
 Proposed phases:
 
-1. Fix DAWproject fidelity for openDAW-to-openDAW round trips first.
-   - Re-enable and fix the native-device roundtrip path so an openDAW project exported to DAWproject and reimported into openDAW loses nothing (currently every device degrades to Unknown FX).
+1. Fix DAWproject fidelity for gatedDAW-to-gatedDAW round trips first.
+   - Re-enable and fix the native-device roundtrip path so a gatedDAW project exported to DAWproject and reimported into gatedDAW loses nothing (currently every device degrades to Unknown FX).
    - Add regression tests using real files exported from at least one third-party app (Bitwig or Studio One) rather than only self-generated fixtures.
 
 2. Extend `lib-dawproject`'s device schema coverage.
    - Model the DAWproject spec's other standard built-in device types (compressor, limiter, gate) alongside the existing `EqualizerSchema`.
-   - Map them to/from the closest native openDAW device, the way `BuiltinDevices.equalizer` already does for EQ.
+   - Map them to/from the closest native gatedDAW device, the way `BuiltinDevices.equalizer` already does for EQ.
    - For anything with no native equivalent, keep the Unknown FX fallback but make it visible in the UI (not just a code comment) so users know a plugin didn't transfer.
 
 3. Add Ableton Live (`.als`) import.

@@ -124,7 +124,7 @@ export namespace SfzParser {
         const unsupportedOpcodes = [...new Set([...stripped.matchAll(/([A-Za-z][A-Za-z0-9_]*)\s*=/g)]
             .map(match => match[1].toLowerCase())
             .filter(opcode => !SUPPORTED.has(opcode)))]
-        const regions = raw.filter(scope => isDefined(scope.sample)).map(toRegion)
+        const regions = raw.filter(scope => isDefined(scope.sample) && scope.sample.length > 0).map(toRegion)
         return {regions, unsupportedOpcodes}
     }
 

@@ -1,7 +1,7 @@
 # Scripting
 
-Scripts run in a worker with a global `openDAW` object (see `src/Api.ts`). A script either builds a new project
-(`openDAW.newProject()`) or loads the project currently open in the studio (`await openDAW.getProject()`),
+Scripts run in a worker with a global `gatedDAW` object (see `src/Api.ts`). A script either builds a new project
+(`gatedDAW.newProject()`) or loads the project currently open in the studio (`await gatedDAW.getProject()`),
 edits it through typed facades and hands it back with `project.openInStudio()`.
 
 ### Architecture

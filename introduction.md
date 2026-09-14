@@ -1,4 +1,4 @@
-# openDAW Introduction
+# gatedDAW Introduction
 
 This document maps every component of the repository and how they depend on each other. It is meant as the entry
 point for anyone who wants to understand the codebase before touching it. For installation and prerequisites see
@@ -10,7 +10,7 @@ Deployment and server components are intentionally left out here.
 
 ## Bird's Eye View
 
-openDAW is a monorepo with two build systems living side by side.
+gatedDAW is a monorepo with two build systems living side by side.
 
 1. A **npm workspace** (`packages/**`) driven by [turborepo](https://turborepo.com), holding all TypeScript.
 2. A **cargo workspace** (`crates/`) holding the Rust audio engine and every stock device, compiled to WebAssembly.

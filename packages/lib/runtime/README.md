@@ -1,4 +1,4 @@
-_This package is part of the openDAW SDK_
+_This package is part of the gatedDAW SDK_
 
 # @opendaw/lib-runtime
 

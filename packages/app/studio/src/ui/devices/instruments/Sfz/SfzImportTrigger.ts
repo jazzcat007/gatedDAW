@@ -3,7 +3,7 @@ import {Files} from "@opendaw/lib-dom"
 import {Promises} from "@opendaw/lib-runtime"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {InstrumentFactories, SfzDeviceBoxAdapter} from "@opendaw/studio-adapters"
-import {FilePickerAcceptTypes, SfzParser, toSfzAttachment} from "@opendaw/studio-core"
+import {FilePickerAcceptTypes, SfzParser, toSfzAttachment, withExtendedKeyRange} from "@opendaw/studio-core"
 import {StudioService} from "@/service/StudioService"
 
 // Materializes an SFZ definition + its referenced WAVs into an existing (typically empty) SfzDeviceBox: opens a
@@ -67,6 +67,6 @@ export namespace SfzImportTrigger {
             console.warn(`SFZ import: ${missing} region(s) skipped, sample not found among the picked files`)
         }
         if (attachment.length === 0) {return}
-        editing.modify(() => adapter.load(attachment))
+        editing.modify(() => adapter.load(withExtendedKeyRange(attachment)))
     }
 }

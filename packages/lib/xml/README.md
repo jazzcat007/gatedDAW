@@ -1,4 +1,4 @@
-_This package is part of the openDAW SDK_
+_This package is part of the gatedDAW SDK_
 
 # @opendaw/lib-xml
 
@@ -93,7 +93,7 @@ export class ProjectSchema {
 const project = Xml.element({
     version: "1.0",
     application: Xml.element({
-        name: "openDAW",
+        name: "gatedDAW",
         version: "0.1"
     }, ApplicationSchema),
     transport: Xml.element({
@@ -139,7 +139,7 @@ console.debug(Xml.pretty(Xml.toElement("Project", project)))
 
 ```xml
 <Project version="1.0">
-    <Application name="openDAW" version="0.1"/>
+    <Application name="gatedDAW" version="0.1"/>
     <Transport>
         <Tempo unit="bpm" value="120"/>
         <TimeSignature nominator="4" denominator="4"/>

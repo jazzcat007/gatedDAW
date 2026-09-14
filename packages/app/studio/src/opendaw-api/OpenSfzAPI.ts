@@ -2,6 +2,7 @@ import {asDefined, Lazy, panic, TimeSpan, UUID} from "@opendaw/lib-std"
 import {SfzInstrument} from "@opendaw/studio-adapters"
 import {OpenDAWHeaders} from "./OpenDAWHeaders"
 import {SfzIndex} from "./SfzIndex"
+import {SfzRegionsManifest} from "./SfzRegionsManifest"
 import {IntervalRetryOption, network, Promises} from "@opendaw/lib-runtime"
 
 export class OpenSfzAPI {
@@ -32,8 +33,18 @@ export class OpenSfzAPI {
             .find(({uuid}) => uuid === uuidAsString), "Could not find SFZ instrument"))
     }
 
-    // A catalog entry is a `.sfz` text file plus N separately-addressed WAVs, not one opaque blob (unlike
-    // Soundfont's `load`), so this splits into a definition fetch and a per-sample fetch instead.
+    // The device-creation path: one small manifest the importer already resolved (sample uuids, durations,
+    // derived opcode values), so the browser neither fetches nor parses `.sfz` text for catalog content.
+    async loadRegions(uuid: UUID.Bytes): Promise<SfzRegionsManifest> {
+        const instrument = await this.get(uuid)
+        const url = `${OpenSfzAPI.FileRoot}/${instrument.uuid}/regions.json?v=${Date.now()}`
+        return fetch(url, this.#headers).then(response =>
+            response.ok ? response.json() : panic(`${response.status} ${response.statusText}`))
+            .then(json => SfzRegionsManifest.parse(json))
+    }
+
+    // Raw catalog content, kept for diagnostics and for anything that wants the original definition. The
+    // device-creation path uses `loadRegions` instead.
     async loadDefinition(uuid: UUID.Bytes): Promise<string> {
         const instrument = await this.get(uuid)
         const url = `${OpenSfzAPI.FileRoot}/${instrument.uuid}/source/${OpenSfzAPI.#encodePath(instrument.definition)}`

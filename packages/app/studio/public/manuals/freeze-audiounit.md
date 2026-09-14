@@ -41,7 +41,7 @@ While frozen:
 ## Automatic Unfreezing
 
 Frozen audio is rendered at a specific tempo. When the tempo changes, the cached audio would no longer be in sync with
-the timeline. openDAW automatically unfreezes all frozen audio units when:
+the timeline. gatedDAW automatically unfreezes all frozen audio units when:
 
 - The **project tempo (BPM)** is changed manually
 - **Tempo automation** is added, removed, or modified

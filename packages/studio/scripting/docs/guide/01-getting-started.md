@@ -6,7 +6,7 @@ order: 1
 
 # Getting Started
 
-Open the script editor (openDAW menu > Script Editor). The File menu offers two templates, **New Create Script**
+Open the script editor (gatedDAW menu > Script Editor). The File menu offers two templates, **New Create Script**
 and **New Edit Script**. Press **Run** to execute.
 
 ## Two kinds of scripts
@@ -14,7 +14,7 @@ and **New Edit Script**. Press **Run** to execute.
 A create script builds a project from scratch and opens it in the studio, replacing whatever is open:
 
 ```ts
-const project = openDAW.newProject("My Project")
+const project = gatedDAW.newProject("My Project")
 project.bpm = 120
 // build
 project.openInStudio()
@@ -23,12 +23,12 @@ project.openInStudio()
 An edit script loads the open project, changes it and hands it back. All changes land as one undo step:
 
 ```ts
-const project = await openDAW.getProject()
+const project = await gatedDAW.getProject()
 project.audioUnits.forEach(unit => unit.tracks.forEach(track => track.regions.forEach(region => region.mute = false)))
 project.openInStudio()
 ```
 
-`openDAW.getProject()` throws if nothing is open, check with `await openDAW.hasProject()` first if the script
+`gatedDAW.getProject()` throws if nothing is open, check with `await gatedDAW.hasProject()` first if the script
 should stay friendly. If the studio project changed while the script was running, `openInStudio()` refuses with a
 toast and nothing is applied.
 
