@@ -1,0 +1,84 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, screwpulp/self-hosted]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  js:
+    name: JS lint, build, test
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+
+      - name: 🦄 Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 23
+          cache: npm
+
+      - name: 🦀 Install Rust + wasm target + binaryen
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+          . "$HOME/.cargo/env"
+          rustup target add wasm32-unknown-unknown
+          rustup toolchain install nightly --profile minimal --component rust-src
+          rustup target add wasm32-unknown-unknown --toolchain nightly
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          sudo apt-get update && sudo apt-get install -y binaryen
+
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      - name: 🔎 Lint
+        run: npm run lint
+
+      - name: 🏗️ Build (includes WASM + generated-code consistency)
+        env:
+          CI: true
+        run: npm run build
+
+      - name: ✅ Test
+        run: npm test
+
+  rust:
+    name: Rust fmt, clippy, test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: crates
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v5
+
+      - name: 🦀 Install Rust toolchain
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable --component rustfmt --component clippy
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: 📎 Install libclang (bindgen dependency)
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev clang
+
+      # NOT YET BLOCKING: the workspace is not fmt-clean today (verified locally —
+      # abi/src/lib.rs alone has dozens of violations). Flip to blocking once a
+      # dedicated formatting-only PR lands; tracked as F03 follow-up in the audit.
+      - name: 🧾 Format check (advisory)
+        continue-on-error: true
+        run: cargo fmt --all -- --check
+
+      # NOT YET BLOCKING: clippy could not be verified locally (bindgen/libclang unavailable
+      # on the Windows dev box per F03 in the audit) so a pre-existing warning count is unknown.
+      # Flip to blocking (-D warnings already set) once a clean baseline is confirmed in CI.
+      - name: 📎 Clippy (advisory)
+        continue-on-error: true
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: ✅ Test
+        run: cargo test --workspace
