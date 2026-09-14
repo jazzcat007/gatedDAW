@@ -219,6 +219,7 @@ Historical performance evidence supports this order. `docs/performance.md` docum
 3. Add F03 required PR CI and a documented Node/Rust/libclang environment preflight.
 4. Triage F12 advisories; update reachable production dependencies first.
 5. Automate and execute the first F05 backup/restore drill.
+6. Establish the documentation-maintenance schedule below, assign its owner, and complete the first roadmap/status reconciliation.
 
 Exit gate: no public first-user takeover; interrupted writes recover; a clean supported runner passes required CI; restore succeeds from an off-host backup.
 
@@ -278,6 +279,22 @@ Use four workstreams with explicit dependencies:
 
 Maintain no more than one large architecture initiative at a time. Reserve approximately 25% of each cycle for regression tests, observability, migrations, documentation, and debt discovered by the active feature. Every roadmap item must include owner, risk, dependencies, rollback/migration, automated verification, manual verification, and a measurable exit condition.
 
+## Documentation maintenance schedule
+
+Documentation freshness is part of delivery, not a later cleanup task. Assign a rotating **documentation steward** for each development cycle; the feature owner remains responsible for the accuracy of the pages their change affects.
+
+| Cadence | Required work | Owner | Completion evidence |
+| --- | --- | --- | --- |
+| Every feature/fix PR | Update affected manuals, API/configuration references, screenshots, examples, roadmap status, and migration notes in the same PR. Mark superseded plans explicitly. | PR author; reviewer verifies | Documentation-impact checkbox and links in the PR description; CI link/path checks pass |
+| Weekly automated check | Validate internal links, referenced files, duplicate active roadmap entries, stale generated API/schema docs, and documented CLI commands that can run safely in CI. | Build/release owner | Scheduled workflow result; failures create or update one tracked maintenance issue |
+| Monthly, first working week | Compare shipped menus/devices/Admin capabilities, environment variables, API routes, importers, and deployment behavior with README, manuals, and the canonical roadmap. Triage new TODO/FIXME markers and archive completed plans. | Rotating documentation steward plus one product reviewer | Dated checklist committed under `audits/documentation/`; discrepancies have owner and due date |
+| Quarterly or before a release candidate, whichever comes first | Run the complete user journey from a clean install: setup, login/invite, project lifecycle, sharing, Live Rooms, imports, export/recovery, Admin, offline operation, and supported-browser notes. Reconcile version numbers, support matrix, screenshots, licensing/attribution, and Now/Next/Later priorities. | Release owner with engineering and product sign-off | Documentation audit attached to the release; no unresolved release-blocking discrepancy |
+| After an incident or breaking migration | Update recovery/runbook material and the relevant architecture decision within two working days of resolution. | Incident owner | Post-incident action links to the updated documents and regression test |
+
+Create one canonical `docs/roadmap.md`; detailed files in `plans/` should link to it and carry front matter or a visible header with `status`, `owner`, `last-reviewed`, and `superseded-by` where applicable. Add `CODEOWNERS` coverage for the roadmap, deployment runbooks, public manuals, authentication/security docs, and licensing/attribution files.
+
+Documentation release gate: a release candidate cannot be approved when a shipped user-visible feature, configuration variable, supported platform, recovery procedure, or security behavior is missing or contradicted by its canonical documentation. Track documentation age and broken-link count in the delivery metrics, but judge freshness primarily by verified behavior rather than timestamps alone.
+
 ## Metrics to start recording
 
 - Reliability: successful saves, stale-write conflicts, failed/aborted writes, recovery events, backup age, restore-drill age.
@@ -285,6 +302,7 @@ Maintain no more than one large architecture initiative at a time. Reserve appro
 - Product: project open/save success, audio-engine initialization success, import failures by reason, crash/error reports by build, Live Room snapshot lag.
 - DSP/browser: render-quantum CPU, underrun/glitch count, cold start, WASM/module load, memory high-water, catalog parse time.
 - Delivery: required-CI duration/flakiness, escaped regressions, time-to-reproduce, open P0/P1 age, roadmap items without an acceptance test.
+- Documentation: broken internal links, stale generated references, undocumented user-visible changes, active plans past their review date, and days since the last monthly reconciliation.
 
 Set budgets after collecting a representative baseline; avoid inventing targets that have no relationship to the OMV host, supported browsers, or real projects.
 
