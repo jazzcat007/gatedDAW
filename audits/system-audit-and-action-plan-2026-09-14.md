@@ -220,6 +220,7 @@ Historical performance evidence supports this order. `docs/performance.md` docum
 4. Triage F12 advisories; update reachable production dependencies first.
 5. Automate and execute the first F05 backup/restore drill.
 6. Establish the documentation-maintenance schedule below, assign its owner, and complete the first roadmap/status reconciliation.
+7. Establish the upstream-compatibility policy and recurring upstream-delta review below; create the first divergence ledger and compatibility baseline.
 
 Exit gate: no public first-user takeover; interrupted writes recover; a clean supported runner passes required CI; restore succeeds from an off-host backup.
 
@@ -265,6 +266,31 @@ Exit gate: offline catalog install/use is reproducible and attributed; visual ch
   Gate implementation on an architecture decision record, Steinberg VST3 SDK/license review, CLAP comparison, a prototype instrument and effect, sample-accurate automation/state round trips, and a Windows/macOS/Linux host compatibility matrix. The web-only studio must remain functional when no native bridge is installed.
 - Modulation routing, nested device graphs, dynamic third-party devices, native packaging, and broad DAW import only after an architecture decision record covers compatibility, isolation, migration, licensing, and rollback.
 - WASM memory eviction or cross-project PCM sharing only when telemetry demonstrates the need.
+
+## Upstream compatibility and fork evolution policy
+
+The fork should remain compatible with upstream openDAW whenever that does not prevent the product we are intentionally building. Compatibility is the default engineering constraint, not a veto on a deliberate fork decision.
+
+Apply these rules to every change:
+
+1. **Classify the change before implementation.** Label it `upstream-compatible`, `fork-isolated`, or `intentional-divergence` in the plan/PR. Record the upstream files and serialized/API surfaces affected.
+2. **Prefer additive seams.** Keep self-hosted authentication, server persistence, Admin, factory/catalog, hosting theme, and deployment behavior behind adapters, configuration, or fork-owned modules. Avoid editing shared engine/editor code when a stable extension point can express the requirement cleanly.
+3. **Preserve durable compatibility.** Existing `.od` projects, presets, DAWproject data, box schemas/field IDs, device identities, public SDK contracts, and factory manifests must continue to load unless an approved migration exists. Append fields rather than renumbering/removing them; test old→new and, where feasible, fork→upstream behavior.
+4. **Upstream generic fixes.** Bug fixes and improvements that are not Metal-Duck-specific should be shaped so they can be proposed upstream or carried as a small, independent patch. Do not mix generic fixes with branding/server changes in one commit.
+5. **Make divergence explicit and affordable.** A divergence is allowed when it materially advances the fork's intended product. It requires an architecture decision record stating why upstream behavior is insufficient, compatibility impact, migration/rollback, tests, likely merge-conflict surface, and who owns the continuing cost.
+6. **Never silently fork a format or protocol.** Version fork-specific extensions, use namespaced metadata where possible, preserve unknown upstream fields, and degrade gracefully when another openDAW build encounters an unsupported extension.
+7. **Keep the fork's end state authoritative.** Upstream parity is valuable only where it reduces risk and maintenance. If compatibility conflicts with privacy, server-first durability, offline operation, accessibility, branding, or an approved product capability, choose the documented fork behavior and provide the best practical interchange path.
+
+Recurring upstream maintenance:
+
+| Cadence | Activity | Evidence |
+| --- | --- | --- |
+| Weekly | Fetch `upstream`, review new commits/releases, and flag security, schema, engine, dependency, and build changes. | Updated upstream-delta issue or a recorded “no actionable change” check |
+| Monthly | Merge upstream into a dedicated compatibility/integration branch, resolve and categorize conflicts, run compatibility tests, and update the divergence ledger. Do not merge into the shared deployment base until required checks pass. | Integration PR with conflict notes, verification, and deferred-item owners |
+| Before schema/format/SDK changes | Compare the proposed contract with upstream head and add old/new fixtures plus migration tests. | Compatibility section in the implementation PR |
+| Before each release candidate | Test representative upstream projects/presets in the fork and fork projects without private extensions in a clean upstream-compatible reader where feasible. Review every intentional divergence. | Signed compatibility matrix attached to the release |
+
+Track a small `docs/upstream-compatibility.md` ledger containing upstream baseline commit, last review date, carried generic patches, fork-only modules, intentional divergences, known merge conflicts, and next sync owner. A growing conflict count is a signal to improve isolation, not automatically a reason to abandon the fork feature.
 
 ## Execution model
 
