@@ -162,4 +162,33 @@ export namespace AdminApi {
         const response = await fetch(`/api/admin/invites/${token}`, {method: "DELETE", headers: CsrfHeader})
         if (!response.ok) {return panic(await parseError(response, `Failed to revoke invite (${response.status})`))}
     }
+
+    export type ErrorReport = {
+        id: string
+        receivedAt: string
+        userId: string
+        username: string
+        scope: string
+        name: string
+        message: string | null
+        stack: string | null
+        buildUuid: string | null
+        buildEnv: string | null
+        userAgent: string | null
+        projectUuid: string | null
+        deviceType: string | null
+        action: string | null
+    }
+
+    export const listErrors = async (): Promise<ReadonlyArray<ErrorReport>> => {
+        const response = await fetch("/api/admin/errors")
+        if (!response.ok) {return panic(await parseError(response, `Failed to list error reports (${response.status})`))}
+        const {reports} = await response.json()
+        return reports
+    }
+
+    export const clearErrors = async (): Promise<void> => {
+        const response = await fetch("/api/admin/errors", {method: "DELETE", headers: CsrfHeader})
+        if (!response.ok) {return panic(await parseError(response, `Failed to clear error reports (${response.status})`))}
+    }
 }

@@ -385,6 +385,97 @@ const InvitesSection = (initialInvites: ReadonlyArray<AdminApi.Invite>): HTMLEle
     )
 }
 
+const ErrorsSection = (lifecycle: Lifecycle, initialReports: ReadonlyArray<AdminApi.ErrorReport>): HTMLElement => {
+    const errorLine: HTMLElement = <div className="error"/>
+    const body: HTMLTableSectionElement = <tbody/>
+    const showError = (reason: unknown) =>
+        errorLine.textContent = reason instanceof Error ? reason.message : String(reason)
+
+    const reload = async () => {
+        errorLine.textContent = ""
+        try {
+            renderRows(await AdminApi.listErrors())
+        } catch (reason) {
+            showError(reason)
+        }
+    }
+
+    const renderRow = (report: AdminApi.ErrorReport): ReadonlyArray<HTMLTableRowElement> => {
+        const detailsRow: HTMLTableRowElement = (
+            <tr className="details-row" style={{display: "none"}}>
+                <td colSpan={6}>
+                    <pre>{[
+                        report.message ?? "(no message)",
+                        report.stack ?? "(no stack)",
+                        `Build: ${report.buildUuid ?? "?"} (${report.buildEnv ?? "?"})`,
+                        `User agent: ${report.userAgent ?? "?"}`,
+                        report.projectUuid === null ? null : `Project: ${report.projectUuid}`,
+                        report.deviceType === null ? null : `Device: ${report.deviceType}`,
+                        report.action === null ? null : `Action: ${report.action}`
+                    ].filter((line): line is string => line !== null).join("\n")}</pre>
+                </td>
+            </tr>
+        ) as HTMLTableRowElement
+        const toggleRow: HTMLTableRowElement = (
+            <tr className="clickable" onclick={() =>
+                detailsRow.style.display = detailsRow.style.display === "none" ? "" : "none"}>
+                <td>{formatDate(report.receivedAt)}</td>
+                <td>{report.username}</td>
+                <td>{report.scope}</td>
+                <td>{report.name}</td>
+                <td className="message">{report.message ?? "—"}</td>
+                <td>{report.buildUuid?.slice(0, 8) ?? "—"}</td>
+            </tr>
+        ) as HTMLTableRowElement
+        return [toggleRow, detailsRow]
+    }
+
+    const renderRows = (list: ReadonlyArray<AdminApi.ErrorReport>) =>
+        replaceChildren(body, ...list.flatMap(renderRow))
+    renderRows(initialReports)
+
+    const refreshButton: HTMLButtonElement = (
+        <button type="button" onclick={reload}>REFRESH</button>
+    ) as HTMLButtonElement
+    const clearButton: HTMLButtonElement = (
+        <button type="button" onclick={async () => {
+            if (!confirm("Clear all stored client error reports? This cannot be undone.")) {return}
+            try {
+                await AdminApi.clearErrors()
+                await reload()
+            } catch (reason) {
+                showError(reason)
+            }
+        }}>CLEAR ALL</button>
+    ) as HTMLButtonElement
+
+    const interval = setInterval(() => void reload(), 15_000)
+    lifecycle.own(Terminable.create(() => clearInterval(interval)))
+
+    return (
+        <section className="errors">
+            <h2>Client Errors</h2>
+            <p className="hint">Automatically reported by the client's error handler. Click a row for the full
+                stack trace.</p>
+            <table>
+                <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>User</th>
+                    <th>Scope</th>
+                    <th>Name</th>
+                    <th>Message</th>
+                    <th>Build</th>
+                </tr>
+                </thead>
+                {body}
+            </table>
+            <div className="asset-actions">{refreshButton}{clearButton}</div>
+            {errorLine}
+        </section>
+    )
+}
+
 export const AdminPage: PageFactory<StudioService> = async ({service, lifecycle}: PageContext<StudioService>) => {
     const me = await AdminApi.me()
     if (!me.authenticated || me.user?.role !== "admin") {
@@ -393,6 +484,7 @@ export const AdminPage: PageFactory<StudioService> = async ({service, lifecycle}
     const {settings, users} = await AdminApi.fetchSettings()
     const invites = await AdminApi.listInvites()
     const assets = await AdminApi.fetchAssets()
+    const errors = await AdminApi.listErrors()
     return (
         <div className={className}>
             <BackButton service={service}/>
@@ -402,6 +494,7 @@ export const AdminPage: PageFactory<StudioService> = async ({service, lifecycle}
                 {UsersSection(lifecycle, me.user.id, users)}
                 {InvitesSection(invites)}
                 {AssetsSection(lifecycle, assets)}
+                {ErrorsSection(lifecycle, errors)}
                 {SettingsSection(settings)}
             </div>
         </div>

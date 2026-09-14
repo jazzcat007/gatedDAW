@@ -26,7 +26,7 @@ import {
     RegionClipResolver,
     Workers
 } from "@opendaw/studio-core"
-import {OpenPresetAPI, OpenSampleAPI, OpenSoundfontAPI} from "@/opendaw-api"
+import {OpenPresetAPI, OpenSampleAPI, OpenSfzSampleAPI, OpenSoundfontAPI} from "@/opendaw-api"
 import {testFeatures} from "@/features.ts"
 import {MissingFeature} from "@/ui/MissingFeature.tsx"
 import {UpdateMessage} from "@/ui/UpdateMessage.tsx"
@@ -46,6 +46,7 @@ import {Menu} from "@/ui/components/Menu"
 import {TouchContextMenu} from "@/ui/TouchContextMenu"
 import {WasmEngine} from "@opendaw/studio-core-wasm"
 import {ensureAuthenticated} from "@/auth/AuthGate"
+import {applyHostingTheme, loadHostingTheme} from "@/ui/theme/HostingTheme"
 
 if ("stackTraceLimit" in Error) {Error.stackTraceLimit = 50}
 
@@ -57,6 +58,7 @@ export const boot = async ({workersUrl, workletsUrl, wasmProcessorUrl, wasmOffli
     workersUrl: string, workletsUrl: string
     wasmProcessorUrl: string, wasmOfflineWorkerUrl: string
 }) => {
+    applyHostingTheme(loadHostingTheme())
     if (!await ensureAuthenticated()) {return}
     console.debug("booting...")
     console.debug(location.origin)
@@ -118,9 +120,16 @@ export const boot = async ({workersUrl, workletsUrl, wasmProcessorUrl, wasmOffli
         soundfonts: () => OpenSoundfontAPI.get().all(),
         presets: () => OpenPresetAPI.get().list()
     })
+    // SFZ region samples live in their own content-addressed store, so the factory index decides which of the
+    // two roots a uuid belongs to. The index is memoized, so this costs no network after the first load.
     const chainedSampleProvider = new ChainedSampleProvider({
-        fetch: async (uuid: UUID.Bytes, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> =>
-            OpenSampleAPI.get().load(uuid, progress)
+        fetch: async (uuid: UUID.Bytes, progress: Progress.Handler): Promise<[AudioData, SampleMetaData]> => {
+            const uuidAsString = UUID.toString(uuid)
+            const known = await OpenSampleAPI.get().all()
+            return known.some(sample => sample.uuid === uuidAsString)
+                ? OpenSampleAPI.get().load(uuid, progress)
+                : OpenSfzSampleAPI.get().load(uuid, progress)
+        }
     })
     const chainedSoundfontProvider = new ChainedSoundfontProvider({
         fetch: async (uuid: UUID.Bytes, progress: Progress.Handler): Promise<[ArrayBuffer, SoundfontMetaData]> =>

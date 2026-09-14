@@ -143,6 +143,86 @@ const findValidInvite = (token) => {
   return invite
 }
 
+const errorReportsFile = join(serverRoot, "error-reports.json")
+const ERROR_REPORT_LIMIT = 500
+const loadErrorReports = () => {
+  const raw = readJson(errorReportsFile, {reports: []})
+  return Array.isArray(raw.reports) ? raw.reports : []
+}
+let errorReports = loadErrorReports()
+const persistErrorReports = () => writeFileSync(errorReportsFile, `${JSON.stringify({reports: errorReports}, null, 2)}\n`)
+
+// Per (ip, user) sliding window, separate from login attempts: a stuck client shouldn't be able to
+// flood the ring buffer (and evict real reports) by retrying a failing request in a loop.
+const errorReportAttempts = new Map()
+const ERROR_REPORT_WINDOW_MS = 60 * 1000
+const ERROR_REPORT_MAX_PER_WINDOW = 20
+const isErrorReportRateLimited = (key) => {
+  const entry = errorReportAttempts.get(key)
+  if (!entry) return false
+  if (Date.now() - entry.firstAttempt > ERROR_REPORT_WINDOW_MS) {
+    errorReportAttempts.delete(key)
+    return false
+  }
+  return entry.count >= ERROR_REPORT_MAX_PER_WINDOW
+}
+const recordErrorReportAttempt = (key) => {
+  const entry = errorReportAttempts.get(key)
+  if (!entry || Date.now() - entry.firstAttempt > ERROR_REPORT_WINDOW_MS) {
+    errorReportAttempts.set(key, {firstAttempt: Date.now(), count: 1})
+  } else {
+    entry.count += 1
+  }
+}
+
+const asOptionalString = (value, limit) =>
+  typeof value === "string" && value.length > 0 ? value.slice(0, limit) : null
+
+const serveErrorsApi = async (req, res) => {
+  const currentUser = getCurrentUser(req)
+  if (currentUser === null) {
+    sendJson(res, 401, {error: "Authentication required"})
+    return
+  }
+  if (req.method !== "POST") {
+    methodNotAllowed(res, ["POST"])
+    return
+  }
+  const key = `${req.socket.remoteAddress}|${currentUser.id}`
+  if (isErrorReportRateLimited(key)) {
+    sendJson(res, 429, {error: "Too many error reports. Please wait and try again."})
+    return
+  }
+  recordErrorReportAttempt(key)
+  const parsed = tryParseJson(await readBody(req, 64 * 1024))
+  if (parsed === undefined || typeof parsed !== "object") {
+    sendJson(res, 400, {error: "Invalid JSON"})
+    return
+  }
+  const report = {
+    id: randomUUID(),
+    receivedAt: new Date().toISOString(),
+    userId: currentUser.id,
+    username: currentUser.username,
+    scope: asOptionalString(parsed.scope, 200) ?? "unknown",
+    name: asOptionalString(parsed.name, 200) ?? "Error",
+    message: asOptionalString(parsed.message, 2000),
+    stack: asOptionalString(parsed.stack, 8000),
+    buildUuid: asOptionalString(parsed.buildUuid, 100),
+    buildEnv: asOptionalString(parsed.buildEnv, 50),
+    userAgent: asOptionalString(parsed.userAgent, 500),
+    projectUuid: asOptionalString(parsed.projectUuid, 100),
+    deviceType: asOptionalString(parsed.deviceType, 100),
+    action: asOptionalString(parsed.action, 200)
+  }
+  errorReports.push(report)
+  if (errorReports.length > ERROR_REPORT_LIMIT) {
+    errorReports = errorReports.slice(errorReports.length - ERROR_REPORT_LIMIT)
+  }
+  persistErrorReports()
+  sendJson(res, 200, {ok: true})
+}
+
 const roomLinksFile = join(serverRoot, "room-links.json")
 const ROOM_NAME_PATTERN = /^[a-z0-9.\-_]{1,16}$/
 const loadRoomLinks = () => {
@@ -1139,6 +1219,20 @@ const serveAdminApi = async (req, res) => {
     methodNotAllowed(res, ["GET", "PUT"])
     return
   }
+  if (segments.length === 1 && segments[0] === "errors") {
+    if (req.method === "GET") {
+      sendJson(res, 200, {reports: [...errorReports].reverse()})
+      return
+    }
+    if (req.method === "DELETE") {
+      errorReports = []
+      persistErrorReports()
+      sendJson(res, 200, {ok: true})
+      return
+    }
+    methodNotAllowed(res, ["GET", "DELETE"])
+    return
+  }
   if (segments.length === 1 && segments[0] === "assets") {
     if (req.method === "GET") {
       sendJson(res, 200, {assets: summarizeFactoryAssets()})
@@ -1463,6 +1557,13 @@ const server = createServer((req, res) => {
       return
     }
     serveProjectsApi(req, res).catch(error => {
+      console.error(error)
+      sendJson(res, 500, {error: "Internal server error"})
+    })
+    return
+  }
+  if (url.pathname.startsWith("/api/errors")) {
+    serveErrorsApi(req, res).catch(error => {
       console.error(error)
       sendJson(res, 500, {error: "Internal server error"})
     })
