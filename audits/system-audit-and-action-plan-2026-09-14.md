@@ -258,6 +258,10 @@ Exit gate: offline catalog install/use is reproducible and attributed; visual ch
 - Presence-derived soft locks, then persistent comments and A/B variants on the version-history model.
 - Pattern/mono/drum/chord sequencer program after common scheduling/pattern contracts are proven.
 - Mobile/PWA work from measured browser constraints.
+- **VST3/CLAP support as an explicit desktop-integration program.** Start with a feasibility spike and choose the product boundary deliberately:
+  1. Package the openDAW engine/devices as VST3 and CLAP plug-ins that run inside Reaper, Bitwig, and other desktop DAWs. This is the preferred first target because it reuses the shipped Rust/WASM engine and SDK packaging direction while keeping the web studio independent.
+  2. Treat hosting existing third-party VST3 plug-ins inside openDAW as a separate, larger target. Native VST binaries cannot run directly in a browser; this requires a signed native companion or desktop shell, plug-in discovery, process isolation, crash recovery, latency/state/automation bridging, platform installers, and a clear licensing/security policy.
+  Gate implementation on an architecture decision record, Steinberg VST3 SDK/license review, CLAP comparison, a prototype instrument and effect, sample-accurate automation/state round trips, and a Windows/macOS/Linux host compatibility matrix. The web-only studio must remain functional when no native bridge is installed.
 - Modulation routing, nested device graphs, dynamic third-party devices, native packaging, and broad DAW import only after an architecture decision record covers compatibility, isolation, migration, licensing, and rollback.
 - WASM memory eviction or cross-project PCM sharing only when telemetry demonstrates the need.
 
@@ -291,6 +295,7 @@ MemPalace was consulted through the local CLI as historical context, while curre
 - Wing `opendaw`, room `general`, source/drawer `self-hosted-roadmap.md`: relevance `cosine=0.454`, `bm25=1.496`. It confirms the intended server-first Projects/Live Rooms split and earlier auth/persistence direction; current source shows several of those phases have since shipped.
 - Wing `opendaw`, room `general`, source/drawer `memory-systems.md`: relevance `cosine=0.395` and `0.380` across returned passages. It records the shipped non-shared-memory fix and the decision to defer eviction/shared-PCM work until measurements justify it.
 - Wing `opendaw`, room `general`, source/drawer `023-native-version.md`: relevance `cosine=0.380`, `bm25=1.5`. It records unresolved Linux WebKit/AudioWorklet risk and correctly separates native packaging from literal DSP performance.
+- Wing `opendaw`, room `general`, source/drawer `234-evaluate-webclap.md`: relevance `cosine=0.432`, `bm25=4.335`. It records that browser-side WebCLAP/internal WASM device modularity and native VST-like third-party hosting are different product problems; the roadmap now keeps those tracks explicit.
 
 ## Limitations
 
