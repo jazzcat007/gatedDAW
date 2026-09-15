@@ -37,13 +37,17 @@ jobs:
       - name: 📦 Install dependencies
         run: npm ci
 
-      - name: 🔎 Lint
-        run: npm run lint
-
+      # Build before lint: packages/studio/boxes/src is codegen output (gitignored, produced by
+      # studio-forge-boxes's build step) and eslint errors on "no files matching pattern" if it
+      # doesn't exist yet. This bit the very first run of this workflow (turbo's lint task has no
+      # dependsOn, so `npm run lint` alone doesn't trigger the codegen it needs) — see PR #28.
       - name: 🏗️ Build (includes WASM + generated-code consistency)
         env:
           CI: true
         run: npm run build
+
+      - name: 🔎 Lint
+        run: npm run lint
 
       - name: ✅ Test
         run: npm test
