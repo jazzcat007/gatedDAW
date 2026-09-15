@@ -1,5 +1,10 @@
 import {NestedLabels} from "@/ui/PreferencePanel"
-import {FpsOptions, OverlappingRegionsBehaviourOptions, StudioSettings} from "@opendaw/studio-core"
+import {
+    FpsOptions,
+    OverlappingRegionsBehaviourOptions,
+    SfzRegionLimitOptions,
+    StudioSettings
+} from "@opendaw/studio-core"
 import {EngineSettings} from "@opendaw/studio-adapters"
 
 export namespace PreferencesPageLabels {
@@ -31,7 +36,8 @@ export namespace PreferencesPageLabels {
                 "note-audition-while-editing": "Note audition while editing",
                 "auto-create-output-maximizer": "Automatically add maximizer to main output",
                 "stop-playback-when-overloading": "Stop playback when overloading",
-                "latency-warning-threshold": "Latency warning threshold (ms)"
+                "latency-warning-threshold": "Latency warning threshold (ms)",
+                "sfz-region-limit": "Maximum regions per SFZ"
             }
         },
         "pointer": {
@@ -71,6 +77,9 @@ export namespace PreferencesPageLabels {
     export const StudioSettingsOptions = {
         "time-display": {
             fps: FpsOptions.map(value => ({value, label: `${value}`}))
+        },
+        "engine": {
+            "sfz-region-limit": SfzRegionLimitOptions.map(value => ({value, label: `${value}`}))
         },
         "editing": {
             "overlapping-regions-behaviour": OverlappingRegionsBehaviourOptions.map(value => ({

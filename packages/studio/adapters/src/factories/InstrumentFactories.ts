@@ -238,6 +238,8 @@ export namespace InstrumentFactories {
         volume: number, pan: number, tune: number
     }>
 
+    export const MaxSfzRegions = 100
+
     export const Sfz: InstrumentFactory<SfzRegionAttachment, SfzDeviceBox> = {
         defaultName: "SFZ",
         defaultIcon: IconSymbol.Sfz,
@@ -256,7 +258,7 @@ export namespace InstrumentFactories {
                 box.host.refer(host)
             })
             if (isDefined(attachment)) {
-                attachment.forEach((region, index) => {
+                attachment.slice(0, MaxSfzRegions).forEach((region, index) => {
                     SfzRegionBox.create(boxGraph, UUID.generate(), box => {
                         box.device.refer(deviceBox.regions)
                         box.file.refer(region.file)
