@@ -735,6 +735,11 @@ export interface StereoToolEffect extends AudioEffect {
     invertR: boolean
     /** Swap channels (default false) */
     swap: boolean
+    /**
+     * Remove DC offset (default false).
+     * @remarks Reserved: this setting is persisted but not yet applied by the audio engine.
+     */
+    dcRemove: boolean
     /** Panning law */
     panningMixing: Mixing
 }
