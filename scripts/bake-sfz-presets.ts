@@ -13,7 +13,7 @@ import {AudioUnitType, IconSymbol} from "@opendaw/studio-enums"
 import {AudioUnitFactory, InstrumentFactories, PresetEncoder, ProjectSkeleton} from "@opendaw/studio-adapters"
 // Deep import from studio-core source: the package entry pulls in ysync code that reads
 // `import.meta.env` at module scope, which only exists under a bundler, not in Node.
-import {toSfzAttachment, withExtendedKeyRange} from "../packages/studio/core/src/sfz/SfzAttachment"
+import {limitSfzRegions, MAX_SFZ_REGIONS, toSfzAttachment, withExtendedKeyRange} from "../packages/studio/core/src/sfz/SfzAttachment"
 import type {InstrumentPresetMeta, PresetMeta} from "../packages/studio/core/src/presets/PresetMeta"
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -150,7 +150,13 @@ const bakePreset = (name: string, regions: ReadonlyArray<ManifestRegion>): Array
     const capture = CaptureMidiBox.create(boxGraph, UUID.generate())
     const unit = AudioUnitFactory.create(skeleton, AudioUnitType.Instrument, Option.wrap(capture), 1)
     const files = new Map<string, AudioFileBox>()
-    const attachment = withExtendedKeyRange(regions.map(region =>
+    // InstrumentFactories.Sfz.create only wires up SfzRegionBox references for the first MaxSfzRegions
+    // attachments (attachment.slice(0, MaxSfzRegions)) -- creating a file for every region regardless of
+    // that cap left any AudioFileBox used solely by a region past index 100 unreferenced when the
+    // transaction closed ("Target AudioFileBox ... requires an edge"). Prune first, same as the browser
+    // import paths, so a file is only ever created for a region that will actually end up referencing it.
+    const selected = limitSfzRegions(regions, MAX_SFZ_REGIONS)
+    const attachment = withExtendedKeyRange(selected.map(region =>
         toSfzAttachment({defaultPath: "", ...region}, useAudioFile(boxGraph, files, region))))
     InstrumentFactories.Sfz.create(boxGraph, unit.input, name, IconSymbol.Sfz, attachment)
     boxGraph.endTransaction()

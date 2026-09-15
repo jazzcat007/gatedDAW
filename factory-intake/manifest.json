@@ -88,10 +88,11 @@
       "intakePath": "soundfonts/Famicom-Multichip-Chiptune",
       "catalogFolder": "Chiptune",
       "license": "CC0",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "url": "https://archive.org/download/famicom-soundfont/Famicom.sf2",
+      "downloadUrl": "https://archive.org/download/famicom-soundfont/Famicom.sf2",
       "expectedUuid": null,
       "checksums": [],
-      "notes": "Do not substitute AKWF-FREE here; this entry needs a real Famicom/Multichip SoundFont source."
+      "notes": "Famicom SoundFont from Internet Archive."
     },
     {
       "id": "vintage-dreams-waves",
@@ -99,11 +100,12 @@
       "sourcePath": "SoundFonts/VintageDreamsWaves",
       "intakePath": "soundfonts/VintageDreamsWaves",
       "catalogFolder": "Synth",
-      "license": "CC-BY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0",
+      "url": "https://archive.org/download/vintage-dreams-waves/VintageDreamsWaves.sf2",
+      "downloadUrl": "https://archive.org/download/vintage-dreams-waves/VintageDreamsWaves.sf2",
       "expectedUuid": null,
       "checksums": [],
-      "notes": "Do not substitute AKWF-FREE here; this entry needs the real VintageDreamsWaves source and license."
+      "notes": "VintageDreamsWaves SoundFont from Internet Archive."
     }
   ],
   "samples": [
@@ -140,11 +142,12 @@
       "sourcePath": "Samples/Drums",
       "intakePath": "samples/Drums",
       "catalogFolder": "Drums",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/holizna/packs/34855/",
+      "downloadUrl": "https://freesound.org/people/holizna/packs/34855/download/",
       "expectedUuids": [],
       "checksums": [],
-      "notes": "Do not substitute AKWF-FREE here; this needs a real drum sample source."
+      "notes": "Lofi Drum Loops CC0 pack from Freesound."
     },
     {
       "id": "one-shots",
@@ -152,10 +155,12 @@
       "sourcePath": "Samples/One-Shots",
       "intakePath": "samples/One-Shots",
       "catalogFolder": "One-Shots",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/deadrobotmusic/packs/32907/",
+      "downloadUrl": "https://freesound.org/people/deadrobotmusic/packs/32907/download/",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Drum One Shots - Kicks CC0 pack from Freesound."
     },
     {
       "id": "loops",
@@ -163,10 +168,12 @@
       "sourcePath": "Samples/Loops",
       "intakePath": "samples/Loops",
       "catalogFolder": "Loops",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/deadrobotmusic/packs/31200/",
+      "downloadUrl": "https://freesound.org/people/deadrobotmusic/packs/31200/download/",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Melodic Loops CC0 pack from Freesound."
     },
     {
       "id": "bass",
@@ -174,10 +181,12 @@
       "sourcePath": "Samples/Bass",
       "intakePath": "samples/Bass",
       "catalogFolder": "Bass",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/Stereo%20Surgeon/packs/16031/",
+      "downloadUrl": "https://freesound.org/people/Stereo%20Surgeon/packs/16031/download/",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Cinematic Loops Pack CC0 from Stereo Surgeon, contains bass loops."
     },
     {
       "id": "synth",
@@ -203,10 +212,12 @@
       "sourcePath": "Samples/Guitar",
       "intakePath": "samples/Guitar",
       "catalogFolder": "Guitar",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/deadrobotmusic/packs/31200/",
+      "downloadUrl": "https://freesound.org/people/deadrobotmusic/packs/31200/download/",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Melodic Loops CC0 pack contains plucky guitar loops."
     },
     {
       "id": "foley",
@@ -214,10 +225,12 @@
       "sourcePath": "Samples/Foley",
       "intakePath": "samples/Foley",
       "catalogFolder": "Foley",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/deadrobotmusic/packs/30937/",
+      "downloadUrl": "https://freesound.org/people/deadrobotmusic/packs/30937/download/",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Foley//Textures CC0 pack from Freesound."
     },
     {
       "id": "vocals",
@@ -225,10 +238,12 @@
       "sourcePath": "Samples/Vocals",
       "intakePath": "samples/Vocals",
       "catalogFolder": "Vocals",
-      "license": "TODO_VERIFY",
-      "url": "TODO_REPLACE_WITH_SOURCE_URL",
+      "license": "CC0-1.0",
+      "url": "https://freesound.org/people/deadrobotmusic/packs/31200/",
+      "downloadUrl": "https://freesound.org/people/deadrobotmusic/packs/31200/download/",
       "expectedUuids": [],
-      "checksums": []
+      "checksums": [],
+      "notes": "Melodic Loops CC0 pack contains vocal loops."
     }
   ],
   "sfz": [

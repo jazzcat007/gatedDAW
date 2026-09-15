@@ -37,3 +37,25 @@ packages/app/studio/.env
 /announcements/temp.txt
 /tmp/
 /packages/app/studio/public/docs/scripting/
+
+# Local-only tools, captures, and scratch output. Never commit these artifacts.
+/.playwright-mcp/
+/.tools/
+/node_modules.stale-pre-node24/
+/stash.diff
+*.orphaned
+
+# Local configuration and credentials. Commit only documented, redacted templates.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+id_rsa
+id_ed25519
+credentials.json
+secrets.*
+*.secret

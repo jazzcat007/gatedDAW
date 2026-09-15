@@ -2,6 +2,7 @@ import {z} from "zod"
 
 export const FpsOptions = [24, 25, 29.97, 30] as const
 export const OverlappingRegionsBehaviourOptions = ["clip", "push-existing", "keep-existing"] as const
+export const SfzRegionLimitOptions = [25, 50, 75, 100] as const
 
 export const StudioSettingsSchema = z.object({
     "visibility": z.object({
@@ -30,12 +31,14 @@ export const StudioSettingsSchema = z.object({
         "note-audition-while-editing": z.boolean(),
         "auto-create-output-maximizer": z.boolean(),
         "stop-playback-when-overloading": z.boolean(),
-        "latency-warning-threshold": z.number().catch(25)
+        "latency-warning-threshold": z.number().catch(25),
+        "sfz-region-limit": z.union(SfzRegionLimitOptions.map(value => z.literal(value))).catch(100)
     }).default({
         "note-audition-while-editing": true,
         "auto-create-output-maximizer": true,
         "stop-playback-when-overloading": true,
-        "latency-warning-threshold": 25
+        "latency-warning-threshold": 25,
+        "sfz-region-limit": 100
     }),
     "pointer": z.object({
         "dragging-use-pointer-lock": z.boolean(),

@@ -35,7 +35,8 @@ export class SfzDeviceBoxAdapter implements InstrumentDeviceBoxAdapter, LabeledA
     // Appends regions parsed from an SFZ definition after any already present (mirrors PlayfieldDeviceBoxAdapter.chop).
     load(regions: InstrumentFactories.SfzRegionAttachment): void {
         const startIndex = this.#regions.adapters().length
-        regions.forEach((region, offset) => {
+        const availableRegions = Math.max(0, InstrumentFactories.MaxSfzRegions - startIndex)
+        regions.slice(0, availableRegions).forEach((region, offset) => {
             SfzRegionBox.create(this.#context.boxGraph, UUID.generate(), box => {
                 box.device.refer(this.#box.regions)
                 box.file.refer(region.file)

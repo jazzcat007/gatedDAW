@@ -12,6 +12,10 @@ component
   color: var(--color-dark)
   overflow-y: auto
   @include colors.panel-background
+  background-image: var(--hosting-background-image)
+  background-position: center
+  background-size: cover
+  background-attachment: fixed
 
   a
     color: var(--color-blue)
@@ -86,6 +90,24 @@ component
         font-family: monospace
         font-size: 0.95em
         letter-spacing: 0.03em
+
+    > .theme-designer
+      appearance: none
+      margin-top: 0.15em
+      padding: 0.45em 0.8em
+      border: 1px solid rgba(0, 238, 255, 0.35)
+      border-radius: 3px
+      color: var(--color-bright)
+      background: color-mix(in srgb, var(--color-panel-background) 82%, transparent)
+      font: inherit
+      font-size: 0.72em
+      letter-spacing: 0.06em
+      text-transform: uppercase
+      cursor: pointer
+
+      &:hover
+        background: var(--color-bright)
+        color: var(--color-background)
 
   > .main
     flex: 1

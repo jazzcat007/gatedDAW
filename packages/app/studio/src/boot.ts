@@ -46,6 +46,7 @@ import {Menu} from "@/ui/components/Menu"
 import {TouchContextMenu} from "@/ui/TouchContextMenu"
 import {WasmEngine} from "@opendaw/studio-core-wasm"
 import {ensureAuthenticated} from "@/auth/AuthGate"
+import {applyHostingTheme, loadHostingTheme} from "@/ui/theme/HostingTheme"
 
 if ("stackTraceLimit" in Error) {Error.stackTraceLimit = 50}
 
@@ -57,6 +58,7 @@ export const boot = async ({workersUrl, workletsUrl, wasmProcessorUrl, wasmOffli
     workersUrl: string, workletsUrl: string
     wasmProcessorUrl: string, wasmOfflineWorkerUrl: string
 }) => {
+    applyHostingTheme(loadHostingTheme())
     if (!await ensureAuthenticated()) {return}
     console.debug("booting...")
     console.debug(location.origin)

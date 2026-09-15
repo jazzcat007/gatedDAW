@@ -2,13 +2,19 @@ import {writeFileSync, mkdirSync} from "node:fs"
 import {dirname} from "node:path"
 
 const TOKEN = process.env.GH_TOKEN
-if (!TOKEN) {
-    console.error("GH_TOKEN env var is required")
-    process.exit(1)
-}
-
 const LOGIN = "andremichelle"
 const OUTPUT_PATH = "packages/app/studio/public/sponsors.json"
+const writeOutput = output => {
+    mkdirSync(dirname(OUTPUT_PATH), {recursive: true})
+    writeFileSync(OUTPUT_PATH, JSON.stringify(output, null, 2) + "\n")
+    console.log(`Wrote ${output.totalCount} sponsors to ${OUTPUT_PATH}`)
+}
+
+if (!TOKEN) {
+    console.warn("GH_TOKEN is not configured; writing an empty sponsors list")
+    writeOutput({fetchedAt: new Date().toISOString(), totalCount: 0, sponsors: []})
+    process.exit(0)
+}
 
 const query = `
 query($login: String!) {
@@ -67,6 +73,4 @@ const output = {
     }))
 }
 
-mkdirSync(dirname(OUTPUT_PATH), {recursive: true})
-writeFileSync(OUTPUT_PATH, JSON.stringify(output, null, 2) + "\n")
-console.log(`Wrote ${output.totalCount} sponsors to ${OUTPUT_PATH}`)
+writeOutput(output)

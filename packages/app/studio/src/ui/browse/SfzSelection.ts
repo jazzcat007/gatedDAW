@@ -1,6 +1,6 @@
 import {Arrays, asDefined, isAbsent, RuntimeNotifier, UUID} from "@opendaw/lib-std"
 import {InstrumentFactories, SfzInstrument} from "@opendaw/studio-adapters"
-import {toSfzAttachment, withExtendedKeyRange} from "@opendaw/studio-core"
+import {limitSfzRegions, StudioPreferences, toSfzAttachment, withExtendedKeyRange} from "@opendaw/studio-core"
 import {AudioFileBox} from "@opendaw/studio-boxes"
 import {Promises} from "@opendaw/lib-runtime"
 import {OpenSfzAPI, SfzManifestRegion} from "@/opendaw-api"
@@ -42,8 +42,16 @@ export class SfzSelection implements ResourceSelection<SfzInstrument> {
             console.warn(`SFZ import: unsupported opcodes ignored: ${manifest.unsupportedOpcodes.join(", ")}`)
         }
         const {api, editing} = this.#service.project
+        const selectedRegions = limitSfzRegions(
+            manifest.regions, StudioPreferences.settings.engine["sfz-region-limit"])
+        if (selectedRegions.length < manifest.regions.length) {
+            RuntimeNotifier.notify({
+                message: `SFZ limited to ${selectedRegions.length} of ${manifest.regions.length} regions.`,
+                icon: "Info"
+            })
+        }
         editing.modify(() => {
-            const attachment = this.#toAttachment(manifest.regions)
+            const attachment = this.#toAttachment(selectedRegions)
             api.createInstrument(InstrumentFactories.Sfz, {attachment})
         })
     }

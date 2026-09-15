@@ -51,6 +51,26 @@ component
           flex-wrap: wrap
           gap: 0.4em
 
+        td.message
+          max-width: 320px
+          overflow: hidden
+          text-overflow: ellipsis
+          white-space: nowrap
+
+        tr.clickable
+          cursor: pointer
+
+          &:hover
+            background: rgba(white, 0.04)
+
+        tr.details-row td
+          border-bottom: 1px solid rgba(white, 0.08)
+
+      p.hint
+        margin: 0
+        opacity: 0.6
+        font-size: 0.8em
+
       form.create-user, form.create-invite
         display: flex
         flex-wrap: wrap
