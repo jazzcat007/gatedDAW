@@ -1,10 +1,11 @@
 # Backup and restore (F05)
 
 Status (2026-09-14): cron installed and a restore drill run on the production OMV host — see
-"Production drill log" below for what was and wasn't actually verified. Still open: `factory` is
-deliberately excluded (see below), off-host replication isn't configured, and the drill ran
-against a near-empty instance (little project/room data existed yet to restore), so byte-level
-restore fidelity for real project/room content is still unproven. See "What's still needed."
+"Production drill log" below for what was and wasn't actually verified. `factory` is deliberately
+excluded (see below), and off-host redundancy is handled by the host's own RAID + host-level
+backup process rather than this repo's tooling (also see below). Still open: the drill ran against
+a near-empty instance (little project/room data existed yet to restore), so byte-level restore
+fidelity for real project/room content is still unproven. See "What's still needed."
 
 Companion to `audits/system-audit-and-action-plan-2026-09-14.md` F05, which found that backup
 existed only as roadmap intent, with no scheduled job, no integrity verification, and no
@@ -100,10 +101,15 @@ can silently lack the executable bit even though it looks executable in your wor
 with `git ls-files -s deploy/backup.sh` (want `100755`, not `100644`) before wiring it into cron —
 fixed here via `git update-index --chmod=+x`, but re-check after any future edit to these scripts.
 
-Off-host replication (the archives above are backups against corruption/bad-deploy/bug, not
-against losing the whole disk/host) is **not yet set up** — that needs a destination (another
-host, object storage, etc.) and credentials the host operator has to choose; `rsync`/`rclone` the
-contents of `BACKUP_DEST` there once one exists.
+`deploy/backup.sh`'s archives land on the same RAID array as the live data
+(`.../appdata/opendaw`, per `docker-compose.yml`'s volume mounts) — that protects against
+corruption, a bad write, or a bad deploy (this finding's original concern), and RAID itself
+protects against a single disk failure. Per the host operator: that RAID array already goes
+through a separate host-level backup process outside this repo's scope (not `deploy/backup.sh`),
+which is what actually gets `BACKUP_DEST`'s contents off-host. This repo's tooling doesn't need to
+duplicate that — just make sure `BACKUP_DEST` (`.../appdata/opendaw/backups`) is included in
+whatever that host-level backup covers, and don't assume it's covered without asking, since this
+doc has no visibility into how that process is configured.
 
 ## RPO / RTO (proposed — needs owner sign-off)
 
@@ -151,7 +157,9 @@ touched persistence.
 
 1. Re-run the restore drill once real project/Live Room content exists in production, to prove
    byte-level fidelity on data that actually matters (see drill log above).
-2. Decide on and configure off-host replication (not yet set up).
+2. Confirm `BACKUP_DEST` (`.../appdata/opendaw/backups`) is actually included in the host-level
+   RAID/backup process mentioned above — this doc can describe that process exists, not verify
+   its coverage.
 3. Optionally: switch the production cron entry to this repo's `deploy/backup.sh` now that its
    executable bit is fixed, if the private `/root/opendaw-ops/backup.sh` script was only a
    workaround for that bug rather than a deliberate preference.
