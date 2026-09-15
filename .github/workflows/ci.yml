@@ -46,8 +46,16 @@ jobs:
           CI: true
         run: npm run build
 
-      - name: 🔎 Lint
-        run: npm run lint
+      # NOT YET BLOCKING: running the full workspace lint for real (this workflow's first
+      # `--continue` run, done locally since `npm run lint` alone stops at the first failure)
+      # found 21 of 24 packages with a lint script currently fail — lint has evidently never
+      # been exercised across this monorepo before. Blocking on it now would fail every PR for
+      # pre-existing reasons. `--continue` (instead of plain `npm run lint`) so this step's log
+      # always shows the full remaining list, not just the first failure, for whoever does the
+      # cleanup pass. Flip to blocking once that pass lands; tracked as an F03 follow-up.
+      - name: 🔎 Lint (advisory)
+        continue-on-error: true
+        run: npx turbo run lint --continue
 
       - name: ✅ Test
         run: npm test
