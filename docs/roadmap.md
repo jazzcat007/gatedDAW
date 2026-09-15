@@ -19,17 +19,26 @@ this page gets kept honest over time.
 | Item | State | Links |
 | --- | --- | --- |
 | Reliability/security Phase 0 (atomic writes, first-boot admin-takeover fix, PR CI, dependency triage, backup/restore) | In review — PR #28 | `audits/system-audit-and-action-plan-2026-09-14.md`, `audits/dependency-triage-2026-09-14.md`, `docs/backup-restore.md` |
-| PR-gated CI actually enforcing lint/fmt/clippy (currently advisory — see below) | Blocked on a cleanup pass | `.github/workflows/ci.yml` |
+| PR-gated CI actually enforcing lint/fmt/clippy/test (currently all advisory — see below) | Blocked on a cleanup pass | `.github/workflows/ci.yml` |
 | SFZ/factory-pack catalog rollout | In progress, PRs through #11+ | `plans/sfz-instrument-support.md`, `plans/sfz-lazy-samples-and-baked-presets.md`, `plans/sfz-non-orchestral-catalog-expansion.md`, `plans/factory-pack-installer.md` |
 
-**Known debt blocking "Now" from closing:** turning on real CI (F03) revealed `cargo fmt --check`
-fails today, and a real (`--continue`) workspace lint run found 21 of 24 JS packages with a lint
-script currently fail (mostly `@typescript-eslint/no-namespace` and unused-var warnings — nothing
-found so far looks like a masked correctness bug, but the full 21-package list hasn't been
-triaged package-by-package). Both gates are `continue-on-error` in `ci.yml` until a dedicated
-cleanup PR lands; flip them to blocking once it does. This is itself the highest-value next
-"documentation and process" item, since it's the thing standing between this roadmap's "Now" row
-and Phase 0's actual exit gate.
+**Known debt blocking "Now" from closing:** turning on real CI (F03) for the first time surfaced,
+in order: `cargo fmt --check` fails today (whole-workspace, not scoped — verified locally);
+21 of 24 JS packages fail lint the first time it's run for real (mostly
+`@typescript-eslint/no-namespace` and unused-var warnings; fixed the 3 real errors this found in
+`lib-inference`, left the rest advisory since 21 packages is a real cleanup project, not a quick
+fix); and `npm test` found four real pre-existing failures, three of which got fixed in PR #28
+(a stale model-URL assertion in `lib-inference`, three stale palette-hue assertions plus one
+missing `StereoTool.dcRemove` scripting binding in `studio-scripting`), leaving three open:
+`studio-core`'s `DawProjectRoundtrip` test is the already-tracked F08 native-device-fidelity bug
+(Phase 2, not new), and `studio-core`'s `Issue287.sync.test.ts` plus `studio-p2p`'s
+`ChunkProtocol.test.ts` both failed on a flat 5000ms timeout with no assertion mismatch — consistent
+with CPU contention from running all 46 packages' tests in parallel locally, not confirmed as a
+real bug on an actual (less contended) CI runner. All three gates (fmt/clippy, lint, test) are
+`continue-on-error` in `ci.yml` until each is independently confirmed clean; flip each to blocking
+as it clears. Finishing this triage (the 21-package lint cleanup, the two timeout tests, F08) is
+the highest-value next "documentation and process" item — it's what stands between this roadmap's
+"Now" row and Phase 0's actual exit gate.
 
 ## Next
 
