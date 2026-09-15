@@ -15,17 +15,21 @@
 #   DATA_ROOT       parent directory containing server/ projects/ rooms/ factory/
 #   BACKUP_DEST     where archives are written (default: $DATA_ROOT/backups)
 #   RETENTION_DAYS  delete archives older than this many days (default: 14)
+#   COMPONENTS      space-separated subset to back up (default: "server projects rooms factory").
+#                   E.g. COMPONENTS="server projects rooms" to skip factory if it's reproducible
+#                   RAID-backed content on your host and not worth a same-host archive.
 set -euo pipefail
 
 DATA_ROOT="${DATA_ROOT:-/srv/dev-disk-by-uuid-43c0d683-376c-4b42-a6df-64a09c625b76/appdata/opendaw}"
 BACKUP_DEST="${BACKUP_DEST:-$DATA_ROOT/backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
+read -ra COMPONENTS <<< "${COMPONENTS:-server projects rooms factory}"
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 
 mkdir -p "$BACKUP_DEST"
 
 failures=0
-for component in server projects rooms factory; do
+for component in "${COMPONENTS[@]}"; do
   src="$DATA_ROOT/$component"
   if [ ! -d "$src" ]; then
     echo "WARN: $src does not exist, skipping" >&2
