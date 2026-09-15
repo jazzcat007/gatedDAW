@@ -99,7 +99,7 @@ const main = () => {
         const invalidDefinitions = new Set()
         for (const definition of walk(libraryRoot)) {
             const key = relative(libraryRoot, definition).replaceAll("\\", "/")
-            const parsed = parseSfz(definition)
+            const parsed = parseSfz(definition, libraryRoot)
             const pathOf = region => resolveSfzPath(dirname(definition), region.default_path ?? "", region.sample)
             const playable = parsed.regions.filter(region => region.sample)
             const samples = [...new Set(playable.map(pathOf))]

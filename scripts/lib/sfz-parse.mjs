@@ -1,7 +1,7 @@
 // Offline twin of packages/studio/core/src/sfz/SfzParser.ts. Kept as its own dependency-free module so the
 // importer runs on the deploy host without a built checkout, and so `importer-parity.test.ts` can import the
 // parse surface without pulling in the CLI. Any change here must keep parity with SfzParser.
-import {readFileSync} from "node:fs"
+import {existsSync, readFileSync} from "node:fs"
 import {dirname, resolve} from "node:path"
 
 const SUPPORTED = new Set([
@@ -30,17 +30,40 @@ const parseAttributes = source => {
     return attributes
 }
 
-const parseFile = (file, stack = []) => {
+// `include` paths are supposed to resolve relative to the file containing the #include (SFZ spec), and
+// that's tried first. But real-world libraries -- karoryfer's caveman-cosmonaut among them -- write every
+// #include as if it were still relative to whatever file a human/player actually opens (here, main.sfz's
+// own directory, Programs/), not relative to each includer. A mapping file living in Programs/mappings/
+// writing `#include "mappings/foo.sfz"` means "Programs/mappings/foo.sfz", not
+// "Programs/mappings/mappings/foo.sfz" -- and the importer parses every .sfz file it finds as a candidate
+// definition on its own (see walk() in import-sfz-instruments.mjs), so a mapping file can be *the* file
+// being parsed, with no main.sfz in the call chain to establish "Programs/" as a root. There's no reliable
+// way to know which ancestor the author meant, so walk up from the includer's own directory to
+// libraryBoundary (the library's clone root, always an ancestor of every file in it) and use the first
+// candidate that exists. The spec-correct, includer-relative path is still tried first and wins whenever
+// it exists, so this never changes behavior for a well-formed library.
+const parseFile = (file, libraryBoundary, stack = []) => {
     const resolved = resolve(file)
     if (stack.includes(resolved)) {throw new Error(`Circular #include: ${[...stack, resolved].join(" -> ")}`)}
     const raw = readFileSync(resolved, "utf8")
-    const expanded = withoutComments(raw).replace(/^\s*#include\s+"([^"]+)"\s*$/gm, (_match, include) =>
-        parseFile(resolve(dirname(resolved), include), [...stack, resolved]).source)
+    const expanded = withoutComments(raw).replace(/^\s*#include\s+"([^"]+)"\s*$/gm, (_match, include) => {
+        const target = resolveInclude(dirname(resolved), include, libraryBoundary)
+        return parseFile(target, libraryBoundary, [...stack, resolved]).source
+    })
     return {source: expanded, attributes: parseAttributes(expanded)}
 }
 
-export const parseSfz = file => {
-    const {source} = parseFile(file)
+const resolveInclude = (fromDir, include, libraryBoundary) => {
+    for (let dir = fromDir; ; dir = dirname(dir)) {
+        const candidate = resolve(dir, include)
+        if (existsSync(candidate)) {return candidate}
+        if (dir === libraryBoundary || dir === dirname(dir)) {break}
+    }
+    return resolve(fromDir, include) // none exist; keep the spec-correct path so the error names it
+}
+
+export const parseSfz = (file, libraryBoundary = dirname(resolve(file))) => {
+    const {source} = parseFile(file, resolve(libraryBoundary))
     const tokens = /<(control|global|master|group|region)>|([A-Za-z][A-Za-z0-9_]*)\s*=\s*("(?:[^"\\]|\\.)*"|[^<\r\n]*?(?=\s+[A-Za-z][A-Za-z0-9_]*\s*=|\s*<|\r?\n|$))/gi
     const scopes = {control: {}, global: {}, master: {}, group: {}, region: {}}
     const regions = []
