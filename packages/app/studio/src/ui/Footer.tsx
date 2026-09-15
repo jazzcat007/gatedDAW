@@ -50,7 +50,7 @@ export const Footer = ({lifecycle, service}: Construct) => {
                                         profileLifecycle.own(profile.subscribeMetaData(observer))
                                         observer(profile.meta)
                                     } else {
-                                        value.textContent = "âï¸Ž"
+                                        value.textContent = "\u23CF\uFE0E"
                                     }
                                 }))
                         }}/>

@@ -13,7 +13,7 @@ export const decodeUtf8 = (bytes: Uint8Array): string => {
                 : (byte0 & 0xF0) === 0xE0 ? ((byte0 & 0x0F) << 12) | (next() << 6) | next()
                     : (byte0 & 0xF8) === 0xF0 ? ((byte0 & 0x07) << 18) | (next() << 12) | (next() << 6) | next()
                         : 0xFFFD
-        result += codePoint <= 0x10FFFF ? String.fromCodePoint(codePoint) : "�"
+        result += codePoint <= 0x10FFFF ? String.fromCodePoint(codePoint) : "\uFFFD"
     }
     return result
 }
