@@ -341,13 +341,18 @@ export class StereoToolEffectImpl extends AudioEffectFacade<StereoToolDeviceBox>
     declare invertL: boolean
     declare invertR: boolean
     declare swap: boolean
+    // Box field + scripting binding exist (schema parity); the Rust DSP
+    // (crates/stock-devices/device-stereo-tool) does not read this field yet, so setting it has
+    // no audible effect until that's implemented. Not a scripting-layer bug — flagged here so it
+    // isn't mistaken for one.
+    declare dcRemove: boolean
     declare panningMixing: Mixing
 
     constructor(context: Context, box: StereoToolDeviceBox) {
         super(context, box)
         this.bind({
             volume: box.volume, panning: box.panning, stereo: box.stereo, invertL: box.invertL,
-            invertR: box.invertR, swap: box.swap, panningMixing: box.panningMixing
+            invertR: box.invertR, swap: box.swap, dcRemove: box.dcRemove, panningMixing: box.panningMixing
         })
     }
 }

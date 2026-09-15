@@ -1,5 +1,19 @@
 # WASM Audio Engine
 
+status: stale — see warning below
+last-reviewed: 2026-09-15
+
+**This plan and `build-order.md`'s "Where we are" section are stale and contradict the shipped
+code.** A compiled `engine.wasm`, `packages/studio/core-wasm` (worklet integration, engine exports,
+sync protocol), and per-device WASM plugins (including `device_euclid.wasm`) already exist in this
+tree — this is substantially more built than "planning — all docs drafted" (the line that used to
+be here) or `build-order.md`'s claim that only Tier 0 is done. Neither document has been reconciled
+against actual implementation progress; treat both as historical design context, not a current
+status source. Verify against `crates/engine` and `packages/studio/core-wasm` directly, and see
+`docs/roadmap.md` § Later for the standing note to do a real reconciliation pass. Don't restate a
+completion percentage here without actually doing that pass — this line is deliberately just a
+warning, not a corrected number.
+
 Replace the real-time DSP core of the TS audio engine with a WebAssembly module running in the
 AudioWorklet, for performance headroom and numerical robustness.
 
@@ -48,4 +62,5 @@ WASM core is free to restructure; it just has to produce the same audio.
 9. [Rollout / fallback / retirement](09-rollout.md) — **drafted**
    - [SDK packaging & configurable plugin path](sdk-packaging.md) — publish the engine as `@opendaw/studio-core-wasm`, manifest-driven plugin URLs — **planned**
 
-Status: **planning — all docs drafted.**
+Per-section status above reflects each doc's own drafting state, not implementation progress —
+see the stale-status warning at the top of this file before treating any of it as current.

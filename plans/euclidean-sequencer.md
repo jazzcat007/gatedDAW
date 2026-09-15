@@ -1,5 +1,16 @@
 # Euclidean Sequencer (first of a sequencer family)
 
+status: superseded-by-implementation
+superseded-by: plans/sequencer-program.md
+last-reviewed: 2026-09-15
+
+The Euclidean device described below has shipped (native `EuclidDeviceBox`, adapter, editor,
+manual, `crates/stock-devices/device-euclid`). This design doc predates that and is kept for
+historical context only — do not treat it as current planning. `plans/sequencer-program.md` is the
+active plan; it already tracks the one open item this doc's implementation left behind (a
+duplicate, unused `EuclidSequencerDeviceBox`/adapter/editor path, `.orphaned` in the tree, that
+needs reconciling against the shipped `EuclidDeviceBox` before new sequencer schemas are added).
+
 ## Goal
 
 Add generative/pattern-based sequencer devices, starting with a Euclidean rhythm generator, without

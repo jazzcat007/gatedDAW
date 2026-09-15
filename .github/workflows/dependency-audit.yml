@@ -1,0 +1,41 @@
+# .github/workflows/dependency-audit.yml
+name: Dependency audit
+
+on:
+  schedule:
+    # Every Monday 08:00 UTC. See audits/dependency-triage-2026-09-14.md (F12) for the
+    # triage this backstops and why production/dev findings are treated differently.
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+jobs:
+  audit-production:
+    name: npm audit (production dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 23
+          cache: npm
+      - run: npm ci
+      # Fails the run (and so surfaces via GitHub's normal Actions-failure notification) on any
+      # advisory reachable from what actually ships to users. This is the one that should get
+      # fixed promptly rather than logged as an accepted exception.
+      - name: Fail on new production advisories
+        run: npm audit --omit=dev --audit-level=moderate
+
+  audit-full:
+    name: npm audit (including dev/build tooling)
+    runs-on: ubuntu-latest
+    # Advisory-only: dev-tooling advisories (test runner, publish tooling) are not reachable in
+    # production per the F12 triage. Still worth a weekly look, but shouldn't block anything.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 23
+          cache: npm
+      - run: npm ci
+      - run: npm audit --audit-level=moderate

@@ -1,5 +1,13 @@
 # Self-Hosted gatedDAW Roadmap
 
+status: active
+owner: Richard Billings
+last-reviewed: 2026-09-15
+superseded-by: docs/roadmap.md is now the canonical Now/Next/Later index; this file's own detailed
+phase breakdowns (Server-First Collaboration Model, Project Privacy & Sharing, Project Versioning,
+Live Collaboration Features, DAW Import/Export) remain the source of truth for those areas and are
+still actively maintained — only the "Sequencers" section below was stale.
+
 ## Current Baseline
 
 - Fork: `jazzcat007/gatedDAW`
@@ -48,11 +56,20 @@ The quickest path to a richer self-hosted studio is to grow the catalog first, b
 
 ## Sequencers
 
-Goal: a family of pattern-based and generative MIDI-generating devices, starting with a Euclidean rhythm sequencer. Full design in `plans/euclidean-sequencer.md`.
+**Euclid is shipped**: a native `EuclidDeviceBox` WASM device, with its adapter, UI editor, and
+manual, plus the underlying `crates/stock-devices/device-euclid` Rust crate. This section
+previously described it as a not-yet-started goal ("starting with a Euclidean rhythm sequencer");
+that was stale as of 2026-09-15. Do not re-plan Euclid as new work.
 
-- Builds on real existing precedent rather than starting cold: Arpeggio (`crates/stock-devices/device-arpeggio`) already implements the rate-grid/scheduling machinery a sequencer needs; Cubed already proves the box schema can hold self-contained step patterns; Spielwerk (scriptable MIDI effect) already advertises step sequencers and probability filters as example scripts, making it a zero-risk place to prototype the Euclidean algorithm before writing native DSP.
-- Order: prototype in Spielwerk → extract Arpeggio's generic scheduling code into a shared module (so it isn't copy-pasted into every new sequencer) → ship the native Euclidean Sequencer device → use the same shared module for a probability/trigger sequencer and a polymeter/polyrhythm sequencer → a random-walk/Markov melodic sequencer as a separate, larger design (generates pitch, not just rhythm).
-- Follows the current device-adding process (schema → adapter → Rust/WASM DSP → UI editor → the four dispatch-table registrations), not the proposed-but-unbuilt runtime device-loading system in `plans/loading-devices-at-runtime.md`.
+The broader sequencer family (Pattern, Drum, generative/Markov, etc.) is active work tracked in
+`plans/sequencer-program.md`, not here — that plan already accounts for Euclid's existing
+precedent (Arpeggio's scheduling machinery, Cubed's step-pattern schema, Spielwerk's scriptable
+prototyping path) and for the one piece of cleanup Euclid's implementation left behind: a
+duplicate, unused `EuclidSequencerDeviceBox`/adapter/editor path (`.orphaned` in the tree) that
+needs reconciling against the shipped `EuclidDeviceBox` before new sequencer schemas are added.
+See `docs/roadmap.md` § Next for the current recommended build order (`plans/sequencer-program.md`
+§ "Recommended first release"). `plans/euclidean-sequencer.md` is the original pre-implementation
+design doc, kept for historical context only.
 
 ## Design Overhaul
 

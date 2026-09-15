@@ -1,12 +1,11 @@
 import {
-  copyFileSync, createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, unlinkSync,
-  writeFileSync
+  closeSync, copyFileSync, createReadStream, existsSync, fsyncSync, mkdirSync, openSync, readdirSync, readFileSync,
+  renameSync, rmSync, statSync, unlinkSync, writeFileSync
 } from "node:fs"
-import {writeFile} from "node:fs/promises"
 import {createServer} from "node:http"
-import {randomBytes, randomUUID, scryptSync, timingSafeEqual} from "node:crypto"
+import {createHash, randomBytes, randomUUID, scryptSync, timingSafeEqual} from "node:crypto"
 import {execFile} from "node:child_process"
-import {extname, join, normalize} from "node:path"
+import {basename, dirname, extname, join, normalize} from "node:path"
 import {WebSocketServer} from "ws"
 import * as Y from "yjs"
 import {setupWSConnection, ROOM_CLEANUP_DELAY_MS, setPersistence} from "./packages/server/yjs-server/utils.js"
@@ -52,9 +51,56 @@ const readJson = (file, fallback) => {
   }
 }
 
+// F01: users.json and sessions.json gate authentication. A silent fallback to an empty default
+// on parse failure would re-open first-run admin setup (see F02) or silently drop every session
+// instead of surfacing the corruption, so these fail closed: refuse to start rather than guess.
+const readJsonStrict = (file) => {
+  if (!existsSync(file)) return null
+  try {
+    return JSON.parse(readFileSync(file, "utf8"))
+  } catch (error) {
+    throw new Error(
+      `Refusing to start: ${file} exists but is not valid JSON (${error.message}). ` +
+      "Restore it from a backup or remove it only if you intend to lose its contents."
+    )
+  }
+}
+
 const writeJsonIfMissing = (file, value) => {
   if (existsSync(file)) return
-  writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`)
+  atomicWriteFileSync(file, `${JSON.stringify(value, null, 2)}\n`)
+}
+
+// F01: every durable JSON store below was written directly to its final path, so a crash or kill
+// mid-write could leave a truncated/corrupt file. Write to a sibling temp file in the same
+// directory, fsync it, then rename over the target (rename is atomic on the same filesystem) so a
+// reader always sees either the old complete content or the new complete content, never a partial
+// write. Best-effort directory fsync afterwards so the rename itself survives a host crash.
+const fsyncDir = (dir) => {
+  try {
+    const fd = openSync(dir, "r")
+    try {
+      fsyncSync(fd)
+    } finally {
+      closeSync(fd)
+    }
+  } catch {
+    // Not all platforms/filesystems support fsync on a directory handle; best-effort only.
+  }
+}
+
+const atomicWriteFileSync = (file, data) => {
+  const dir = dirname(file)
+  const tmp = join(dir, `.${basename(file)}.${randomBytes(6).toString("hex")}.tmp`)
+  const fd = openSync(tmp, "w")
+  try {
+    writeFileSync(fd, data)
+    fsyncSync(fd)
+  } finally {
+    closeSync(fd)
+  }
+  renameSync(tmp, file)
+  fsyncDir(dir)
 }
 
 const defaultSettings = {
@@ -98,12 +144,12 @@ const verifyPassword = (password, stored) => {
 }
 
 const loadUsers = () => {
-  const raw = readJson(usersFile, {users: []})
+  const raw = readJsonStrict(usersFile) ?? {users: []}
   return Array.isArray(raw.users) ? raw.users.filter(user => typeof user?.passwordHash === "string") : []
 }
 
 let users = loadUsers()
-const persistUsers = () => writeFileSync(usersFile, `${JSON.stringify({users}, null, 2)}\n`)
+const persistUsers = () => atomicWriteFileSync(usersFile, `${JSON.stringify({users}, null, 2)}\n`)
 
 if (users.length === 0 && authEnabled) {
   users.push({
@@ -121,13 +167,44 @@ if (users.length === 0 && authEnabled) {
   persistUsers()
 }
 
+// F02: with no admin bootstrapped above, POST /api/auth/setup would otherwise let the first
+// unauthenticated visitor claim ownership of a freshly exposed instance. Require a server-side,
+// one-time setup token (printed to the console/logs, never sent over the network first) unless
+// the operator explicitly opts into the insecure single-visitor-claims-admin behavior for local dev.
+const setupTokenFile = join(serverRoot, "setup-token.json")
+const allowInsecureSetup = process.env.OPENDAW_ALLOW_INSECURE_SETUP === "true"
+const hashSetupToken = (token) => createHash("sha256").update(token).digest("hex")
+
+if (users.length === 0) {
+  if (allowInsecureSetup) {
+    console.warn(
+      "[SECURITY] OPENDAW_ALLOW_INSECURE_SETUP=true: the first visitor to POST /api/auth/setup " +
+      "will become admin with no token required. Do not use this in a reachable/production deployment."
+    )
+  } else {
+    const setupToken = randomBytes(24).toString("hex")
+    atomicWriteFileSync(setupTokenFile, `${JSON.stringify({
+      tokenHash: hashSetupToken(setupToken), createdAt: new Date().toISOString()
+    }, null, 2)}\n`)
+    console.log("=".repeat(72))
+    console.log("No admin account exists yet. One-time setup token (also written to")
+    console.log(`${setupTokenFile}):`)
+    console.log(setupToken)
+    console.log('Complete setup with: POST /api/auth/setup {"username", "password", "setupToken"}')
+    console.log("The token is consumed on first successful setup and regenerated on restart.")
+    console.log("=".repeat(72))
+  }
+} else if (existsSync(setupTokenFile)) {
+  unlinkSync(setupTokenFile)
+}
+
 const invitesFile = join(serverRoot, "invites.json")
 const loadInvites = () => {
   const raw = readJson(invitesFile, {invites: []})
   return Array.isArray(raw.invites) ? raw.invites : []
 }
 let invites = loadInvites()
-const persistInvites = () => writeFileSync(invitesFile, `${JSON.stringify({invites}, null, 2)}\n`)
+const persistInvites = () => atomicWriteFileSync(invitesFile, `${JSON.stringify({invites}, null, 2)}\n`)
 
 const sanitizeInvite = (invite) => ({
   token: invite.token,
@@ -152,14 +229,14 @@ const loadRoomLinks = () => {
   return Array.isArray(raw.rooms) ? raw.rooms : []
 }
 let roomLinks = loadRoomLinks()
-const persistRoomLinks = () => writeFileSync(roomLinksFile, `${JSON.stringify({rooms: roomLinks}, null, 2)}\n`)
+const persistRoomLinks = () => atomicWriteFileSync(roomLinksFile, `${JSON.stringify({rooms: roomLinks}, null, 2)}\n`)
 
 const sessionsFile = join(serverRoot, "sessions.json")
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const SESSION_COOKIE = "opendaw_session"
-const sessions = new Map(Object.entries(readJson(sessionsFile, {})))
+const sessions = new Map(Object.entries(readJsonStrict(sessionsFile) ?? {}))
 
-const persistSessions = () => writeFileSync(sessionsFile, `${JSON.stringify(Object.fromEntries(sessions), null, 2)}\n`)
+const persistSessions = () => atomicWriteFileSync(sessionsFile, `${JSON.stringify(Object.fromEntries(sessions), null, 2)}\n`)
 
 const pruneSessions = () => {
   const now = Date.now()
@@ -389,9 +466,11 @@ const scheduleRoomWrite = (docName, doc) => {
   }
   const timer = setTimeout(() => {
     roomWriteTimers.delete(docName)
-    writeFile(roomFilePath(docName), Buffer.from(Y.encodeStateAsUpdate(doc))).catch(error => {
+    try {
+      atomicWriteFileSync(roomFilePath(docName), Buffer.from(Y.encodeStateAsUpdate(doc)))
+    } catch (error) {
       console.error(`Failed to persist room '${docName}':`, error)
-    })
+    }
   }, 1000)
   roomWriteTimers.set(docName, timer)
 }
@@ -411,7 +490,7 @@ setPersistence({
       clearTimeout(timer)
       roomWriteTimers.delete(docName)
     }
-    await writeFile(roomFilePath(docName), Buffer.from(Y.encodeStateAsUpdate(doc)))
+    atomicWriteFileSync(roomFilePath(docName), Buffer.from(Y.encodeStateAsUpdate(doc)))
   }
 })
 
@@ -543,7 +622,7 @@ const copyFileIfExists = (src, dest) => {
 const projectFolder = (uuid) => join(projectsRoot, uuid)
 const projectTrashFile = join(projectsRoot, "trash.json")
 const readProjectTrash = () => readJson(projectTrashFile, [])
-const writeProjectTrash = (ids) => writeFileSync(projectTrashFile, `${JSON.stringify(ids, null, 2)}\n`)
+const writeProjectTrash = (ids) => atomicWriteFileSync(projectTrashFile, `${JSON.stringify(ids, null, 2)}\n`)
 
 const projectAccess = (meta, user) => {
   if (user.role === "admin") return "admin"
@@ -641,7 +720,7 @@ const serveProjectsApi = async (req, res) => {
         members: [{userId: currentUser.id, role: "owner"}]
       }
       mkdirSync(projectFolder(uuid), {recursive: true})
-      writeFileSync(join(projectFolder(uuid), "meta.json"), `${JSON.stringify(meta, null, 2)}\n`)
+      atomicWriteFileSync(join(projectFolder(uuid), "meta.json"), `${JSON.stringify(meta, null, 2)}\n`)
       sendJson(res, 200, {uuid, meta})
       return
     }
@@ -665,7 +744,7 @@ const serveProjectsApi = async (req, res) => {
       members: [{userId: currentUser.id, role: "owner"}]
     }
     mkdirSync(folder, {recursive: true})
-    writeFileSync(metaPath, `${JSON.stringify(existingMeta, null, 2)}\n`)
+    atomicWriteFileSync(metaPath, `${JSON.stringify(existingMeta, null, 2)}\n`)
   }
   // Existing projects from before per-project privacy have no owner. Keep them
   // admin-only until an administrator explicitly claims or migrates them.
@@ -722,7 +801,7 @@ const serveProjectsApi = async (req, res) => {
     if (req.method === "PUT") {
       const body = await readBody(req)
       snapshotProjectRevision(uuid)
-      writeFileSync(join(folder, "project.od"), body)
+      atomicWriteFileSync(join(folder, "project.od"), body)
       sendJson(res, 200, {ok: true})
       return
     }
@@ -741,7 +820,7 @@ const serveProjectsApi = async (req, res) => {
     }
     if (req.method === "PUT") {
       const body = await readBody(req)
-      writeFileSync(join(folder, "image.bin"), body)
+      atomicWriteFileSync(join(folder, "image.bin"), body)
       sendJson(res, 200, {ok: true})
       return
     }
@@ -763,7 +842,7 @@ const serveProjectsApi = async (req, res) => {
         createdBy: existingMeta.createdBy,
         members: existingMeta.members
       }
-      writeFileSync(metaPath, `${JSON.stringify(meta, null, 2)}\n`)
+      atomicWriteFileSync(metaPath, `${JSON.stringify(meta, null, 2)}\n`)
       sendJson(res, 200, {ok: true})
       return
     }
@@ -800,7 +879,7 @@ const serveProjectsApi = async (req, res) => {
         members.push({userId: user.id, role: candidate.role})
       }
       const meta = {...existingMeta, members}
-      writeFileSync(metaPath, `${JSON.stringify(meta, null, 2)}\n`)
+      atomicWriteFileSync(metaPath, `${JSON.stringify(meta, null, 2)}\n`)
       sendJson(res, 200, {members: serializeProjectMembers(meta)})
       return
     }
@@ -821,7 +900,7 @@ const serveProjectsApi = async (req, res) => {
         createdBy: currentUser.username,
         members: [{userId: currentUser.id, role: "owner"}]
       }
-      writeFileSync(join(newFolder, "meta.json"), `${JSON.stringify(duplicatedMeta, null, 2)}\n`)
+      atomicWriteFileSync(join(newFolder, "meta.json"), `${JSON.stringify(duplicatedMeta, null, 2)}\n`)
       sendJson(res, 200, {uuid: newUuid, meta: duplicatedMeta})
       return
     }
@@ -991,6 +1070,21 @@ const serveAuthApi = async (req, res) => {
       return
     }
     const parsed = tryParseJson(await readBody(req, 4096))
+    if (!allowInsecureSetup) {
+      const providedToken = typeof parsed?.setupToken === "string" ? parsed.setupToken : ""
+      const stored = readJson(setupTokenFile, null)
+      const storedHash = typeof stored?.tokenHash === "string" ? stored.tokenHash : null
+      const providedHash = providedToken.length > 0 ? hashSetupToken(providedToken) : null
+      const tokenValid = storedHash !== null && providedHash !== null &&
+        storedHash.length === providedHash.length &&
+        timingSafeEqual(Buffer.from(storedHash), Buffer.from(providedHash))
+      if (!tokenValid) {
+        sendJson(res, 403, {
+          error: "Missing or invalid setup token. Check the server console/logs for the one-time token."
+        })
+        return
+      }
+    }
     const username = typeof parsed?.username === "string" ? parsed.username.trim() : ""
     const password = typeof parsed?.password === "string" ? parsed.password : ""
     if (username.length < 3 || password.length < 8) {
@@ -1003,6 +1097,7 @@ const serveAuthApi = async (req, res) => {
     }
     users.push(user)
     persistUsers()
+    if (existsSync(setupTokenFile)) unlinkSync(setupTokenFile)
     setSessionCookie(res, createSession(user.id))
     sendJson(res, 200, {ok: true, user: sanitizeUser(user)})
     return
@@ -1134,7 +1229,7 @@ const serveAdminApi = async (req, res) => {
         return
       }
       const merged = {...readJson(settingsFile, defaultSettings), ...parsed}
-      writeFileSync(settingsFile, `${JSON.stringify(merged, null, 2)}\n`)
+      atomicWriteFileSync(settingsFile, `${JSON.stringify(merged, null, 2)}\n`)
       sendJson(res, 200, {settings: merged})
       return
     }
