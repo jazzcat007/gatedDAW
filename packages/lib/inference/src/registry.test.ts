@@ -26,10 +26,12 @@ describe("TaskRegistry", () => {
         }
     })
 
-    it("each task's model URL is an absolute self-hosted URL", () => {
+    it("each task's model URL is a local self-hosted factory path", () => {
+        // This fork serves models from its own factory mirror rather than upstream's
+        // assets.opendaw.studio, per docs/self-hosted-roadmap.md's "keep model URLs local" goal.
         for (const key of Object.keys(TaskRegistry) as Array<keyof typeof TaskRegistry>) {
             const url = TaskRegistry[key].model.url
-            expect(url).toMatch(/^https:\/\/assets\.opendaw\.studio\/models\//)
+            expect(url).toMatch(/^\/factory\/models\//)
         }
     })
 
