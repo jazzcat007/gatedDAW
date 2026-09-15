@@ -25,10 +25,10 @@ const metaPath = (taskKey: string, version: string) => `${ROOT}/${taskKey}/${ver
 const taskPath = (taskKey: string) => `${ROOT}/${taskKey}`
 const versionPath = (taskKey: string, version: string) => `${ROOT}/${taskKey}/${version}`
 
-export namespace ModelStore {
-    export const ensure = async (taskKey: string,
-                                 model: ModelDescriptor,
-                                 options?: FetchOptions): Promise<Uint8Array> => {
+export const ModelStore = {
+    ensure: async (taskKey: string,
+                   model: ModelDescriptor,
+                   options?: FetchOptions): Promise<Uint8Array> => {
         const {opfs} = requireInferenceConfig()
         const cached = await readCached(opfs, taskKey, model)
         if (cached.nonEmpty()) {
@@ -49,76 +49,79 @@ export namespace ModelStore {
         }
         await opfs.write(metaPath(taskKey, model.version), new TextEncoder().encode(JSON.stringify(meta)))
         return bytes
-    }
+    },
 
-    export const evict = async (taskKey: string, version?: string): Promise<void> => {
+    evict: async (taskKey: string, version?: string): Promise<void> => {
         const {opfs} = requireInferenceConfig()
         const path = isDefined(version) ? versionPath(taskKey, version) : taskPath(taskKey)
         await Promises.tryCatch(opfs.delete(path))
-    }
+    },
 
-    export const isCached = async (taskKey: string, model: ModelDescriptor): Promise<boolean> => {
+    isCached: async (taskKey: string, model: ModelDescriptor): Promise<boolean> => {
         const {opfs} = requireInferenceConfig()
         const meta = await readMeta(opfs, taskKey, model.version)
         if (meta.isEmpty() || meta.unwrap().sha256 !== model.sha256) {return false}
         // Trust meta.json's recorded sha; avoid reading 300+ MB just to probe.
         return opfs.exists(modelPath(taskKey, model.version))
     }
+}
 
-    const readCached = async (opfs: OpfsProtocol,
-                              taskKey: string,
-                              model: ModelDescriptor): Promise<Option<Uint8Array>> => {
-        const meta = await readMeta(opfs, taskKey, model.version)
-        if (meta.isEmpty() || meta.unwrap().sha256 !== model.sha256) {return Option.None}
-        const result = await Promises.tryCatch(opfs.read(modelPath(taskKey, model.version)))
-        return result.status === "resolved" ? Option.wrap(result.value) : Option.None
-    }
+const readCached = async (opfs: OpfsProtocol,
+                          taskKey: string,
+                          model: ModelDescriptor): Promise<Option<Uint8Array>> => {
+    const meta = await readMeta(opfs, taskKey, model.version)
+    if (meta.isEmpty() || meta.unwrap().sha256 !== model.sha256) {return Option.None}
+    const result = await Promises.tryCatch(opfs.read(modelPath(taskKey, model.version)))
+    return result.status === "resolved" ? Option.wrap(result.value) : Option.None
+}
 
-    const readMeta = async (opfs: OpfsProtocol,
-                            taskKey: string,
-                            version: string): Promise<Option<ModelMeta>> => {
-        const result = await Promises.tryCatch(opfs.read(metaPath(taskKey, version)))
-        if (result.status === "rejected") {return Option.None}
-        const {status, value} = tryCatch(() =>
-            JSON.parse(new TextDecoder().decode(result.value)) as ModelMeta)
-        return status === "success" ? Option.wrap(value) : Option.None
-    }
+const readMeta = async (opfs: OpfsProtocol,
+                        taskKey: string,
+                        version: string): Promise<Option<ModelMeta>> => {
+    const result = await Promises.tryCatch(opfs.read(metaPath(taskKey, version)))
+    if (result.status === "rejected") {return Option.None}
+    const {status, value} = tryCatch(() =>
+        JSON.parse(new TextDecoder().decode(result.value)) as ModelMeta)
+    return status === "success" ? Option.wrap(value) : Option.None
+}
 
-    const download = async (model: ModelDescriptor, options?: FetchOptions): Promise<Uint8Array> => {
-        // Cross-origin fetches under COOP+COEP need explicit cors/no-credentials
-        // mode so the response is treated as a permitted resource.
-        const response = await fetch(model.url, {
-            signal: options?.signal,
-            mode: "cors",
-            credentials: "omit"
-        })
-        if (!response.ok) {
-            return panic(`Model fetch failed: ${response.status} ${response.statusText} (${model.url})`)
-        }
-        const total = parseInt(response.headers.get("Content-Length") ?? `${model.bytes}`)
-        const reader = asDefined(response.body, "Empty response body").getReader()
-        const chunks: Array<Uint8Array> = []
-        let loaded = 0
-        while (true) {
-            const {done, value} = await reader.read()
-            if (done) {break}
-            chunks.push(value)
-            loaded += value.length
-            options?.progress?.(total > 0 ? Math.min(loaded / total, 1.0) : 0.5)
-        }
-        const result = new Uint8Array(loaded)
-        let offset = 0
-        for (const chunk of chunks) {
-            result.set(chunk, offset)
-            offset += chunk.length
-        }
-        return result
+const download = async (model: ModelDescriptor, options?: FetchOptions): Promise<Uint8Array> => {
+    // Cross-origin fetches under COOP+COEP need explicit cors/no-credentials
+    // mode so the response is treated as a permitted resource.
+    const response = await fetch(model.url, {
+        signal: options?.signal,
+        mode: "cors",
+        credentials: "omit"
+    })
+    if (!response.ok) {
+        return panic(`Model fetch failed: ${response.status} ${response.statusText} (${model.url})`)
     }
+    const total = parseInt(response.headers.get("Content-Length") ?? `${model.bytes}`)
+    const reader = asDefined(response.body, "Empty response body").getReader()
+    const chunks: Array<Uint8Array> = []
+    let loaded = 0
+    // Standard read-to-completion loop for a ReadableStreamDefaultReader; `done` is only
+    // known after each read, so the exit condition can't be hoisted into the while-clause.
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const {done, value} = await reader.read()
+        if (done) {break}
+        chunks.push(value)
+        loaded += value.length
+        options?.progress?.(total > 0 ? Math.min(loaded / total, 1.0) : 0.5)
+    }
+    const result = new Uint8Array(loaded)
+    let offset = 0
+    for (const chunk of chunks) {
+        result.set(chunk, offset)
+        offset += chunk.length
+    }
+    return result
+}
 
-    const sha256Hex = async (bytes: Uint8Array): Promise<string> => {
-        const digest = await crypto.subtle.digest("SHA-256", bytes as BufferSource)
-        return Array.from(new Uint8Array(digest))
-            .map(byte => byte.toString(16).padStart(2, "0"))
-            .join("")
-    }
+const sha256Hex = async (bytes: Uint8Array): Promise<string> => {
+    const digest = await crypto.subtle.digest("SHA-256", bytes as BufferSource)
+    return Array.from(new Uint8Array(digest))
+        .map(byte => byte.toString(16).padStart(2, "0"))
+        .join("")
 }

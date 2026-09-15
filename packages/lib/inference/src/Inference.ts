@@ -71,8 +71,8 @@ const lookupTask = <K extends TaskKey>(key: K): TaskDefinition<TaskInput<K>, Tas
 
 const NO_PROGRESS: Procedure<unitValue> = () => {}
 
-export namespace Inference {
-    export const install = (config: InstallOptions): void => {
+export const Inference = {
+    install: (config: InstallOptions): void => {
         installInferenceConfig({opfs: config.opfs})
         host.match({
             none: () => {},
@@ -81,11 +81,11 @@ export namespace Inference {
         host = Option.wrap(new EngineHost({
             workerFactory: config.workerFactory ?? defaultWorkerFactory
         }))
-    }
+    },
 
-    export const run = <K extends TaskKey>(key: K,
-                                           input: TaskInput<K>,
-                                           options?: RunOptions): Promise<TaskOutput<K>> => {
+    run: <K extends TaskKey>(key: K,
+                             input: TaskInput<K>,
+                             options?: RunOptions): Promise<TaskOutput<K>> => {
         requireInferenceConfig()
         const engineHost = requireHost()
         const task = lookupTask(key)
@@ -99,33 +99,33 @@ export namespace Inference {
             executionProviders: resolveProviders(task.executionProviders, options?.executionProvider),
             downloadShare: options?.downloadShare
         }))
-    }
+    },
 
     /**
      * Whether the model bytes for `key` are already cached in OPFS with a
      * SHA-256 matching the task definition. Useful for deciding whether to
      * show a download dialog before calling `preload` or `run`.
      */
-    export const isCached = async <K extends TaskKey>(key: K): Promise<boolean> => {
+    isCached: async <K extends TaskKey>(key: K): Promise<boolean> => {
         requireInferenceConfig()
         const task = lookupTask(key)
         return ModelStore.isCached(task.key, task.model)
-    }
+    },
 
     /**
      * The model descriptor (URL, SHA-256, bytes, version) for a task. Useful
      * for formatting download-size messages in confirmation dialogs without
      * duplicating the bytes/version values in the consumer.
      */
-    export const modelDescriptor = <K extends TaskKey>(key: K): ModelDescriptor =>
-        lookupTask(key).model
+    modelDescriptor: <K extends TaskKey>(key: K): ModelDescriptor =>
+        lookupTask(key).model,
 
     /**
      * Ensure the model is downloaded (cache hit or fresh fetch with progress)
      * AND its session is created in the worker. Resolves once the session is
      * ready to run inference. Subsequent `run` calls are inference-only.
      */
-    export const preload = async <K extends TaskKey>(
+    preload: async <K extends TaskKey>(
         key: K,
         options?: PreloadOptions
     ): Promise<void> => {
@@ -136,20 +136,20 @@ export namespace Inference {
             progress: options?.progress,
             signal: options?.signal
         })
-    }
+    },
 
     /**
      * Release the in-memory session for `key` (if any). The model bytes stay
      * cached in OPFS, so a subsequent `preload` with a different
      * `executionProvider` is the cheap way to switch EPs at runtime.
      */
-    export const releaseTask = async <K extends TaskKey>(key: K): Promise<void> => {
+    releaseTask: async <K extends TaskKey>(key: K): Promise<void> => {
         requireInferenceConfig()
         const engineHost = requireHost()
         await engineHost.releaseTask(key as string)
-    }
+    },
 
-    export const acquire = <K extends TaskKey>(key: K): Promise<TaskHandle<K>> => {
+    acquire: <K extends TaskKey>(key: K): Promise<TaskHandle<K>> => {
         requireInferenceConfig()
         const engineHost = requireHost()
         const task = lookupTask(key)
@@ -178,9 +178,9 @@ export namespace Inference {
                     engineHost.releaseTask(task.key).catch(() => {})
                 }
             })
-    }
+    },
 
-    export const shutdown = (): Promise<void> => {
+    shutdown: (): Promise<void> => {
         if (host.isEmpty()) {return Promise.resolve()}
         const engineHost = host.unwrap()
         host = Option.None
